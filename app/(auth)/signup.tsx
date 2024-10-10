@@ -1,20 +1,22 @@
 import { Text, View, TouchableOpacity, TextInput } from 'react-native';
 import { Link, useRouter } from 'expo-router'
-import { useState } from 'react';
-import { supabase } from '@/utils/supabase';
+import React, { useState } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
+
+
 
 
 
 export default  function () {
   const router = useRouter();
-  const [userName, setUserName] = useState('');
+  
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-
-
+const { signUp } = useAuth();
+/* 
   const handleSignup = async() => {
     const trimmedEmail = email.trim();
     const trimmedFirstname = firstname.trim();
@@ -33,7 +35,7 @@ export default  function () {
     .from('profiles')
     .insert([
       {
-        id: data.user.id,
+        id: data.user?.id,
         first_name: trimmedFirstname,
         last_name: trimmedLastname,
         email: trimmedEmail,
@@ -48,7 +50,7 @@ export default  function () {
     router.back()
       router.push('/(tabs)');
     }
-  };
+  }; */
 
   return (
     <View className="flex-1 items-center justify-center  bg-black" >
@@ -82,7 +84,7 @@ export default  function () {
           onChangeText={setPassword}
         />
       </View>
-      <TouchableOpacity className='mb-4' onPress={handleSignup}>
+      <TouchableOpacity className='mb-4' onPress={() => signUp(firstname, lastname, email, password)}>
         <Text className='bg-white rounded py-2 px-4 font-bold text-lg'>Skapa</Text>        
       </TouchableOpacity>
       
