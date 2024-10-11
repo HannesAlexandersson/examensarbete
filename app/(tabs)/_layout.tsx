@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -43,10 +43,16 @@ export default function TabLayout() {
         }}
       />
        <Tabs.Screen
-        name="camera"
+        name="empty"
         options={{
           title: 'Camera',      
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "camera-sharp" : "camera-outline"} size={24} color="black" />   
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/camera');
+          },
         }}
       />
     </Tabs>

@@ -4,11 +4,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Text, View, TouchableOpacity } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/providers/AuthProvider';
+import { useRouter } from 'expo-router';
 
 
 type CameraMode = 'picture' | 'video';
 
-export default function App() {
+export default function() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
@@ -20,6 +21,7 @@ export default function App() {
   const [videoUri, setVideoUri] = useState<string | undefined>(undefined);
   const [photoUri, setPhotoUri] = useState<string | undefined>(undefined);
   const { user } = useAuth();
+  const router = useRouter();
 
   const handlePermission = async () => {
     const cameraResponse = await requestPermission();
@@ -73,67 +75,102 @@ export default function App() {
     }
   }
 
-  //function to save the video in the supabase bucket
-  const saveVideo = async() => {
-   
-   const formData = new FormData();
-   const fileName = videoUri?.split('/').pop();
-    formData.append('file', {
-      uri: videoUri,
-      type: `video/${fileName?.split('.').pop()}`,
-      name:fileName,
+//function to save the video in the supabase bucket
+const saveVideo = async() => {
+  
+  const formData = new FormData();
+  const fileName = videoUri?.split('/').pop();
+  formData.append('file', {
+    uri: videoUri,
+    type: `video/${fileName?.split('.').pop()}`,
+    name:fileName,
+  });
+
+  const { data, error } = await supabase.storage
+    .from('videos')
+    .upload(fileName, formData, {
+      cacheControl: '3600000000',
+      upsert: false,
     });
 
-    const { data, error } = await supabase.storage
-      .from('videos')
-      .upload(fileName, formData, {
-        cacheControl: '3600000000',
-        upsert: false,
-      });
-    if(error) console.error(error);
-    
+  if(error) console.error(error);    
 
-    const { error: videoError } = await supabase.from('videos').insert({
-      video_uri: data?.path,
-      user_id: user?.id,
-      title: "test",
-    });
-    if(videoError) console.error(videoError);
-    }
+  const { error: videoError } = await supabase.from('videos').insert({
+    video_uri: data?.path,
+    user_id: user?.id,
+    title: "",
+  });
+
+  if(videoError) console.error(videoError);
+  router.back();
+}
   
 
-  //function to save the photo
-  const savePhoto = () => {
-    console.log('Photo saved', photoUri);
-  };
-  //function to take a photo
-  const takePhoto = async () => {
-    if (type === 'picture') {
-      const photo = await cameraRef.current?.takePictureAsync();
-      setPhotoUri(photo?.uri);
-    }   
-  };
+  
+//function to take a photo
+const takePhoto = async () => {
+  if (type === 'picture') {
+    const photo = await cameraRef.current?.takePictureAsync();
+    setPhotoUri(photo?.uri);
+  }   
+};
 
-  //cycle through the flash modes
-  const toggleFlashMode = () => {
-    setFlashMode((prevMode) => {
-      if (prevMode === 'off') return 'on';
-      if (prevMode === 'on') return 'auto';
-      return 'off'; //reset to 'off' if it was on 'ayto'
+//function to save the photo
+const savePhoto = async() => {
+  const formData = new FormData();
+  const PicturefileName = photoUri?.split('/').pop();
+  formData.append('file', {
+    uri: photoUri,
+    type: `image/${PicturefileName?.split('.').pop()}`,
+    name: PicturefileName,
+  });
+  //save to bucket
+  const { data, error } = await supabase.storage
+    .from('pictures')
+    .upload(PicturefileName, formData, {
+      cacheControl: '3600000000',
+      upsert: false,
     });
-  };
+  if(error) console.error(error);
+  //save to database 'image' table
+  const { error: photoError } = await supabase.from('Images').insert({
+    image_uri: data?.path,
+    user_id: user?.id,
+    title: "",
+  });
+  if(photoError) console.error(photoError);
 
-  //get the correct flashicon based on the flash mode
-  const renderFlashIcon = () => {
-    if (flashMode === 'on') {
-      return <Ionicons name="flash" size={50} color="yellow" />;
-    } else if (flashMode === 'auto') {
-      return <Text className='font-bold text-white text-sm pl-4 pt-4'>AUTO</Text>;
-    } else {
-      return <Ionicons name="flash-outline" size={50} color="white" />;
-    }
-  };
-  return (
+  router.back();
+};
+
+//cycle through the flash modes
+const toggleFlashMode = () => {
+  setFlashMode((prevMode) => {
+    if (prevMode === 'off') return 'on';
+    if (prevMode === 'on') return 'auto';
+    return 'off'; //reset to 'off' if it was on 'ayto'
+  });
+};
+
+//get the correct flashicon based on the flash mode
+const renderFlashIcon = () => {
+  if (flashMode === 'on') {
+    return <Ionicons name="flash" size={50} color="yellow" />;
+  } else if (flashMode === 'auto') {
+    return <Text className='font-bold text-white text-sm pl-4 pt-4'>AUTO</Text>;
+  } else {
+    return <Ionicons name="flash-outline" size={50} color="white" />;
+  }
+};
+
+const discardMedia = () => {
+  setVideoUri(undefined);
+  setPhotoUri(undefined);
+  setIsRecording(false);
+};
+
+
+return (
     
       <CameraView mode={type} ref={cameraRef} style={{ flex: 1}} facing={facing}>
         <View className='flex-1 justify-end'>
@@ -158,9 +195,15 @@ export default function App() {
           {type === 'video' ? ( 
             <>
               {videoUri ? (
-                <TouchableOpacity className='items-end justify-end' onPress={saveVideo}>
-                  <Ionicons name="checkmark-circle" size={100} color="white" />
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity className='items-end justify-end' onPress={saveVideo}>
+                    <Ionicons name="checkmark-circle" size={65} color="green" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity className='items-end justify-end' onPress={discardMedia}>
+                    <Ionicons name="close-circle" size={65} color="red" />
+                  </TouchableOpacity>
+                </>
                 ) : (
                 <TouchableOpacity className='items-end justify-end' onPress={recordVideo}>
                   {isRecording ? <Ionicons name="pause-circle" size={100} color="white" /> : <Ionicons name="radio-button-on" size={100} color="red" />}
@@ -171,9 +214,15 @@ export default function App() {
             ) : (
             <>
               {photoUri ? (
-                <TouchableOpacity className='items-end justify-end' onPress={savePhoto}>
-                  <Ionicons name="checkmark-circle" size={100} color="white" />
-                </TouchableOpacity>                
+                <>
+                  <TouchableOpacity className='items-end justify-end' onPress={savePhoto}>
+                    <Ionicons name="checkmark-circle" size={65} color="green" />
+                  </TouchableOpacity> 
+                  
+                  <TouchableOpacity className='items-end justify-end' onPress={discardMedia}>
+                      <Ionicons name="close-circle" size={65} color="red" />
+                  </TouchableOpacity>
+                </>
                 ) : (
                 <TouchableOpacity className='items-end justify-end' onPress={takePhoto}>
                   <Ionicons name="radio-button-on" size={100} color="white" />
