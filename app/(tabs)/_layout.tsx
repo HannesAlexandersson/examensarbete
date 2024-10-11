@@ -14,14 +14,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',      
+          title: 'Hem',      
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "home-sharp" : "home-outline"} size={24} color="black" />   
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: 'Account',      
+          title: 'Konto',      
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "settings" : "settings-outline"} size={24} color="black" />   
         }}
       />
@@ -38,14 +38,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="people"
         options={{
-          title: 'People',      
-          tabBarIcon: ({ focused }) => <Ionicons name={focused ? "people-sharp" : "people-outline"} size={24} color="black" />   
+          title: 'Kontakter',      
+          tabBarIcon: ({ focused }) => <Ionicons name={focused ? "medkit" : "medkit-outline"} size={24} color="black" />   
         }}
       />
        <Tabs.Screen
         name="empty"
         options={{
-          title: 'Camera',      
+          title: 'Kamera',      
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "camera-sharp" : "camera-outline"} size={24} color="black" />   
         }}
         listeners={{
