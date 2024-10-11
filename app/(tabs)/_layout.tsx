@@ -4,8 +4,7 @@ import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function TabLayout() {
- 
-//<Ionicons name="camera-outline" size={24} color="black" />  <Ionicons name="people-outline" size={24} color="black" />  <Ionicons name="settings-outline" size={24} color="black" />  <Ionicons name="home-outline" size={24} color="black" />
+  
   return (
     <Tabs
       screenOptions={{
