@@ -22,9 +22,15 @@ const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
-  setUser(data);
-  console.log('Welcome back:', data)
-  router.push('/(tabs)')
+
+  if (data?.first_time) {
+    // Redirect to the special onboarding route thats only getting renderd once
+    router.push('/onboarding');  
+  } else {  
+    setUser(data);
+    console.log('Welcome back:', data)
+    router.push('/(tabs)')
+  }
 }
 
 const signIn = async (email: string, password: string) => {
@@ -32,7 +38,7 @@ const signIn = async (email: string, password: string) => {
     email: email,
     password: password,
   });
-  console.log('Welcome back:', data.user?.email)
+  
   if (error) return console.error(error)
   getUser(data.user.id);
   

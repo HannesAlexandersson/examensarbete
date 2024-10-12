@@ -3,6 +3,7 @@ export type User = {
   first_name: string;
   last_name: string;
   email: string;
+  first_time: boolean;
 };
 
 export type AuthContextType = {
