@@ -79,12 +79,12 @@ export default function() {
 const saveVideo = async() => {
   
   const formData = new FormData();
-  const fileName = videoUri?.split('/').pop();
+  const fileName = videoUri?.split('/').pop() || 'default-video-name.jpg';
   formData.append('file', {
     uri: videoUri,
     type: `video/${fileName?.split('.').pop()}`,
     name:fileName,
-  });
+  } as any);//as any to avoid type error, because it expects an blob but it works perfectly fine with the file object. So instead of converting it to blob and base64 and all that simply cast it as any.
 
   const { data, error } = await supabase.storage
     .from('videos')
@@ -98,7 +98,7 @@ const saveVideo = async() => {
   const { error: videoError } = await supabase.from('videos').insert({
     video_uri: data?.path,
     user_id: user?.id,
-    title: "",
+    title: "default-video-title",
   });
 
   if(videoError) console.error(videoError);
@@ -118,12 +118,12 @@ const takePhoto = async () => {
 //function to save the photo
 const savePhoto = async() => {
   const formData = new FormData();
-  const PicturefileName = photoUri?.split('/').pop();
+  const PicturefileName = photoUri?.split('/').pop() || 'default-picture-name.jpg';
   formData.append('file', {
     uri: photoUri,
     type: `image/${PicturefileName?.split('.').pop()}`,
     name: PicturefileName,
-  });
+  } as any);
   //save to bucket
   const { data, error } = await supabase.storage
     .from('pictures')
@@ -136,7 +136,7 @@ const savePhoto = async() => {
   const { error: photoError } = await supabase.from('Images').insert({
     image_uri: data?.path,
     user_id: user?.id,
-    title: "",
+    title: "default-image-title",
   });
   if(photoError) console.error(photoError);
 

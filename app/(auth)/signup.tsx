@@ -16,41 +16,7 @@ export default  function () {
   const [password, setPassword] = useState('');
 
 const { signUp } = useAuth();
-/* 
-  const handleSignup = async() => {
-    const trimmedEmail = email.trim();
-    const trimmedFirstname = firstname.trim();
-    const trimmedLastname = lastname.trim();
-    
 
-    const { data, error: signupError } = await supabase.auth.signUp({      
-       email: trimmedEmail,
-      password: password,
-    });
-    if (signupError) {
-      console.error('Signup error:', signupError.message);
-      return;
-    }
-    const { error: profileError } = await supabase
-    .from('profiles')
-    .insert([
-      {
-        id: data.user?.id,
-        first_name: trimmedFirstname,
-        last_name: trimmedLastname,
-        email: trimmedEmail,
-      },
-    ]);
-
-  if (profileError) {
-    console.error('Profile insertion error:', profileError.message);
-  } else {
-    console.log('Profile created:', data);
-    // Redirect to another page or show success message
-    router.back()
-      router.push('/(tabs)');
-    }
-  }; */
 
   return (
     <View className="flex-1 items-center justify-center  bg-black" >
@@ -89,7 +55,7 @@ const { signUp } = useAuth();
       </TouchableOpacity>
       
         <Text className='text-white'>Har du redan ett konto?</Text>
-        <Link className='text-blue-600' href="/(auth)/signup">Logga in</Link>
+        <Link className='text-blue-600' href="/(auth)/">Logga in</Link>
       
     </View>
   );

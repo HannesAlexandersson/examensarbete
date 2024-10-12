@@ -1,19 +1,21 @@
 import React from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
+import { User, AuthContextType } from '@/utils/types';
 
-export const AuthContext = React.createContext({
-  user: null,
-  signIn: async (email: string, password: string) => {},
-  signUp: async (firstname: string, lastname: string, email: string, password: string) => {},
-  signOut: async () => {},
-});
+export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
-export const useAuth = () => React.useContext(AuthContext);
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
 //the user object is created here and used all over the app with the context
-const [user, setUser] = React.useState(null);
+const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 
 const getUser = async (id: string) => {
