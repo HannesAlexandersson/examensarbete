@@ -6,11 +6,10 @@ module.exports = {
       fontFamily: {
         roboto: ['Roboto', 'sans-serif'],
       },
-    },
-    colors: {
-      vgrBlue: '#006198',
-    },
-    
+      colors: {
+        vgrBlue: '#005b89',
+      },
+    },    
   }, 
 }
 
