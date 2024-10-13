@@ -12,6 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "fonts": {
+      "Roboto": "./assets/fonts/Roboto/Roboto-Regular.ttf" 
+    },
     "ios": {
       "supportsTablet": true
     },

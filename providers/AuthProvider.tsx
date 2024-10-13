@@ -18,12 +18,15 @@ export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 
+const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
+
 const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
   if (data?.first_time) {
+    setUser(data);
     // Redirect to the special onboarding route thats only getting renderd once
     router.push('/onboarding');  
   } else {  
@@ -95,6 +98,6 @@ React.useEffect(() => {
 }, []);
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp}}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, setSelectedOption }}>{children}</AuthContext.Provider>
 
 }
