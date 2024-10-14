@@ -1,10 +1,23 @@
+import { Image } from "react-native-reanimated/lib/typescript/Animated";
+
 export type User = {
-  id: string;
+  id: string | null;
   first_name: string;
   last_name: string;
   email: string;
   first_time: boolean;
-  selected_option: string | null;
+  selected_option: string | null;  
+  avatar_url?: string | null;  
+  description?: string;
+  date_of_birth?: Date | null;
+};
+
+export type EventSource = {
+  id: number;
+  date: string;
+  type: string;
+  title: string;
+  icon: Image;
 };
 
 export type AuthContextType = {
@@ -13,7 +26,9 @@ export type AuthContextType = {
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   selectedOption: number | null;
+  userAge: number | null;
   setSelectedOption: (option: number | null) => void;
+  editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string) => Promise<void>;
 };
 
 export type OnboardingText = {

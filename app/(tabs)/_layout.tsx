@@ -9,7 +9,17 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#000',
-        headerShown: false,
+        headerShown: true,
+        headerTitleAlign: 'center',
+        headerTitleStyle: {
+          color: 'white',
+          fontSize: 30,
+          fontWeight: 'bold',
+          fontFamily: 'Roboto',              
+        },
+        headerBackground: () => (
+          <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#005b89' }} />
+        ),
       }}>
       <Tabs.Screen
         name="index"
