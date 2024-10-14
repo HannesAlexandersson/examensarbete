@@ -26,6 +26,10 @@ const getUser = async (id: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
+  if (data?.date_of_birth) {
+    data.date_of_birth = new Date(data.date_of_birth);
+  }
+
   if (data?.first_time) {    
     setUser(data);
     // Redirect to the special onboarding route thats only getting renderd once

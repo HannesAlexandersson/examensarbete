@@ -79,13 +79,11 @@ export default function EditProfile() {
     }
   };
 
-  const handleSave = () => {    
+  const handleSave = () => {     
     editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription);
     alert('Din profil är uppdaterad');
     router.back();
-  };
-
-  
+  };  
 
   return (
   <ScrollView className=" bg-vgrBlue">
@@ -116,7 +114,9 @@ export default function EditProfile() {
         
         <Text className='text-white text-md w-full text-left font-roboto'>Födelsedatum</Text>
         <TouchableOpacity onPress={() => setShowDatePicker(true)} className='bg-white rounded-lg p-4 mb-4 w-full'>
-          <Text className='text-black'>{dateOfBirth.toLocaleDateString()}</Text>
+          <Text className='text-black'>
+          {dateOfBirth.toLocaleDateString()}
+          </Text>
         </TouchableOpacity>
         
 
@@ -142,8 +142,11 @@ export default function EditProfile() {
             {image ? (
               <Image source={{ uri: image }} className="w-24 h-24 rounded-full mb-4" />
             ) : (
-              <Image source={{ uri: userAvatar }} className="w-24 h-24 rounded-full mb-4" />
-            )}
+              userAvatar ? (
+                <Image source={{ uri: userAvatar }} className="w-24 h-24 rounded-full mb-4" />
+              ) : (
+              <View className='w-24 h-24 bg-gray-200 rounded-full mb-4' />
+            ))}
 
             <View className='flex flex-row gap-2 justify-center items-center w-full'>
               <TouchableOpacity onPress={pickImage} className='bg-white rounded-lg p-2 mb-4'>
