@@ -9,7 +9,7 @@ export type User = {
   selected_option: string | null;  
   avatar_url?: string | null;  
   description?: string;
-  date_of_birth?: Date | null;
+  date_of_birth?: Date | null;  
 };
 
 export type EventSource = {
@@ -29,6 +29,11 @@ export type AuthContextType = {
   userAge: number | null;
   userAvatar: string | null;
   setSelectedOption: (option: number | null) => void;
+  userMediaFiles: ({ file }: { file: string; }) => string | null
+  selectedMediaFile: string | null;
+  setSelectedMediaFile: (file: string | null) => void;
+  getPhotoForAvatar?: boolean;
+  setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string) => Promise<void>;
 };
 

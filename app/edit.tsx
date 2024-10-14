@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 
 export default function EditProfile() {
-  const { user, editUser, userAvatar } = useAuth();
+  const { user, editUser, userAvatar, setGetPhotoForAvatar, getPhotoForAvatar, selectedMediaFile, setSelectedMediaFile } = useAuth();
   const [id, setId] = useState(user?.id || '');
   const [firstName, setFirstName] = useState(user?.first_name || '');
   const [lastName, setLastName] = useState(user?.last_name || '');
@@ -85,6 +85,29 @@ export default function EditProfile() {
     router.back();
   };  
 
+  const handleToAlbum = () => {
+    setGetPhotoForAvatar(true);
+    router.push('/album?source=edit');
+  };
+
+  useEffect(() => {
+    if (getPhotoForAvatar) {      
+      if (selectedMediaFile){
+        setAvatarUrl(selectedMediaFile);
+      }
+      setImage(selectedMediaFile);
+    }
+  }, [selectedMediaFile, getPhotoForAvatar]);
+
+  const handleRegret = () => {
+    setAvatarUrl(user?.avatar_url || '');
+    setImage(user?.avatar_url || '');
+    setSelectedMediaFile(null);
+    setGetPhotoForAvatar(false);
+
+    router.back();
+  };
+
   return (
   <ScrollView className=" bg-vgrBlue">
     <View className='flex-1 items-center justify-center'>
@@ -148,19 +171,24 @@ export default function EditProfile() {
               <View className='w-24 h-24 bg-gray-200 rounded-full mb-4' />
             ))}
 
-            <View className='flex flex-row gap-2 justify-center items-center w-full'>
+            <View className='flex flex-row gap-2 justify-center items-center mb-4 w-full'>
+              <TouchableOpacity onPress={handleToAlbum} className='bg-white rounded-lg p-2 mb-4'>
+                <Text className='text-vgrBlue'>Album</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={pickImage} className='bg-white rounded-lg p-2 mb-4'>
-                <Text className='text-vgrBlue'>Välj bild från album</Text>
+                <Text className='text-vgrBlue'>Telefonbilder</Text>
               </TouchableOpacity>
 
             
               <TouchableOpacity onPress={takePicture} className='bg-white rounded-lg p-2 mb-4'>
-                <Text className='text-vgrBlue'>Ta nytt foto</Text>
+                <Text className='text-vgrBlue'>Nytt foto</Text>
               </TouchableOpacity>
 
             </View>
+
             <View className='flex flex-row gap-6 justify-center items-center w-full'>
-              <TouchableOpacity className='mb-4' onPress={() => router.back()}>
+              <TouchableOpacity className='mb-4' onPress={handleRegret}>
                 <Text className='bg-white rounded py-2 px-4 font-bold text-lg text-vgrBlue'>Ångra</Text>
               </TouchableOpacity>
               <TouchableOpacity className='mb-4' onPress={handleSave}>

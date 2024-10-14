@@ -55,11 +55,14 @@ export default function AccountScreen() {
           <Ionicons name="book-outline" size={24} color="black" />
           <Text className='text-black font-normal font-roboto text-xl text-center'>Min dagbok</Text>
         </TouchableOpacity>
-          <TouchableOpacity className='bg-white border border-gray-400 w-full  rounded-lg px-4 py-2 items-center' onPress={handleQuestions}>
+        <TouchableOpacity className='bg-white border border-gray-400 w-full  rounded-lg px-4 py-2 items-center' onPress={handleQuestions}>
           <MaterialCommunityIcons name="chat-question-outline" size={24} color="black" />
-        <Text className='text-black font-normal font-roboto text-xl text-center'>Mina frågor</Text>
+          <Text className='text-black font-normal font-roboto text-xl text-center'>Mina frågor</Text>
         </TouchableOpacity>
-        
+        <TouchableOpacity className='bg-white border border-gray-400 w-full  rounded-lg px-4 py-2 items-center' onPress={() => router.push('/album')}>
+          <MaterialCommunityIcons name="image-album" size={24} color="black" />
+          <Text className='text-black font-normal font-roboto text-xl text-center'>Mitt album</Text>
+        </TouchableOpacity>        
       </View>
       <TouchableOpacity className='bg-black rounded-lg px-4 py-2' onPress={signOut}>
         <Text className='text-white font-bold text-3xl'>Logga ut</Text>

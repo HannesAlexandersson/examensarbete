@@ -20,6 +20,8 @@ const router = useRouter();
 const [userAge, setUserAge] = React.useState<number | null>(null);
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
+const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
+const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 
 const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
@@ -184,9 +186,14 @@ useEffect(() => {
   const age = today.getFullYear() - birthDate.getFullYear();
   setUserAge(age);
   }
-console.log(userAge);
 }, [user?.date_of_birth]);
+
+const userMediaFiles = ({ file }: {file: string}) => {  
+    setSelectedMediaFile(file);
+    return file;  
+}
+
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar  }}>{children}</AuthContext.Provider>
 
 }

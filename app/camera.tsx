@@ -178,6 +178,12 @@ return (
             <TouchableOpacity onPress={toggleFlashMode}>
               {renderFlashIcon()}
             </TouchableOpacity>
+            
+          </View>
+          <View className='absolute top-10 right-0 pr-4'>
+            <TouchableOpacity onPress={() => router.push('/album')}>
+              <Ionicons name="albums-outline" size={34} color="white" />
+            </TouchableOpacity>
           </View>
           <View className='flex-row items-center justify-around mb-10'>
            {/*Conditional rendering of the camera mode buttons */ }
