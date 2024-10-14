@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Text, View, Image, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { router } from 'expo-router';
@@ -9,15 +9,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const { user, userAvatar } = useAuth();
+  
   const [events, setEvents] = useState<EventSource[]>([]);
 
-  useEffect(() => {
-    if (user?.avatar_url) {
-      setAvatar(user.avatar_url);
-    }
-  }, [user]);
 
   const handleDiary = () => {
     router.push('/diary');
@@ -32,15 +27,15 @@ export default function HomeScreen() {
     <View className="flex-1 items-center justify-start gap-4 bg-slate-100">
       <View className='flex flex-row justify-between items-end w-full px-5 pt-12'>
         <Text className="font-normal font-roboto text-[22px] text-black" >Hej {user?.first_name}!</Text>
-        {avatar && (
+        {userAvatar && (
         <View className='flex items-center justify-center'>
           <Image 
-            source={{ uri: avatar }}
+            source={{ uri: userAvatar }}
             className="w-11 h-12 rounded-full"
           />
         </View>
         )}
-        {!avatar && (
+        {!userAvatar && (
           <View className='flex items-center justify-center'>
             <Image 
               source={require('@/assets/images/default_avatar.png')}

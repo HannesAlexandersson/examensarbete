@@ -27,6 +27,7 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   selectedOption: number | null;
   userAge: number | null;
+  userAvatar: string | null;
   setSelectedOption: (option: number | null) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string) => Promise<void>;
 };

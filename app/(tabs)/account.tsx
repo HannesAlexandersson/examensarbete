@@ -10,16 +10,8 @@ import { router } from 'expo-router';
 
 
 export default function AccountScreen() {
-  const { user, signOut, userAge } = useAuth();
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const { user, signOut, userAge, userAvatar } = useAuth();
   
-
-  useEffect(() => {
-    if (user?.avatar_url) {
-      setAvatar(user.avatar_url);
-    }
-  }, [user]);
-
   const handleQuestions = () => {
     alert('Välj en vårdkontakt för att ställa en fråga');
     router.push('/people');
@@ -36,15 +28,15 @@ export default function AccountScreen() {
           <Text className="font-normal font-roboto text-[16px] text-black" >{user?.description}</Text>
         </View>
         <View className='w-1/2 flex flex-col gap-2 items-center justify-center'>
-          {avatar && (
+          {userAvatar && (
             <View className='flex items-center justify-center'>
               <Image 
-                source={{ uri: avatar }}
+                source={{ uri: userAvatar }}
                 className="w-16 h-20 rounded-full"
               />
             </View>
           )}
-          {!avatar && (
+          {!userAvatar && (
             <View className='flex items-center justify-center'>
               <Image 
                 source={require('@/assets/images/default_avatar.png')}

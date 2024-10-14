@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 
 export default function EditProfile() {
-  const { user, editUser } = useAuth();
+  const { user, editUser, userAvatar } = useAuth();
   const [id, setId] = useState(user?.id || '');
   const [firstName, setFirstName] = useState(user?.first_name || '');
   const [lastName, setLastName] = useState(user?.last_name || '');
@@ -79,8 +79,7 @@ export default function EditProfile() {
     }
   };
 
-  const handleSave = () => {   
-    
+  const handleSave = () => {    
     editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription);
     alert('Din profil är uppdaterad');
     router.back();
@@ -143,7 +142,7 @@ export default function EditProfile() {
             {image ? (
               <Image source={{ uri: image }} className="w-24 h-24 rounded-full mb-4" />
             ) : (
-              <View className='w-24 h-24 bg-gray-200 rounded-full mb-4' />
+              <Image source={{ uri: userAvatar }} className="w-24 h-24 rounded-full mb-4" />
             )}
 
             <View className='flex flex-row gap-2 justify-center items-center w-full'>

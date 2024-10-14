@@ -18,6 +18,7 @@ export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 const [userAge, setUserAge] = React.useState<number | null>(null);
+const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
 
 const getUser = async (id: string) => {
@@ -30,10 +31,33 @@ const getUser = async (id: string) => {
     // Redirect to the special onboarding route thats only getting renderd once
     router.push('/onboarding');  
   } else {
-    setUser(data);    
-    router.push('/(tabs)')
+    // Fetch avatar if the avatar_url exists
+    if (data.avatar_url) {
+      const { data: avatarData, error: avatarError } = await supabase.storage
+        .from('avatars')
+        .download(data.avatar_url);
+
+      if (avatarError) {
+        console.error('Error downloading avatar:', avatarError);
+        return;
+      }
+      
+      // Read the blob data as a base64 string
+      const reader = new FileReader();
+      reader.onloadend = () => {        
+        if (typeof reader.result === 'string') {
+          setUserAvatar(reader.result); //set the user avatar to the avatar state
+        } else {
+          console.error('Unexpected result type:', typeof reader.result);
+        }
+      };
+      reader.readAsDataURL(avatarData); 
+    }
+
+    setUser(data);
+    router.push('/(tabs)');
   }
-}
+};
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -159,6 +183,6 @@ useEffect(() => {
 console.log(userAge);
 }, [user?.date_of_birth]);
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, setSelectedOption, editUser, userAge }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge }}>{children}</AuthContext.Provider>
 
 }
