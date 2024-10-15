@@ -5,9 +5,7 @@ import { Button, Text, View, TouchableOpacity } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'expo-router';
-
-
-type CameraMode = 'picture' | 'video';
+import { CameraMode } from '@/utils/types';
 
 export default function() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -33,17 +31,17 @@ export default function() {
   };
 
   useEffect(() => {
-    // Check permissions when the component mounts
+    //check permissions on mount
     handlePermission();
   }, []);
 
   if (!permission) {
-    // Camera permissions are still loading.
+    //camera permissions are still loading.
     return <View />;
   }
 
   if (!permission.granted && !micPermission?.granted) {
-    // Camera permissions are not granted yet.
+    //camera permissions are not granted yet.
     return (
       <View className='flex-1 justifyContent-center'>
         <Text className='text-center pb-10'>Du måste ge appen tillåtelse att använda kameran för att ta kort</Text>
@@ -53,12 +51,12 @@ export default function() {
   }
 
   
-
+  //toggle between front and back camera
   function toggleCameraFacing() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
 
-  // Function to toggle between photo and video modes
+  //toggle between photo and video modes
   const toggleCameraMode = () => {
     setType((prevType) => (prevType === 'picture' ? 'video' : 'picture' as CameraMode));
   };  
@@ -75,7 +73,7 @@ export default function() {
     }
   }
 
-//function to save the video in the supabase bucket
+//save the video in the supabase bucket
 const saveVideo = async() => {
   
   const formData = new FormData();
@@ -115,7 +113,7 @@ const takePhoto = async () => {
   }   
 };
 
-//function to save the photo
+//save the photo
 const savePhoto = async() => {
   const formData = new FormData();
   const PicturefileName = photoUri?.split('/').pop() || 'default-picture-name.jpg';
@@ -163,6 +161,7 @@ const renderFlashIcon = () => {
   }
 };
 
+//if the user doenst want to save the media, cleanse all the states
 const discardMedia = () => {
   setVideoUri(undefined);
   setPhotoUri(undefined);
@@ -170,8 +169,7 @@ const discardMedia = () => {
 };
 
 
-return (
-    
+return (    
       <CameraView mode={type} ref={cameraRef} style={{ flex: 1}} facing={facing}>
         <View className='flex-1 justify-end'>
           <View className='absolute top-10 left-0 pl-2'>
@@ -185,8 +183,7 @@ return (
               <Ionicons name="albums-outline" size={34} color="white" />
             </TouchableOpacity>
           </View>
-          <View className='flex-row items-center justify-around mb-10'>
-           {/*Conditional rendering of the camera mode buttons */ }
+          <View className='flex-row items-center justify-around mb-10'>           
           {type === 'picture' ? (            
             <TouchableOpacity className='items-end justify-end' onPress={toggleCameraMode}>
               <Ionicons name="videocam" size={50} color="white" />
@@ -196,7 +193,6 @@ return (
               <Ionicons name="camera-sharp" size={50} color="white" />
             </TouchableOpacity>
           )}
-          
           
           {type === 'video' ? ( 
             <>

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { getOnboardingText, getVersionDescriptions } from '@/utils/querys';
 import { OnboardingText, CheckmarkOptions, VersionDescriptions } from '@/utils/types';
-import RoundCheckmark from '@/components/Checkmark';
+import { Button, Typography, RoundCheckmark } from '@/components';
 
 
 export default function OnboardingScreen() {
@@ -46,7 +46,7 @@ export default function OnboardingScreen() {
   }
 
   if (error) {
-    return <Text>Error fetching data: {error.message}</Text>;
+    return <Typography variant='blue' weight='700' size='h1'>Error fetching data: {error.message}</Typography>;
   }
  
   //handle the "in component" navigation
@@ -75,9 +75,10 @@ export default function OnboardingScreen() {
 
   const handleForward = async() => {   
     if (selectedOption === null) {
-      alert('Please select a version.');
+      alert('Välj en version för att fortsätta');
       return;
     } 
+    //update the user profile with the selected version and set first_time to false
     const { data, error } = await supabase.from('profiles')
     .update({ first_time: false, selected_version: selectedOption })
     .eq('id', user?.id);
@@ -94,9 +95,9 @@ export default function OnboardingScreen() {
       {currentStep === 1 && (
         <View className="flex-1 justify-center items-center">
           {onboardingData.map((item) => (
-          <View key={item.position} className='flex-1 justify-center items-center px-4'>
-            <Text className='text-vgrBlue font-bold text-[17px] text-center uppercase mb-4  font-roboto'>{item.title}</Text>
-            <Text className='text-black font-normal text-center leading-5 text-[17px]  font-roboto'>{item.paragraph}</Text>           
+          <View key={item.position} className='flex-1 justify-center items-start px-4'>
+            <Typography variant='blue' weight='700' className='text-[17px] text-start uppercase mt-4'>{item.title}</Typography>
+            <Typography variant='black' weight='400' className='text-start leading-5 text-[17px] mt-4'>{item.paragraph}</Typography>           
           </View>
         ))}
         </View>
@@ -104,8 +105,8 @@ export default function OnboardingScreen() {
 
       {currentStep === 2 && (
         <View className="flex-1 justify-center items-center">
-          <Text className="font-normal text-xl text-black font-roboto">Välj version av appen</Text>
-          <Text className="font-light text-lg text-black font-roboto">Du kan byta version när du vill senare</Text>
+          <Typography variant='black' weight='500' size='lg'>Välj version av appen</Typography>
+          <Typography variant='black' weight='300'  className="text-lg">Du kan byta version när du vill senare</Typography>
           {options.map(option => (
             <RoundCheckmark
               key={option.id}
@@ -116,12 +117,12 @@ export default function OnboardingScreen() {
           ))}
           <View className="my-4 h-px w-[90%] bg-vgrBlue " />
           <View className='flex flex-col items-center justify-center w-[90%]'>
-            <Text className='font-normal italic text-[14px] mb-4 text-center w-[75%] font-roboto' >Versionerna är designade att passa barn mellan 5-18 år</Text>
-            <View className='flex flex-col gap-4 items-center justify-center w-[90%]'>
+            <Typography variant='black' weight='400' size='sm' className='italic mb-4 text-center w-[75%]' >Versionerna är designade att passa barn mellan 5-18 år</Typography>
+            <View className='flex flex-col gap-4 items-center justify-center w-[90%] mb-1'>
             {versionDescriptions.map((item) => (
               <View key={item.position} className='flex flex-row gap-2 w-full pr-10 items-start justify-start'>
-                <Text className='font-normal text-black italic text-[14px] font-roboto'>{item.version}</Text>
-                <Text className='font-light text-black italic text-[14px] text-start font-roboto'>{item.paragraph}</Text>
+                <Typography variant='black' weight='400' size='sm' className='italic'>{item.version}</Typography>
+                <Typography  variant='black' weight='300' size='sm' className='italic text-start'>{item.paragraph}</Typography>
               </View>
             ))}            
             </View>
@@ -135,12 +136,13 @@ export default function OnboardingScreen() {
       resizeMode="cover"
       className="flex flex-row items-center " 
     >
-      <TouchableOpacity
-            className="bg-white rounded-lg px-2 py-2 ml-4"
-            onPress={handleBack}
-          >
-            <Text className="text-vgrBlue text-lg font-bold font-roboto">Avsluta</Text>
-        </TouchableOpacity>
+      <Button
+        variant='white' size='sm'
+        className="ml-4"
+        onPress={handleBack}
+      >
+        <Typography variant='blue' weight='700' className="text-lg">Avsluta</Typography>
+      </Button>
       <Text className="text-white text-xl font-bold flex-1 text-center font-roboto">{currentStep}/2 sidor</Text>
       <TouchableOpacity onPress={handleNext} className='flex-row items-center mr-4'>
         <Ionicons name="arrow-forward-circle" size={50} color="white" />
@@ -158,12 +160,14 @@ export default function OnboardingScreen() {
           <Ionicons name="arrow-back-circle-sharp" size={50} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold flex-1 text-center font-roboto">{currentStep}/2 sidor</Text>
-        <TouchableOpacity
-            className="bg-white rounded-lg px-2 py-2 mr-4"
-            onPress={handleForward}
-          >
-            <Text className="text-vgrBlue text-lg font-bold font-roboto">Starta appen</Text>
-        </TouchableOpacity>
+        <Button
+          variant='white'
+          size='sm'
+          className="mr-4"
+          onPress={handleForward}
+        >
+          <Typography variant='blue' weight='700' className="text-lg">Starta appen</Typography>
+        </Button>
       </ImageBackground>
       )}
 

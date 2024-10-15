@@ -1,15 +1,14 @@
-import { Text, View, TouchableOpacity, TextInput, Image } from 'react-native';
-import { Link, useRouter } from 'expo-router'
+import { View, TextInput, Image } from 'react-native';
+import { Link } from 'expo-router'
 import React, { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
+import { Typography, Button } from '@/components';
 
 
 
 
 
-export default  function () {
-  const router = useRouter();
-  
+export default  function () {  
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [email, setEmail] = useState('');
@@ -27,38 +26,38 @@ const { signUp } = useAuth();
       />
       
       <View className='flex-1 items-center justify-center w-full p-4'>
-        <Text className="font-bold text-2xl text-white underline mb-4" >Skapa konto</Text>
+        <Typography variant="white" weight="700" className='text-2xl mb-4'>Skapa konto</Typography>
         <TextInput
             placeholder="Förnamn"
-            className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+            className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
             value={firstname}
             onChangeText={setFirstname}
           />
           <TextInput
             placeholder="Efternamn"
-            className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+            className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
             value={lastname}
             onChangeText={setLastname}
           />
           
           <TextInput
               placeholder="Email"
-              className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+              className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
               value={email}
               onChangeText={setEmail}
             />
             <TextInput
               secureTextEntry={true}          
               placeholder="Lösenord"
-              className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+              className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
               value={password}
               onChangeText={setPassword}
             />
-          <TouchableOpacity className='mb-4' onPress={() => signUp(firstname, lastname, email, password)}>
-            <Text className='bg-white rounded py-2 px-4 font-bold text-lg'>Skapa</Text>        
-          </TouchableOpacity>
+          <Button variant='white' size="md" className='mb-4 rounded' onPress={() => signUp(firstname, lastname, email, password)}>
+            <Typography variant='black' weight='700' className='text-lg'>Skapa</Typography>        
+          </Button>
         
-          <Text className='text-white'>Har du redan ett konto?</Text>
+          <Typography variant="white" size="md" className='mt-2'>Har du redan ett konto?</Typography>
           <Link className='text-blue-300 underline' href="/(auth)/">Logga in</Link>
         </View>
       

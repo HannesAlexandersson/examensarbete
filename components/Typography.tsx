@@ -13,13 +13,17 @@ const textSizes = {
   sm: 'text-[14px] ',
   md: 'text-[16px]',
   lg: 'text-center text-xl',
-  xl: 'text-center text-[22px]',  
+  xl: 'text-center text-[22px]',
+  h1: 'text-3xl mb-4',
+  h2: 'text-2xl mb-4',
+  h3: 'text-lg mb-4',
 }
 
 const fontWeight = {
   300: 'font-light',
   400: 'font-normal',
   500: 'font-medium',
+  600: 'font-semibold',
   700: 'font-bold',
 }
 

@@ -7,6 +7,7 @@ const buttonVariants = {
   black: 'bg-black border border-black',
   blue: 'bg-vgrBlue border border-vgrBlue',
   outlined: 'bg-white border border-black',
+  white: 'bg-white border border-white',
 };
 
 const buttonSizes = {

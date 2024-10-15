@@ -126,57 +126,78 @@ React.useEffect(() => {
   };
 }, []);
 
-const editUser = async (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string) => {
+const editUser = async (
+  id: string, 
+  firstname: string, 
+  lastname: string, 
+  email: string, 
+  dateOfBirth: Date, 
+  avatarUrl: string, 
+  userDescription: string
+) => {
+  //if there is no changes made to a property then dont update that property in the db
+  const updates: any = {};
+  if (firstname !== user?.first_name) updates.first_name = firstname;
+  if (lastname !== user?.last_name) updates.last_name = lastname;
+  if (email !== user?.email) updates.email = email;
+  if (dateOfBirth !== user?.date_of_birth) updates.date_of_birth = dateOfBirth;
+  if (userDescription !== user?.description) updates.description = userDescription;
+
+  //only upload avatar if the avatar URL has changed
+  if (avatarUrl && avatarUrl !== user?.avatar_url) {
   
-  // Function to save the photo
-  const saveAvatar = async () => {
-    const formData = new FormData();
-    const PicturefileName = avatarUrl?.split('/').pop() || 'default-avatar-name.jpg';
-    
-    formData.append('file', {
-      uri: avatarUrl,
-      type: `image/${PicturefileName?.split('.').pop()}`,
-      name: PicturefileName,
-    } as any);
+    //save the photo
+    const saveAvatar = async () => {
+      const formData = new FormData();
+      const PicturefileName = avatarUrl?.split('/').pop() || 'default-avatar-name.jpg';
+      
+      formData.append('file', {
+        uri: avatarUrl,
+        type: `image/${PicturefileName?.split('.').pop()}`,
+        name: PicturefileName,
+      } as any);
 
-    // Save to the avatar bucket
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(PicturefileName, formData, {
-        cacheControl: '3600000000',
-        upsert: false,
-      });
+      //save to the avatar bucket
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(PicturefileName, formData, {
+          cacheControl: '3600000000',
+          upsert: false,
+        });
 
-    if(error) console.error(error);
+      if (error) {
+        console.error(error);
+        return null;
+      }
 
-    return data?.path; // Return the path of the uploaded image
-  };
+      return data?.path; 
+    };
 
-  // If avatarUrl is provided, upload the image and get the new URL
-  if (avatarUrl) {
+    //upload the image and get the new URL from the storage   
     const uploadedImagePath = await saveAvatar();
     if (uploadedImagePath) {
-      avatarUrl = uploadedImagePath; // Update with new avatar URL
+      avatarUrl = uploadedImagePath; 
+    }    
+  }
+
+  //only update the database if there are changes
+  if (Object.keys(updates).length > 0) {
+    // Update the user profile in the database
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id);    
+
+    if (error) {
+      console.error('Profile update error:', error);
+      return;
     }
+
+    setUser(data); 
+    console.log('User updated');
+  } else {
+    console.log('No changes detected, skipping update.');
   }
-
-  // Update the user profile in the database
-  const { data, error } = await supabase.from('profiles').update({
-    first_name: firstname,
-    last_name: lastname,
-    email: email,
-    date_of_birth: dateOfBirth,
-    avatar_url: avatarUrl, // Use newAvatarUrl which might be updated
-    description: userDescription,
-  }).eq('id', id);
-
-  if (error) {
-    console.error('Profile update error:', error);
-    return;
-  }
-
-  setUser(data); 
-  console.log('User updated', data);
 };
 
 useEffect(() => {

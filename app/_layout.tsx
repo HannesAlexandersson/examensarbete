@@ -33,6 +33,7 @@ export default function RootLayout() {
         <Stack.Screen name="camera" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="edit" options={{ headerShown: false }} />
         <Stack.Screen name="album" options={{ 
+          presentation: 'modal',
           headerShown: true,
           title: 'ALBUM',
           headerTitleAlign: 'center',

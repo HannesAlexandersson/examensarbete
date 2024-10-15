@@ -1,15 +1,14 @@
-import { Text, View, TouchableOpacity, TextInput, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Image } from 'react-native';
 import { Link } from 'expo-router'
-import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import React from 'react';
+import { Typography, Button } from '@/components';
 
 
-export default function () {
-  /* const router = useRouter(); */
+
+export default function () {  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
 
   const { signIn } = useAuth();
 
@@ -22,25 +21,27 @@ export default function () {
       />
       
     <View className='flex-1 flex-col items-center justify-center w-full p-4'>
-      <Text className="font-bold text-2xl text-white mb-4" >Välkommen till Hälsokollen</Text>
+      <Typography weight='700' variant='white'  className="text-2xl mb-4" >
+        Välkommen till Hälsokollen
+      </Typography>
       <TextInput
           placeholder="Email"
-          className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+          className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
           value={email}
           onChangeText={setEmail}
         />
         <TextInput
           secureTextEntry={true}          
           placeholder="Lösenord"
-          className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'
+          className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
           value={password}
           onChangeText={setPassword}
         />
-        <TouchableOpacity className='mb-4' onPress={() => signIn(email, password)}>
-          <Text className='bg-white rounded py-2 px-4 font-bold text-lg'>Logga in</Text>        
-        </TouchableOpacity>
+        <Button variant="white" size="md" className='rounded' onPress={() => signIn(email, password)} >
+          <Typography variant='black' size='md' weight='700' className='text-lg' >Logga in</Typography>
+        </Button>       
       
-        <Text className='text-white'>Har du inget konto?</Text>
+        <Typography variant="white" size="md" className='mt-8'>Har du inget konto?</Typography>
         <Link className='text-blue-300 underline' href="/(auth)/signup">Skapa ett konto</Link>
       </View>
       

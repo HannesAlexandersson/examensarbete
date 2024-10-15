@@ -63,15 +63,17 @@ export type CheckmarkOptions = {
 export type TypographyProps = {
   children: React.ReactNode;
   variant?: 'black' | 'white' | 'blue';
-  weight?: '300' | '400' | '500' | '700';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  weight?: '300' | '400' | '500' | '600' | '700';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'h1' | 'h2' | 'h3';
   className?: string; 
 }
 
 export type ButtonProps = {
   children: React.ReactNode;
-  variant?: 'black' | 'blue' | 'outlined';  
+  variant?: 'black' | 'blue' | 'outlined' | 'white';  
   size?: 'sm' | 'md' | 'lg';
   className?: string; 
   onPress?: () => void;
 }
+
+export type CameraMode = 'picture' | 'video';
