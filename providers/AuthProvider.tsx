@@ -144,15 +144,21 @@ const editUser = async (
   if (dateOfBirth !== user?.date_of_birth) updates.date_of_birth = dateOfBirth;
   if (userDescription !== user?.description) updates.description = userDescription;
   if (selectedOption !== user?.selected_version) updates.selected_version = selectedOption;
+  if (avatarUrl !== user?.avatar_url) updates.avatar_url = avatarUrl;
 
   //only upload avatar if the avatar URL has changed
   if (avatarUrl && avatarUrl !== user?.avatar_url) {
+    // Move old avatar to the 'oictures' bucket instead of avatar buckets. 
+    if (user?.avatar_url) {
+      console.log('user avatar url:', user.avatar_url);
+      await moveAvatarToPictures(user.avatar_url);
+    }
+
   
     //save the photo
     const saveAvatar = async () => {
       const formData = new FormData();
-      const PicturefileName = avatarUrl?.split('/').pop() || 'default-avatar-name.jpg';
-      
+      const PicturefileName = avatarUrl?.split('/').pop() || 'default-avatar-name.jpg';      
       formData.append('file', {
         uri: avatarUrl,
         type: `image/${PicturefileName?.split('.').pop()}`,
@@ -178,7 +184,10 @@ const editUser = async (
     //upload the image and get the new URL from the storage   
     const uploadedImagePath = await saveAvatar();
     if (uploadedImagePath) {
-      avatarUrl = uploadedImagePath; 
+      const uploadedFileName = uploadedImagePath.split('/').pop();
+      avatarUrl = uploadedFileName as string; 
+      updates.avatar_url = avatarUrl;
+      console.log('uploadedImagePath:', avatarUrl);
     }    
   }
 
@@ -195,11 +204,33 @@ const editUser = async (
       return;
     }
 
-    setUser(data); 
+    await getUser(id);
     console.log('User updated');
   } else {
     console.log('No changes detected, skipping update.');
   }
+};
+
+// Function to move avatar to the "pictures" bucket
+const moveAvatarToPictures = async (oldAvatarUrl: string) => {
+  console.log('inside moveAvatarToPictures', oldAvatarUrl);
+
+  if (!oldAvatarUrl) {
+    console.error('Old avatar path is undefined or empty.');
+    return; // Handle the error case appropriately
+  }  
+
+  // Move the old avatar to the "pictures" bucket
+  const { data: moveData, error: moveError } = await supabase.storage
+  .from('avatars') // Source bucket
+  .move(oldAvatarUrl, `${oldAvatarUrl}`, {
+    destinationBucket: 'pictures' // Specify the destination bucket
+  });
+
+  if (moveError) {
+    console.error('Failed to copy avatar:', moveError);
+    return;
+  }  
 };
 
 useEffect(() => {

@@ -10,7 +10,7 @@ import { Typography, Button } from '@/components';
 
 export default function AccountScreen() {
   const { user, signOut, userAge, userAvatar } = useAuth();
-  
+  console.log(user);
   const handleQuestions = () => {
     alert('Välj en vårdkontakt för att ställa en fråga');
     router.push('/people');
