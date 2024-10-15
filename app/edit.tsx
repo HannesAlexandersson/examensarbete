@@ -10,7 +10,7 @@ import { Button, Typography } from '@/components';
 
 
 export default function EditProfile() {
-  const { user, editUser, userAvatar, setGetPhotoForAvatar, getPhotoForAvatar, selectedMediaFile, setSelectedMediaFile } = useAuth();
+  const { user, editUser, userAvatar, setGetPhotoForAvatar, getPhotoForAvatar, selectedMediaFile, setSelectedMediaFile, setSelectedOption, selectedOption } = useAuth();
   const [id, setId] = useState(user?.id || '');
   const [firstName, setFirstName] = useState(user?.first_name || '');
   const [lastName, setLastName] = useState(user?.last_name || '');
@@ -81,7 +81,7 @@ export default function EditProfile() {
   };
 
   const handleSave = () => {    
-    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription);
+    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption);
     alert('Din profil är uppdaterad');
     router.back();
   };  
@@ -109,10 +109,52 @@ export default function EditProfile() {
     router.back();
   };
 
+  
+  const setVersion = (v: number) => {
+    alert(`Versionen är ändrad till version ${v}. Vänligen starta om appen för att låta den nya versionen appliceras.`);
+    setSelectedOption(v);
+    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption);
+    router.back();
+  };
+
   return (
   <ScrollView className=" bg-vgrBlue">
     <View className='flex-1 items-center justify-center'>
       <View className='flex-1 items-center justify-center w-full p-4 pt-12'>
+        <Typography variant='white' weight='700' size='h2' className="underline mb-4">Byt version</Typography>
+        <View className='flex flex-row gap-2 justify-center items-center mb-4 w-full'>
+
+        {user?.selected_version === 1 ? (
+        <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 1')}>
+          <Typography variant='white'>Version 1</Typography>
+        </Button>
+        ) : (
+        <Button variant='white' size='md' onPress={() => setVersion(1)}>
+          <Typography variant='blue'>Version 1</Typography>
+        </Button>
+        )}
+
+        {user?.selected_version === 2 ? (
+        <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 2')}>
+          <Typography variant='white'>Version 2</Typography>
+        </Button>
+        ) : (
+        <Button variant='white' size='md' onPress={() => setVersion(2)}>
+          <Typography variant='blue'>Version 2</Typography>
+        </Button>
+        )}
+
+        {user?.selected_version === 3 ? (
+        <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 3')}>
+          <Typography variant='white'>Version 3</Typography>
+        </Button>
+        ) : (
+          <Button variant='white' size='md' onPress={() => setVersion(3)}>
+            <Typography variant='blue'>Version 3</Typography>
+          </Button>
+        )}
+
+        </View>
         <Typography variant='white' weight='700' size='h2' className="underline mb-4">Redigera Profil</Typography>
         <Typography variant='white' weight='300' size='sm' className='w-full text-left'>Ditt förnamn</Typography>
         <TextInput
@@ -153,7 +195,7 @@ export default function EditProfile() {
             onChange={handleDateChange}
           />
         )}
-        <Typography variant='white' weight='300' size='sm' className='w-full text-left'>Beskrivning</Typography>
+        <Typography variant='white' weight='300' size='sm' className='w-full text-left'>Beskrivning (max 180 bokstäver)</Typography>
         <TextInput
           placeholder="Beskriv dig själv"
           className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full'

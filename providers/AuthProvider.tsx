@@ -19,7 +19,7 @@ const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 const [userAge, setUserAge] = React.useState<number | null>(null);
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
-const [selectedOption, setSelectedOption] = React.useState<number | null>(null);
+const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 
@@ -60,7 +60,7 @@ const getUser = async (id: string) => {
       reader.readAsDataURL(avatarData); 
     }
 
-    setUser(data);
+    setUser(data);    
     router.push('/(tabs)');
   }
 };
@@ -133,7 +133,8 @@ const editUser = async (
   email: string, 
   dateOfBirth: Date, 
   avatarUrl: string, 
-  userDescription: string
+  userDescription: string,
+  selectedOption: number
 ) => {
   //if there is no changes made to a property then dont update that property in the db
   const updates: any = {};
@@ -142,6 +143,7 @@ const editUser = async (
   if (email !== user?.email) updates.email = email;
   if (dateOfBirth !== user?.date_of_birth) updates.date_of_birth = dateOfBirth;
   if (userDescription !== user?.description) updates.description = userDescription;
+  if (selectedOption !== user?.selected_version) updates.selected_version = selectedOption;
 
   //only upload avatar if the avatar URL has changed
   if (avatarUrl && avatarUrl !== user?.avatar_url) {
