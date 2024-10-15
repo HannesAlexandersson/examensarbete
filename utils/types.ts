@@ -59,3 +59,19 @@ export type CheckmarkOptions = {
   id: number;
   label: string;
 }
+
+export type TypographyProps = {
+  children: React.ReactNode;
+  variant?: 'black' | 'white' | 'blue';
+  weight?: '300' | '400' | '500' | '700';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string; 
+}
+
+export type ButtonProps = {
+  children: React.ReactNode;
+  variant?: 'black' | 'blue' | 'outlined';  
+  size?: 'sm' | 'md' | 'lg';
+  className?: string; 
+  onPress?: () => void;
+}
