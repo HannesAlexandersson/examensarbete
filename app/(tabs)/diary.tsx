@@ -18,9 +18,10 @@ export default function DiaryScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [drawing, setDrawing] = useState<string | null>(null); 
+  const [drawingPreview, setDrawingPreview] = useState<string | null>(null);
   const [isDrawingMode, setIsDrawingMode] = useState(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false); 
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
   useEffect(() => {
@@ -52,7 +53,8 @@ export default function DiaryScreen() {
   const handleSaveDrawing = (savedDrawing: any) => {
     console.log('Drawing saved');
     const base64ImageUri = `data:image/png;base64,${savedDrawing}`;
-    setDrawing(base64ImageUri);
+    setDrawingPreview(base64ImageUri);
+    setDrawing(savedDrawing);
   };
 
   // Function to handle form submission (saving post)
