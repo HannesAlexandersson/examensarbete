@@ -109,6 +109,7 @@ const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) return console.error(error);
   setUser(null);
+  setUserAvatar(null);
   router.push('/(auth)')
 };
 
