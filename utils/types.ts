@@ -120,4 +120,5 @@ export interface DrawProps {
   onSave: (drawing: string) => void; 
   strokeColor: string;
   strokeWidth: number;
+  onClose: () => void;
 }

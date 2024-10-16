@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
 import { Button, Typography } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
@@ -21,6 +21,12 @@ export default function DiaryScreen() {
   const [isDrawingMode, setIsDrawingMode] = useState(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false); 
+
+  //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
+  useEffect(() => {
+    setIsDrawingMode(false);
+    setIsModalVisible(false);
+  }, []);
   
 
   // Open Image Picker to select image or video
@@ -44,13 +50,15 @@ export default function DiaryScreen() {
 
   // Handle Drawing (Save the drawing to state)
   const handleSaveDrawing = (savedDrawing: any) => {
-    setDrawing(savedDrawing);
+    console.log('Drawing saved');
+    const base64ImageUri = `data:image/png;base64,${savedDrawing}`;
+    setDrawing(base64ImageUri);
   };
 
   // Function to handle form submission (saving post)
   const handleSavePost = () => {
     if (!postText && !selectedImage && !selectedVideo && !drawing) {
-      alert("Please add some content to save the post.");
+      alert("Du kan inte spara en tom post");
       return;
     }
   
@@ -154,12 +162,20 @@ export default function DiaryScreen() {
               {selectedVideo && <Text style={{ marginTop: 10 }}>Video added: {selectedVideo}</Text>}
 
               {isDrawingMode && (
+                <Modal
+                visible={isModalVisible}
+                transparent={false}
+                animationType="slide"
+                onRequestClose={() => setIsDrawingMode(false)}
+              >
                 <Draw
-                  style={{ width: 300, height: 200, backgroundColor: '#f0f0f0', marginTop: 10 }}
+                  style={{ height: '100%', width: '100%' }}
                   onSave={(drawing) => handleSaveDrawing(drawing)} // Save the drawing as a base64 string or image URI
                   strokeColor={'black'}
                   strokeWidth={5}
+                  onClose={() => setIsDrawingMode(false)}
                 />
+                </Modal>
               )}
               
               {/* Save Button */}
@@ -171,6 +187,13 @@ export default function DiaryScreen() {
               <Button variant='black' size='md' className='my-2 items-center' onPress={() => setIsModalVisible(false)}>
                 <Typography variant='white' weight='700' size='md'>Ångra</Typography>
               </Button>
+
+                {drawing &&
+                <View className='mt-2 items-center justify-center'>
+                  <Text >Förhandsgranskning:</Text>              
+                  <Image source={{ uri: drawing }} style={{ width: 100, height: 100, marginTop: 10, borderWidth: 1, borderColor: 'black' }} />
+                </View>
+                }
             </View>
           </View>
         </Modal>

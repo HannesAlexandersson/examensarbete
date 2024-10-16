@@ -1,27 +1,29 @@
 import { StatusBar } from "expo-status-bar";
-import React, {useState } from "react";
+import React, {useState, useRef } from "react";
+import { router } from 'expo-router';
 import {View, Dimensions, TouchableOpacity, StyleSheet } from "react-native";
 import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
 import {Canvas, Circle, Path, Skia, ImageSVG} from "@shopify/react-native-skia";
 import Animated, {useSharedValue, withTiming, useAnimatedStyle, withSpring} from "react-native-reanimated";
-import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { IPath, ICircle, IStamp, Tools, DrawProps } from "@/utils/types";
 
 
 
-const Draw: React.FC<DrawProps> = ({ style, onSave, strokeColor, strokeWidth }) =>{
+const Draw: React.FC<DrawProps> = ({ style, onSave, onClose, strokeColor, strokeWidth }) =>{
   const { width, height } = Dimensions.get("window");
 
-  const paletteColors = ["red", "green", "blue", "yellow"];
+  const paletteColors = ["red", "green", "blue", "yellow", "black"];
 
   const svgStar =
-    '<svg class="star-svg" version="1.1" ……………..></polygon></svg>';
+    '<svg class="star-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/2000/xlink" viewBox="0 0 200 200"><polygon id="star" fill="{{fillColor}}" points="100,0,129.38926261462365,59.54915028125263,195.10565162951536,69.09830056250526,147.55282581475768,115.45084971874736,158.77852522924732,180.90169943749473,100,150,41.2214747707527,180.90169943749476,52.447174185242325,115.45084971874738,4.894348370484636,69.09830056250527,70.61073738537632,59.549150281252636"></polygon></svg>';
 
   const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
   const [activeTool, setActiveTool] = useState<Tools>(Tools.Pencil);
   const [paths, setPaths] = useState<IPath[]>([]);
   const [circles, setCircles] = useState<ICircle[]>([]);
   const [stamps, setStamps] = useState<IStamp[]>([]);
+  const canvasRef = useRef<any>(null);
 
 
   const pan = Gesture.Pan()
@@ -55,7 +57,7 @@ const Draw: React.FC<DrawProps> = ({ style, onSave, strokeColor, strokeWidth }) 
     })
     .minDistance(1);
 
-    const tap = Gesture.Tap()
+  const tap = Gesture.Tap()
     .runOnJS(true)
     .onStart((g) => {
       if (activeTool === Tools.Stamp) {
@@ -93,13 +95,41 @@ const Draw: React.FC<DrawProps> = ({ style, onSave, strokeColor, strokeWidth }) 
     };
   });
 
+  const saveCanvas = async () => {
+    try {
+      if (!canvasRef.current) {
+        console.log('Canvas ref is null');
+        return;
+      }
+  
+      // Take a snapshot of the current canvas state
+      const snapshot = canvasRef.current.makeImageSnapshot();  // Use correct method
+      
+      if (!snapshot) {
+        console.log('Snapshot creation failed');
+        return;
+      }
+      
+      const base64Image = snapshot.encodeToBase64(); 
+  
+      if (base64Image) {
+        console.log('Base64 Image:', base64Image); // Optional, just for checking
+        onSave(base64Image); // Pass the base64 string to the parent component
+      }
+  
+      onClose();  
+    } catch (error) {
+      console.error('Error saving canvas:', error);  // Log any error that occurs
+    }
+  };
+
   return (
     <>
       <GestureHandlerRootView>
-        <View style={{ height, width }}>
+        <View style={style}>
           <GestureDetector gesture={tap}>
             <GestureDetector gesture={pan}>
-              <Canvas style={{ flex: 8 }}>
+              <Canvas ref={canvasRef} style={{ flex: 8 }}>
                 {circles.map((c, index) => (
                   <Circle key={index} cx={c.x} cy={c.y} r={10} />
                 ))}
@@ -197,6 +227,12 @@ const Draw: React.FC<DrawProps> = ({ style, onSave, strokeColor, strokeWidth }) 
                     </TouchableOpacity>
                   )}
                 </View>
+                <TouchableOpacity onPress={() => {                  
+                  saveCanvas();
+                }}>
+
+                  <MaterialIcons name="save-alt" size={40} color="black" />
+                </TouchableOpacity>
                 <TouchableOpacity onPress={clearCanvas}>
                   <Ionicons
                     name="trash-outline"
