@@ -12,12 +12,20 @@ import { Button, Typography, RoundCheckmark } from '@/components';
 export default function OnboardingScreen() {
   const { user, selectedOption, setSelectedOption } = useAuth();
   const router = useRouter();  
-
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingText[]>([]);
   const [versionDescriptions, setVersionDescriptions] = useState<VersionDescriptions[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  //if the user backtracks, we dont want them to see the onboarding again
+  
+  useEffect(() => {
+    if (user?.first_time === false) {
+      router.push('/(tabs)');
+    }
+  }, [user?.first_time]);
 
   //Fetch the textdata from the CMS
   useEffect(() => {
@@ -85,7 +93,7 @@ export default function OnboardingScreen() {
 
     if (error) return console.error(error);
   
-    router.push('/(tabs)');
+    router.push('/(tabs)');    
   };
 
 
