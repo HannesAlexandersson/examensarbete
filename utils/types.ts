@@ -87,11 +87,12 @@ export type AuthStackParamList = {
 };
 
 export interface DiaryEntry {
+  titel: string;
   text: string;
   image?: string | null;
   video?: string | null;
   drawing?: string | null;
-  date?: Date;
+  date?: Date ;
 }
 
 export interface IPath {

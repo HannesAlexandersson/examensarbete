@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
 import { Button, Typography } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -13,6 +13,7 @@ export default function DiaryScreen() {
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null); 
   const [loadedAll, setLoadedAll] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [postTitel, setPostTitel] = useState('');
   const [postText, setPostText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export default function DiaryScreen() {
   const [isDrawingMode, setIsDrawingMode] = useState(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false); 
-  console.log('date', selectedDate);
+  
 
   // Open Image Picker to select image or video
   const pickImageOrVideo = async () => {
@@ -55,11 +56,12 @@ export default function DiaryScreen() {
   
     // Save the post to the diary, including text, image, video, drawing, and date
     const newEntry = {
+      titel: postTitel,
       text: postText,
       image: selectedImage,
       video: selectedVideo,
       drawing: drawing,
-      date: selectedDate,  // Save the selected date
+      date: selectedDate,  
     };
   
     // Save to diary
@@ -70,7 +72,7 @@ export default function DiaryScreen() {
     setSelectedImage(null);
     setSelectedVideo(null);
     setDrawing(null);
-    setSelectedDate(new Date());  // Reset the date to current date
+    setSelectedDate(new Date());
   
     // Close modal
     setIsModalVisible(false);
@@ -93,15 +95,17 @@ export default function DiaryScreen() {
           animationType="slide"
           onRequestClose={() => setIsModalVisible(false)}
         >
-          <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="flex-1 justify-center items-center bg-vgrBlue bg-opacity-50">
             <View className="flex-col bg-white w-4/5 p-6 rounded-lg">
-              <Typography variant='black' size='h3' weight='700'>Ny post</Typography>
-
-                <Button variant='black' size='sm' className='mb-4 w-full' onPress={() => setShowDatePicker(true)}>
-                  <Typography variant='white' weight='700' size='sm'>
+              <Typography variant='black' size='h3' weight='700'>Nytt dagboksinlägg</Typography>
+              <View className="flex-col justify-center items-start">
+                <Typography variant='black' size='sm' weight='400'>Välj datum för inlägget</Typography>
+                <Button variant='outlined' size='sm' className='mb-4 w-full rounded' onPress={() => setShowDatePicker(true)}>
+                  <Typography variant='black' weight='400' size='sm'>
                     {selectedDate ? selectedDate.toLocaleDateString() : 'Välj datum'}
                   </Typography>
                 </Button>
+              </View>
               <View className="flex-1 justify-center items-center">
 
                 {showDatePicker && (
@@ -111,14 +115,21 @@ export default function DiaryScreen() {
                     mode="date"
                     display="default"
                     onChange={(event, date) => {
-                      setShowDatePicker(false);  // Hide date picker after selection
+                      setShowDatePicker(false);
                       if (date) {
-                        setSelectedDate(date);   // Set the selected date
+                        setSelectedDate(date);
                       }
                     }}
                   />
                 )}
               </View>
+              <TextInput
+                style={{ borderColor: 'gray', borderWidth: 1, marginTop: 10, padding: 4, height: 40 }}
+                placeholder="Skriv titeln här..."
+                multiline={false}
+                value={postTitel}
+                onChangeText={setPostTitel}
+              />
               
               <TextInput
                 style={{ borderColor: 'gray', borderWidth: 1, marginTop: 10, padding: 8, height: 100 }}
@@ -130,10 +141,10 @@ export default function DiaryScreen() {
 
               {/* Media or Drawing Option */}
               <View className="flex flex-row justify-between mt-4">
-                <Button variant='black' size='sm' onPress={pickImageOrVideo}>
+                <Button variant='blue' size='sm' onPress={pickImageOrVideo}>
                   <Typography variant='white' weight='700' size='sm'>Lägg till Bild/Video</Typography>
                 </Button>
-                <Button variant='black' size='sm' onPress={() => setIsDrawingMode(true)}>
+                <Button variant='blue' size='sm' onPress={() => setIsDrawingMode(true)}>
                   <Typography variant='white' weight='700' size='sm'>Måla/teckna</Typography>
                 </Button>
               </View>
@@ -152,13 +163,13 @@ export default function DiaryScreen() {
               )}
               
               {/* Save Button */}
-              <Button variant='black' size='lg' className='my-4' onPress={handleSavePost}>
+              <Button variant='blue' size='lg' className='my-4 items-center' onPress={handleSavePost}>
                 <Typography variant='white' weight='700' size='md'>Spara post</Typography>
               </Button>
               
               {/* Close Modal Button */}
-              <Button variant='outlined' size='md' onPress={() => setIsModalVisible(false)}>
-                <Typography variant='black' weight='500' size='md'>Stäng</Typography>
+              <Button variant='black' size='md' className='my-2 items-center' onPress={() => setIsModalVisible(false)}>
+                <Typography variant='white' weight='700' size='md'>Ångra</Typography>
               </Button>
             </View>
           </View>
@@ -168,7 +179,11 @@ export default function DiaryScreen() {
         {diary?.map((entry, index) => (
           <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 mt-4'>
             <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
-            <Typography variant='black' size='sm'>{new Date(entry.date).toDateString()}</Typography>
+            {entry.date ? (
+              <Typography variant='black' size='sm'>{new Date(entry.date).toLocaleDateString()}</Typography>
+            ) : (
+              <Typography variant='black' size='sm'>Inget datum har angivits</Typography>
+            )}
             {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
             {entry.video && <Text>Video added: {entry.video}</Text>}
             {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />}
