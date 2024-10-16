@@ -1,4 +1,5 @@
 import { Image } from "react-native-reanimated/lib/typescript/Animated";
+import { StyleProp, ViewStyle } from "react-native";
 
 export type User = {
   id: string | null;
@@ -84,3 +85,37 @@ export type AuthStackParamList = {
 	Register: undefined;
 	ForgetPassword: undefined;
 };
+
+export interface DiaryEntry {
+  text: string;
+  image?: string | null;
+  video?: string | null;
+  drawing?: string | null;
+}
+
+export interface IPath {
+  segments: String[];
+  color?: string;
+}
+
+export interface ICircle {
+  x: number;
+  y: number;
+}
+export interface IStamp {
+  x: number;
+  y: number;
+  color: string;
+}
+
+export enum Tools {
+  Pencil,
+  Stamp,
+}
+
+export interface DrawProps {
+  style?: StyleProp<ViewStyle>; 
+  onSave: (drawing: string) => void; 
+  strokeColor: string;
+  strokeWidth: number;
+}
