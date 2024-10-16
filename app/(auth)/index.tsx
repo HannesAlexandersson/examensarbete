@@ -40,12 +40,13 @@ export default function () {
         <Button variant="white" size="md" className='rounded' onPress={() => signIn(email, password)} >
           <Typography variant='black' size='md' weight='700' className='text-lg' >Logga in</Typography>
         </Button>       
+
+        <Typography variant="white" size="md" className='mt-8'>Glömt lösenord?</Typography>
+        <Link className='text-blue-300 underline' href='/(auth)/forget' >Återställ lösenord</Link>
       
         <Typography variant="white" size="md" className='mt-8'>Har du inget konto?</Typography>
         <Link className='text-blue-300 underline' href="/(auth)/signup">Skapa ett konto</Link>
       </View>
-      
-      
     </View>
   );
 }

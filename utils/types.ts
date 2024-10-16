@@ -78,3 +78,9 @@ export type ButtonProps = {
 }
 
 export type CameraMode = 'picture' | 'video';
+
+export type AuthStackParamList = {
+	Login: undefined;
+	Register: undefined;
+	ForgetPassword: undefined;
+};
