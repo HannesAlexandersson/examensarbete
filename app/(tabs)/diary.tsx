@@ -47,23 +47,30 @@ export default function DiaryScreen() {
 
   // Function to handle form submission (saving post)
   const handleSavePost = () => {
-    // Here you would save the post to the diary, including text, image, video, or drawing
+    if (!postText && !selectedImage && !selectedVideo && !drawing) {
+      alert("Please add some content to save the post.");
+      return;
+    }
+  
+    // Save the post to the diary, including text, image, video, drawing, and date
     const newEntry = {
       text: postText,
       image: selectedImage,
       video: selectedVideo,
       drawing: drawing,
+      date: selectedDate,  // Save the selected date
     };
-    
-    // Save to diary (for example, appending it to an array)
+  
+    // Save to diary
     setDiary(prevDiary => [...(prevDiary || []), newEntry]);
-
+  
     // Reset modal fields
     setPostText('');
     setSelectedImage(null);
     setSelectedVideo(null);
     setDrawing(null);
-
+    setSelectedDate(new Date());  // Reset the date to current date
+  
     // Close modal
     setIsModalVisible(false);
   };
@@ -87,7 +94,29 @@ export default function DiaryScreen() {
         >
           <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
             <View className="bg-white w-4/5 p-6 rounded-lg">
-              <Typography variant='black' size='h3' weight='700'>Ny post</Typography>              
+              <Typography variant='black' size='h3' weight='700'>Ny post</Typography>
+
+              <View className="flex-1 justify-center items-center mt-4">
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                  <Typography variant='black' weight='700' size='md'>
+                    {selectedDate ? selectedDate.toDateString() : 'Välj ett datum'}
+                  </Typography>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, date) => {
+                      setShowDatePicker(false);  // Hide date picker after selection
+                      if (date) {
+                        setSelectedDate(date);   // Set the selected date
+                      }
+                    }}
+                  />
+                )}
+              </View>
               
               <TextInput
                 style={{ borderColor: 'gray', borderWidth: 1, marginTop: 10, padding: 8, height: 100 }}
