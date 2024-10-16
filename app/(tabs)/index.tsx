@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Text, View, Image, TouchableOpacity } from 'react-native';
+import { Text, View, Image, TouchableOpacity, Alert, BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/providers/AuthProvider';
 import { router } from 'expo-router';
 import { EventSource } from '@/utils/types';
@@ -10,9 +11,44 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 
 export default function HomeScreen() {
-  const { user, userAvatar } = useAuth();
-  
+  const { user, userAvatar } = useAuth();  
   const [events, setEvents] = useState<EventSource[]>([]);
+
+  // handle back button behavior
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (user?.first_time === false) {
+          // Show alert when back button is pressed
+          Alert.alert(
+            "VARNING! Du försöker återgå till processer du redan slutfört!",
+            "Du har redan slutfört onboarding processen, försöker du stänga av appen?",
+            [
+              {
+                text: "Nej, ta mig tillbaka till appen",
+                onPress: () => null, //do nothing IE stay on the home screen
+                style: "cancel"
+              },
+              {
+                text: "Ja, stäng av appen",
+                onPress: () => BackHandler.exitApp() //close the app
+              }
+            ],
+            { cancelable: false }
+          );
+          return true; 
+        }
+        return false;
+      };
+      
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      };
+    }, [user])
+  );
+
 
 
   const handleDiary = () => {

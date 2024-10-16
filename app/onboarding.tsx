@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TouchableOpacity, View, ImageBackground, ActivityIndicator, Alert, BackHandler } from 'react-native';
+import { Text, TouchableOpacity, View, ImageBackground, ActivityIndicator } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
@@ -12,7 +12,7 @@ import { Button, Typography, RoundCheckmark } from '@/components';
 export default function OnboardingScreen() {
   const { user, selectedOption, setSelectedOption } = useAuth();
   const router = useRouter();  
-
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingText[]>([]);
   const [versionDescriptions, setVersionDescriptions] = useState<VersionDescriptions[]>([]);
@@ -20,29 +20,13 @@ export default function OnboardingScreen() {
   const [error, setError] = useState<Error | null>(null);
 
   //if the user backtracks, we dont want them to see the onboarding again
-  useEffect(() => {
-    // Check if the user has already completed onboarding
-    if (user?.first_time === false) {
-      // confirmation dialog
-      Alert.alert(
-        "VARNING! Du försöker återgå till processer du redan slutfört!", 
-        "Du har redan slutfört onboarding processen, försöker du stänga av appen?", 
-        [
-          {
-            text: "Nej, ta mig tillbaka till appen",
-            onPress: () => router.push('/(tabs)'), // If the user selects "No", send them to the home screen
-            style: "cancel"
-          },
-          {
-            text: "Ja, stäng av appen",
-            onPress: () => BackHandler.exitApp() // Close the app if they select "Yes"
-          }
-        ],
-        { cancelable: false }
-      );
-    }
-  }, [user, router]);
   
+  useEffect(() => {
+    if (user?.first_time === false) {
+      router.push('/(tabs)');
+    }
+  }, [user?.first_time]);
+
   //Fetch the textdata from the CMS
   useEffect(() => {
     const fetchData = async () => {
@@ -109,7 +93,7 @@ export default function OnboardingScreen() {
 
     if (error) return console.error(error);
   
-    router.push('/(tabs)');
+    router.push('/(tabs)');    
   };
 
 
