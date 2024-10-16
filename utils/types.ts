@@ -91,6 +91,7 @@ export interface DiaryEntry {
   image?: string | null;
   video?: string | null;
   drawing?: string | null;
+  date?: Date;
 }
 
 export interface IPath {

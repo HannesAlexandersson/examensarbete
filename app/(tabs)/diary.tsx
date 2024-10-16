@@ -20,6 +20,7 @@ export default function DiaryScreen() {
   const [isDrawingMode, setIsDrawingMode] = useState(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false); 
+  console.log('date', selectedDate);
 
   // Open Image Picker to select image or video
   const pickImageOrVideo = async () => {
@@ -93,18 +94,19 @@ export default function DiaryScreen() {
           onRequestClose={() => setIsModalVisible(false)}
         >
           <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
-            <View className="bg-white w-4/5 p-6 rounded-lg">
+            <View className="flex-col bg-white w-4/5 p-6 rounded-lg">
               <Typography variant='black' size='h3' weight='700'>Ny post</Typography>
 
-              <View className="flex-1 justify-center items-center mt-4">
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Typography variant='black' weight='700' size='md'>
-                    {selectedDate ? selectedDate.toDateString() : 'Välj ett datum'}
+                <Button variant='black' size='sm' className='mb-4 w-full' onPress={() => setShowDatePicker(true)}>
+                  <Typography variant='white' weight='700' size='sm'>
+                    {selectedDate ? selectedDate.toLocaleDateString() : 'Välj datum'}
                   </Typography>
-                </TouchableOpacity>
+                </Button>
+              <View className="flex-1 justify-center items-center">
 
                 {showDatePicker && (
                   <DateTimePicker
+                  locale='sv-SE'
                     value={selectedDate}
                     mode="date"
                     display="default"
@@ -163,17 +165,15 @@ export default function DiaryScreen() {
         </Modal>
 
         {/* Display Diary Entries */}
-        <View className='flex flex-col items-center justify-center w-full px-4 bg-slate-200'>
-          <Typography variant='black' size='h3' weight='700' className="mt-4">Dina tidigare inlägg:</Typography>
-          {diary?.map((entry, index) => (
-            <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 mt-4'>
-              <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
-              {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
-              {entry.video && <Text>Video added: {entry.video}</Text>}
-              {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />}
-            </View>
-          ))}
-        </View>
+        {diary?.map((entry, index) => (
+          <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 mt-4'>
+            <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
+            <Typography variant='black' size='sm'>{new Date(entry.date).toDateString()}</Typography>
+            {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
+            {entry.video && <Text>Video added: {entry.video}</Text>}
+            {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />}
+          </View>
+        ))}
         
         {/* Load More/Show Fewer Button */}
         <View className='flex flex-col items-center justify-center px-4 w-full bg-vgrBlue'>
