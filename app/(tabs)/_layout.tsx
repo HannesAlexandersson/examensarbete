@@ -43,7 +43,7 @@ export default function TabLayout() {
           headerTitle: `${user?.first_name}s dagbok`,   
           tabBarIcon: () => 
           <View className="absolute">
-            <Ionicons name="add-circle" size={75} color="black" />   
+            <Ionicons name="add-circle" size={75} color="#005b89" />   
           </View>
         }}        
       />

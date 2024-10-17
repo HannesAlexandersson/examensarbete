@@ -32,12 +32,12 @@ export default function DiaryScreen() {
   useEffect(() => {
     setIsDrawingMode(false);
     setIsModalVisible(false);   
-    fetchUserEntries(); 
+    fetchUserEntries(true); 
   }, []);
 
   console.log('diary:', diary);
   //fetch the  diary entrys 
-  const fetchUserEntries = async () => {
+  const fetchUserEntries = async (limitEntries: boolean = true) => {
     //first check if user is logged in
     if (!user?.id) {
       console.error('User ID is missing');
@@ -46,10 +46,19 @@ export default function DiaryScreen() {
     
     try{
       
-      const {data: diaryEntries, error: diaryError} = await supabase
-        .from('diary_posts')
-        .select('*')
-        .eq('user_id', user.id);
+      /* const {data: diaryEntries, error: diaryError} = await supabase */
+      let query = supabase
+      .from('diary_posts')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('post_date', { ascending: false });
+        
+        
+      if (limitEntries) {
+        query = query.limit(3); // Change the number as needed
+      }
+
+      const { data: diaryEntries, error: diaryError } = await query;
 
       if (diaryError) {
         console.error('Error fetching diary posts:', diaryError);
@@ -323,7 +332,7 @@ export default function DiaryScreen() {
 
   return (
     <ScrollView>
-      <SafeAreaView className="flex-1 items-center justify-start">        
+      <SafeAreaView className="flex-1 items-center justify-start ">        
         
         <View className='flex flex-col items-center justify-center px-4 w-full bg-white'>
           <Button variant='blue' size='lg' className='my-4' onPress={() => setIsModalVisible(true)}>
@@ -457,11 +466,11 @@ export default function DiaryScreen() {
         
         <View className='flex flex-col items-center justify-center px-4 w-full bg-vgrBlue'>
           {!loadedAll ? (
-            <Button variant='outlined' size='lg' className='mt-4' onPress={() => console.log('Load more')}>
+            <Button variant='outlined' size='lg' className='my-4' onPress={() => fetchUserEntries(false)}>
               <Typography variant='black' weight='500' size='md'>Hämta alla inlägg</Typography>
             </Button>
           ) : (
-            <Button variant='outlined' size='lg' className='mt-4' onPress={() => console.log('Show fewer')}>
+            <Button variant='outlined' size='lg' className='my-4' onPress={() => fetchUserEntries(true)}>
               <Typography variant='black' weight='500' size='md'>Visa färre inlägg</Typography>
             </Button>
           )}
