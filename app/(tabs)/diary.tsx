@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system';
 import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
 import type { SkImage } from '@shopify/react-native-skia';
+import DisplayEntryMedia from '@/components/DisplayEntryMedia';
 
 
 export default function DiaryScreen() {
@@ -28,12 +29,17 @@ export default function DiaryScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  //state to remount the component
+  const [remountKey, setRemountKey] = useState(0);
+
   //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
   useEffect(() => {
     setIsDrawingMode(false);
     setIsModalVisible(false);   
     fetchUserEntries(true); 
-  }, []);
+  }, [remountKey]);
+
+  
   
   //fetch the  diary entrys 
   const fetchUserEntries = async (limitEntries: boolean = true) => {
@@ -50,7 +56,7 @@ export default function DiaryScreen() {
       .from('diary_posts')
       .select('*')
       .eq('user_id', user.id)
-      .order('post_date', { ascending: false });
+      .order('created_at', { ascending: false });//post_date or created_at
         
         
       if (limitEntries) {
@@ -168,7 +174,7 @@ export default function DiaryScreen() {
         encoding: FileSystem.EncodingType.Base64,
       });
       
-      console.log('File saved at:', fileUri);
+      
 
       // Create FilelikeObject
       const userDrawing: FilelikeObject = {
@@ -196,11 +202,10 @@ export default function DiaryScreen() {
     }
      
     const mediaUploads: DiaryMediaUpload[] = [];    
-    console.log('inside the save post function');
+   
 
     //only try to upload the media if there is any
-    if (drawing) {    
-      console.log('inside the drawing upload', drawing);
+    if (drawing) {          
       const drawingData = new FormData();     
       drawingData.append('file', {
       uri: drawing.uri,
@@ -325,6 +330,8 @@ export default function DiaryScreen() {
   setDrawingPreview(null);
   setSelectedDate(new Date());
 
+  /*  await fetchUserEntries(); */
+  setRemountKey((prevKey) => prevKey + 1);
   // Close modal
   setIsModalVisible(false);
 };
@@ -466,9 +473,10 @@ const fetchFewerEntries = async () => {
             ) : (
               <Typography variant='black' size='sm'>Inget datum har angivits</Typography>
             )}
-            {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
+            <DisplayEntryMedia entry={entry} />
+            {/* {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
             {entry.video && <Text>Video added: {entry.video}</Text>}
-            {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />}
+            {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />} */}
           </View>
         ))}
         
