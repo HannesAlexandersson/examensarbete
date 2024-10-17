@@ -1,5 +1,6 @@
 import { Image } from "react-native-reanimated/lib/typescript/Animated";
 import { StyleProp, ViewStyle } from "react-native";
+import { SkImage } from "@shopify/react-native-skia";
 
 export type User = {
   id: string | null;
@@ -117,11 +118,22 @@ export enum Tools {
 
 export interface DrawProps {
   style?: StyleProp<ViewStyle>; 
-  onSave: (drawing: string) => void; 
+  onSave: OnSaveFunction; 
   strokeColor: string;
   strokeWidth: number;
   onClose: () => void;
 }
+type OnSaveFunction = (drawing: SkImage) => void;
+
+
+export type FilelikeObject = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+
+
 
 export interface DiaryMediaUpload {
   type: string;

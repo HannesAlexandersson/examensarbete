@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
 import { Button, Typography } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { DiaryEntry, DiaryMediaUpload } from '@/utils/types';
-import { base64ToBlob } from '@/utils/utils';
+import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
+import * as FileSystem from 'expo-file-system';
 import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
+import type { SkImage } from '@shopify/react-native-skia';
 
 export default function DiaryScreen() {
   const { user } = useAuth(); 
@@ -19,7 +21,7 @@ export default function DiaryScreen() {
   const [postText, setPostText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [drawing, setDrawing] = useState<string | null>(null); 
+  const [drawing, setDrawing] = useState<FilelikeObject | null>(null); 
   const [drawingPreview, setDrawingPreview] = useState<string | null>(null);
   const [isDrawingMode, setIsDrawingMode] = useState(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -51,23 +53,40 @@ export default function DiaryScreen() {
     }
   };
 
+
   // Handle Drawing (Save the drawing to state)
-  const handleSaveDrawing = (savedDrawing: any) => {
-    console.log('Drawing saved');
-    const base64ImageUri = `data:image/png;base64,${savedDrawing}`;
-    setDrawingPreview(base64ImageUri);
+  const handleSaveDrawing = async (snapshot: SkImage) => {
+    try {
+      // Generate base64 for preview
+      const base64Image = snapshot.encodeToBase64();
+      const base64ImageUri = `data:image/png;base64,${base64Image}`;
+      setDrawingPreview(base64ImageUri);
 
-    // extract the base64 data from the image uri
-    const base64Data = base64ImageUri.split(',')[1];
-    
-    // Convert Base64 to Blob
-    const drawingBlob = base64ToBlob(base64ImageUri, 'image/png');
-    console.log('Drawing Blob:', drawingBlob);
-    //create a filename for the drawing
-    const drawingFileName = 'user-drawing-' + new Date().toISOString() + '.png';
-    
+      // Save file to device storage
+      const snapshotBytes = await snapshot.encodeToBytes();
+      const drawingFileName = `user-drawing-${new Date().toISOString()}.png`;
+      const fileUri = `${FileSystem.documentDirectory}${drawingFileName}`;
+      
+      // Write bytes directly to file
+      await FileSystem.writeAsStringAsync(fileUri, base64Image, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      console.log('File saved at:', fileUri);
 
-    /* setDrawing(drawingBlob); */
+      // Create FilelikeObject
+      const userDrawing: FilelikeObject = {
+        uri: Platform.OS === 'ios' ? fileUri.replace('file://', '') : fileUri,
+        name: drawingFileName,
+        type: 'image/png',
+      };
+      
+      setDrawing(userDrawing);
+
+      console.log('Drawing saved successfully');
+    } catch (error) {
+      console.error('Error saving drawing:', error);
+    }
   };
 
   // Function to handle form submission (saving post)
@@ -75,21 +94,26 @@ export default function DiaryScreen() {
     if (!postText && !selectedImage && !selectedVideo && !drawing) {
       alert("Du kan inte spara en tom post");
       return;
-    } 
+    } else if( !postTitel || !postText) {
+      alert("Du måste ange en titel och text för att spara ett inlägg");
+      return;
+    }
      
-    const mediaUploads: DiaryMediaUpload[] = [];
-console.log('inside the save post function');
+    const mediaUploads: DiaryMediaUpload[] = [];    
+    console.log('inside the save post function');
+
     //only try to upload the media if there is any
     if (drawing) {    
       console.log('inside the drawing upload', drawing);
-      const drawingData = new FormData();
-      const drawingFileName = drawing?.split('/').pop() || 'default-drawing-name.png';
-      console.log('drawingFileName:', drawingFileName);
+      const drawingData = new FormData();     
       drawingData.append('file', {
-      uri: drawing,
-      type: `image/${drawingFileName?.split('.').pop()}`,
-      name: drawingFileName,
+      uri: drawing.uri,
+      type: drawing.type,
+      name: drawing.name,
       } as any);
+
+      //generate a unique filename
+      const drawingFileName = `drawing-${Date.now()}.${drawing.name.split('.').pop()}`;
 
       //save to bucket
       const { data: drawingBucketData, error: drawingError } = await supabase
@@ -104,7 +128,7 @@ console.log('inside the save post function');
         console.error("Error uploading drawing:", drawingError);
       } else {
         //insert the url to the mediaUploads array
-        mediaUploads.push({ type: 'drawing_url', url: drawingBucketData?.path });
+        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
       }
     }
 
@@ -197,10 +221,12 @@ console.log('inside the save post function');
   setDiary(prevDiary => [...(prevDiary || []), newEntry]);
 
   // Reset modal fields
+  setPostTitel('');
   setPostText('');
   setSelectedImage(null);
   setSelectedVideo(null);
   setDrawing(null);
+  setDrawingPreview(null);
   setSelectedDate(new Date());
 
   // Close modal
@@ -291,7 +317,7 @@ console.log('inside the save post function');
               >
                 <Draw
                   style={{ height: '100%', width: '100%' }}
-                  onSave={(drawing) => handleSaveDrawing(drawing)}
+                  onSave={(snapshot) => handleSaveDrawing(snapshot)}
                   strokeColor={'black'}
                   strokeWidth={5}
                   onClose={() => setIsDrawingMode(false)}
@@ -312,7 +338,12 @@ console.log('inside the save post function');
                 {drawingPreview &&
                 <View className='mt-2 items-center justify-center'>
                   <Text >Förhandsgranskning:</Text>              
-                  <Image source={{ uri: drawingPreview }} style={{ width: 100, height: 100, marginTop: 10, borderWidth: 1, borderColor: 'black' }} />
+                  <Image 
+                    source={{ uri: drawingPreview }} 
+                    style={{ width: 100, height: 100, 
+                    marginTop: 10, borderWidth: 1, 
+                    borderColor: 'black' }} 
+                  />
                 </View>
                 }
             </View>

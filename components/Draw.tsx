@@ -1,12 +1,12 @@
 import { StatusBar } from "expo-status-bar";
 import React, {useState, useRef } from "react";
-import { router } from 'expo-router';
 import {View, Dimensions, TouchableOpacity, StyleSheet } from "react-native";
 import {Gesture, GestureDetector, GestureHandlerRootView} from "react-native-gesture-handler";
 import {Canvas, Circle, Path, Skia, ImageSVG} from "@shopify/react-native-skia";
 import Animated, {useSharedValue, withTiming, useAnimatedStyle, withSpring} from "react-native-reanimated";
 import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { IPath, ICircle, IStamp, Tools, DrawProps } from "@/utils/types";
+
 
 
 
@@ -100,28 +100,24 @@ const Draw: React.FC<DrawProps> = ({ style, onSave, onClose, strokeColor, stroke
       if (!canvasRef.current) {
         console.log('Canvas ref is null');
         return;
-      }
-  
+      }  
       // Take a snapshot of the current canvas state
-      const snapshot = canvasRef.current.makeImageSnapshot();  // Use correct method
+      const snapshot = canvasRef.current.makeImageSnapshot();
       
       if (!snapshot) {
         console.log('Snapshot creation failed');
         return;
       }
-      console.log('Snapshot:', snapshot);
-        console.log('Snapshot type:', typeof snapshot);
       
-      const base64Image = snapshot.encodeToBase64(); 
-  
-      if (base64Image) {
-        console.log('Base64 Image save'); 
-        onSave(base64Image); 
+      if (snapshot) {
+        console.log('Drawing File:', snapshot);
+        onSave(snapshot);
       }
   
-      onClose();  
+      // Close modal after saving the drawing
+      onClose();
     } catch (error) {
-      console.error('Error saving canvas:', error);  // Log any error that occurs
+      console.error('Error saving canvas:', error);
     }
   };
 
