@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system';
 import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
 import type { SkImage } from '@shopify/react-native-skia';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 export default function DiaryScreen() {
   const { user } = useAuth(); 
@@ -30,8 +31,95 @@ export default function DiaryScreen() {
   //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
   useEffect(() => {
     setIsDrawingMode(false);
-    setIsModalVisible(false);
+    setIsModalVisible(false);   
+    fetchUserEntries(); 
   }, []);
+
+  console.log('diary:', diary);
+  //fetch the  diary entrys 
+  const fetchUserEntries = async () => {
+    //first check if user is logged in
+    if (!user?.id) {
+      console.error('User ID is missing');
+      return;
+    }
+    
+    try{
+      
+      const {data: diaryEntries, error: diaryError} = await supabase
+        .from('diary_posts')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (diaryError) {
+        console.error('Error fetching diary posts:', diaryError);
+        return;
+      }
+
+      if (!diaryEntries || diaryEntries.length === 0) {
+        console.log('No diary posts found for this user.');
+        return;
+      }
+
+      // Map the database fields to the expected structure (DiaryEntry)
+    const formattedEntries: DiaryEntry[] = await Promise.all(
+      diaryEntries.map(async (entry: any) => {
+        
+        const mediaUrls = await getMediaFiles(entry);
+
+        return {
+          titel: entry.post_title,   
+          text: entry.post_text,   
+          image: mediaUrls.image || null,  
+          video: mediaUrls.video || null, 
+          drawing: mediaUrls.drawing || null, 
+          date: new Date(entry.post_date)  
+        };
+      })
+    );
+    
+      
+    //set the diary entrys to the state
+    setDiary(formattedEntries);   
+
+  }catch (error) {
+    console.error('Error fetching user images:', error);
+  } 
+}
+
+  const getMediaFiles = async (entry: DiaryEntry) => {
+    const mediaUrls: any = {
+      image: null,
+      video: null,
+      drawing: null,
+    };
+  
+    // Fetch image URL if exists
+    if (entry.image_url) {
+      const { data: imageUrl } = supabase.storage
+        .from('diary_media')
+        .getPublicUrl(entry.image_url);  // Use the actual field from the database
+      if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
+    }
+  
+    // Fetch video URL if exists
+    if (entry.video_url) {
+      const { data: videoUrl } = supabase.storage
+        .from('diary_media')
+        .getPublicUrl(entry.video_url);  // Use the actual field from the database
+      if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
+    }
+  
+    // Fetch drawing URL if exists
+    if (entry.drawing_url) {
+      const { data: drawingUrl } = supabase.storage
+        .from('diary_media')
+        .getPublicUrl(entry.drawing_url);  // Use the actual field from the database
+      if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
+    }
+  
+    return mediaUrls;
+}
   
 
   // Open Image Picker to select image or video
@@ -238,7 +326,7 @@ export default function DiaryScreen() {
       <SafeAreaView className="flex-1 items-center justify-start">        
         
         <View className='flex flex-col items-center justify-center px-4 w-full bg-white'>
-          <Button variant='black' size='lg' className='my-4' onPress={() => setIsModalVisible(true)}>
+          <Button variant='blue' size='lg' className='my-4' onPress={() => setIsModalVisible(true)}>
             <Typography variant='white' weight='700' size='md'>Skriv i dagboken</Typography>
           </Button>
         </View>
@@ -353,6 +441,7 @@ export default function DiaryScreen() {
         {/* Display Diary Entries */}
         {diary?.map((entry, index) => (
           <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 mt-4'>
+            <Typography variant='black' weight='700' size='md'>{entry.titel}</Typography>
             <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
             {entry.date ? (
               <Typography variant='black' size='sm'>{new Date(entry.date).toLocaleDateString()}</Typography>
