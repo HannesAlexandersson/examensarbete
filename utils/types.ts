@@ -122,3 +122,8 @@ export interface DrawProps {
   strokeWidth: number;
   onClose: () => void;
 }
+
+export interface DiaryMediaUpload {
+  type: string;
+  url: string;
+}

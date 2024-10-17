@@ -109,12 +109,14 @@ const Draw: React.FC<DrawProps> = ({ style, onSave, onClose, strokeColor, stroke
         console.log('Snapshot creation failed');
         return;
       }
+      console.log('Snapshot:', snapshot);
+        console.log('Snapshot type:', typeof snapshot);
       
       const base64Image = snapshot.encodeToBase64(); 
   
       if (base64Image) {
-        console.log('Base64 Image:', base64Image); // Optional, just for checking
-        onSave(base64Image); // Pass the base64 string to the parent component
+        console.log('Base64 Image save'); 
+        onSave(base64Image); 
       }
   
       onClose();  

@@ -94,6 +94,7 @@ const signUp = async (firstname: string, lastname: string, email: string, passwo
   .insert(
     {
       id: data.user?.id,
+      user_id: data.user?.id,
       first_name: trimmedFirstname,
       last_name: trimmedLastname,
       email: trimmedEmail,
@@ -246,6 +247,15 @@ useEffect(() => {
 const userMediaFiles = ({ file }: {file: string}) => {  
     setSelectedMediaFile(file);
     return file;  
+}
+
+const saveDiaryEntry = async (diaryEntry: any) => {
+  const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);
+  if (error) {
+    console.error('Error saving diary entry:', error);
+    return;
+  }
+  console.log('Diary entry saved:', data);
 }
 
 //the context provider gives us acces to the user object through out the app
