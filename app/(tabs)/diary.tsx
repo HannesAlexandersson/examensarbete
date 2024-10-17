@@ -10,7 +10,7 @@ import * as FileSystem from 'expo-file-system';
 import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
 import type { SkImage } from '@shopify/react-native-skia';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+
 
 export default function DiaryScreen() {
   const { user } = useAuth(); 
@@ -34,8 +34,7 @@ export default function DiaryScreen() {
     setIsModalVisible(false);   
     fetchUserEntries(true); 
   }, []);
-
-  console.log('diary:', diary);
+  
   //fetch the  diary entrys 
   const fetchUserEntries = async (limitEntries: boolean = true) => {
     //first check if user is logged in
@@ -330,6 +329,16 @@ export default function DiaryScreen() {
   setIsModalVisible(false);
 };
 
+const fetchAllEntries = async () => {
+  fetchUserEntries(false);
+  setLoadedAll(true);
+}
+const fetchFewerEntries = async () => {
+  setDiary(null);
+  fetchUserEntries(true);
+  setLoadedAll(false);
+}
+
   return (
     <ScrollView>
       <SafeAreaView className="flex-1 items-center justify-start ">        
@@ -449,7 +458,7 @@ export default function DiaryScreen() {
 
         {/* Display Diary Entries */}
         {diary?.map((entry, index) => (
-          <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 mt-4'>
+          <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 my-4'>
             <Typography variant='black' weight='700' size='md'>{entry.titel}</Typography>
             <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
             {entry.date ? (
@@ -466,11 +475,11 @@ export default function DiaryScreen() {
         
         <View className='flex flex-col items-center justify-center px-4 w-full bg-vgrBlue'>
           {!loadedAll ? (
-            <Button variant='outlined' size='lg' className='my-4' onPress={() => fetchUserEntries(false)}>
+            <Button variant='outlined' size='lg' className='my-4' onPress={fetchAllEntries}>
               <Typography variant='black' weight='500' size='md'>Hämta alla inlägg</Typography>
             </Button>
           ) : (
-            <Button variant='outlined' size='lg' className='my-4' onPress={() => fetchUserEntries(true)}>
+            <Button variant='outlined' size='lg' className='my-4' onPress={fetchFewerEntries}>
               <Typography variant='black' weight='500' size='md'>Visa färre inlägg</Typography>
             </Button>
           )}
