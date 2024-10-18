@@ -154,6 +154,9 @@ export type OwnAddedMedicinProps = {
   ordination: string;
   utskrivare: string;
   avdelning: string;
+  doktor_namn?: string | null;
+  avd_namn?: string | null;
+  medicin_namn?: string | null;
 };
 
 export type MedicinProps = {
