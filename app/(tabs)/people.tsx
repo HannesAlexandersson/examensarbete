@@ -8,7 +8,7 @@ import { FontAwesome6, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector
 
 export default function PeopleScreen() {
   const { user } = useAuth();
-  
+  console.log(user);
   return (   
     <View className='flex-1 flex-col gap-4 items-center justify-center w-full px-12 bg-white'>
 

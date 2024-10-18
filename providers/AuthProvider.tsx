@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, EnrichMedicinProps } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -28,25 +28,31 @@ const getUser = async (id: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
-  // Call fetchMedicins to get medicines
-  const medicins = await fetchMedicins(id);
-  // Combine the fetched user data with the medicines
-  const updatedUser = {
-    ...data,            
-    medicins: medicins.medicins || [],       
-    own_medicins: medicins.own_medicins || [] 
-  };
-
+  
   if (data?.date_of_birth) {
     data.date_of_birth = new Date(data.date_of_birth);
   }
 
-  if (data?.first_time) {    
-    setUser(data);
-    // Redirect to the special onboarding route thats only getting renderd once
+  // Call fetchMedicins to get medicines
+  const medicins = await fetchMedicins(id);
+
+  // Enrich medicines with staff and department details
+  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
+
+  const updatedUser: User = {
+    ...data,
+    own_medicins: medicins?.own_medicins || [],
+    medicins: enrichedMedicins,
+    diary_entries: data.diary_entries || [], 
+    events: data.events || [],
+  };
+
+  setUser(updatedUser);
+  if (data?.first_time) { 
+    //redirect to the special onboarding route thats only getting renderd once
     router.push('/onboarding');  
   } else {
-    // Fetch avatar if the avatar_url exists
+    //fetch avatar if avatar_url exists
     if (data.avatar_url) {
       const { data: avatarData, error: avatarError } = await supabase.storage
         .from('avatars')
@@ -57,7 +63,7 @@ const getUser = async (id: string) => {
         return;
       }
       
-      // Read the blob data as a base64 string
+      //read the blob data
       const reader = new FileReader();
       reader.onloadend = () => {        
         if (typeof reader.result === 'string') {
@@ -69,8 +75,8 @@ const getUser = async (id: string) => {
       reader.readAsDataURL(avatarData); 
     }
 
-    setUser(data);    
-    router.push('/(tabs)');
+  setUser(updatedUser);    
+  router.push('/(tabs)');
   }
 };
 
@@ -280,7 +286,7 @@ const fetchMedicins = async (userId: string) => {
 
     //fetch the users own added medicines
     const { data: ownMedicins, error: ownMedicinsError } = await supabase
-      .from('own_medicins')
+      .from('Own_added_medicins')
       .select('*')
       .eq('user_id', userId);
 
@@ -298,6 +304,36 @@ const fetchMedicins = async (userId: string) => {
     };
   }
 };
+
+const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
+  if (!medicins || medicins.length === 0) return medicins;
+
+  try {
+    const staffIds = [...new Set(medicins.map((med) => med.utskrivare))];
+    const departmentIds = [...new Set(medicins.map((med) => med.utskrivande_avdelning))];
+
+    const [staffData, departmentData] = await Promise.all([
+      supabase.from('Staff').select('id, staff_name').in('id', staffIds),
+      supabase.from('Departments').select('id, name').in('id', departmentIds)
+    ]);
+
+    if (staffData.error) throw staffData.error;
+    if (departmentData.error) throw departmentData.error;
+
+    const staffLookup = Object.fromEntries(staffData.data.map(staff => [staff.id, staff.staff_name]));
+    const departmentLookup = Object.fromEntries(departmentData.data.map(dept => [dept.id, dept.name]));
+
+    return medicins.map((med) => ({
+      ...med,
+      utskrivare_name: staffLookup[med.utskrivare] || 'Okänd utskrivare',
+      ordinationName: departmentLookup[med.utskrivande_avdelning] || 'Okänd avdelning',
+    }));
+  } catch (error) {
+    console.error('Error fetching staff and department details:', error);
+    return medicins;
+  }
+};
+
 
 //the context provider gives us acces to the user object through out the app
 return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>

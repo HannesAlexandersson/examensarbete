@@ -13,11 +13,11 @@ export type User = {
   description?: string;
   date_of_birth?: Date | null;
   selected_version: number | null;
-  own_medicins?: OwnAddedMedicinProps[];
-  medicins?: MedicinProps[];
-  diary_entries?: DiaryEntry[];
-  events?: EventSource[];
-  diagnosis?: string;
+  own_medicins?: OwnAddedMedicinProps[] | null;
+  medicins?: MedicinProps[] | null;
+  diary_entries?: DiaryEntry[] | null;
+  events?: EventSource[] | null;
+  diagnosis?: string | null;
 };
 
 export type EventSource = {
@@ -162,5 +162,13 @@ export type MedicinProps = {
   ordination: string;
   utskrivande_avdelning: string;
   utskrivare: string;
+  utskrivare_name?: string | null;
+  ordinationName?: string | null;
   user_id: string;
+};
+
+export type EnrichMedicinProps = {
+  medicin?: MedicinProps;
+  utskrivareName: string | null;
+  ordinationName: string | null;
 };

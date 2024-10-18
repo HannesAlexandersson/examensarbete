@@ -54,7 +54,7 @@ export default function Medicin() {
       console.error(error);
     }
   }
-
+  
   return(
     <ScrollView className='bg-vgrBlue w-full'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -90,15 +90,18 @@ export default function Medicin() {
               </View>
             )))}
           <View>
-            <Typography variant='black' size='lg' weight='700' className='text-white mt-2'>Mediciner vården lagt till in:</Typography>
+            <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner vården lagt till in:</Typography>
           </View>
           {medicins && (
             medicins.map((medicin, index) => (
-              <View key={index} className='flex-col gap-2 items-center justify-between w-full px-4 py-2 border-b border-gray-200'>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.name}</Typography>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.ordination}</Typography>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.utskrivare}</Typography>
-                <Typography variant='white' size='sm' weight='300' className='text-gray-400 '>Klicka för mer information</Typography>
+              <View key={index} className='flex-col gap-2 items-center justify-between w-full px-4 py-2 rounded bg-white'>
+                <Typography variant='black' size='lg' weight='700' className=''>{medicin.name}</Typography>
+                <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordination}</Typography>
+                <View className='flex-row gap-2 items-center justify-between w-full'>
+                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordinationName}</Typography>
+                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.utskrivare_name}</Typography>
+                </View>
+                <Typography variant='black' size='sm' weight='300' className='text-gray-400 '>Klicka för mer information</Typography>
               </View>
             )))}
         </View>
