@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler'; 
 import React from 'react';
 import { useFonts } from 'expo-font';
 import { ImageBackground, View } from 'react-native';
@@ -26,6 +28,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <AuthProvider>
       <Stack>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -75,8 +78,12 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen name="+not-found" />
-        
+        <Stack.Screen name="medicin"  options={{ headerShown: false, presentation: 'modal' }}  />
+        <Stack.Screen name="departments"  options={{ headerShown: false }}  />
+        <Stack.Screen name="question"  options={{ headerShown: false }}  />
+        <Stack.Screen name="diagnosis"  options={{ headerShown: false }}  />
       </Stack>
     </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

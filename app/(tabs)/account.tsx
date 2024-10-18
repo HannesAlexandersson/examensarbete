@@ -1,9 +1,7 @@
 import { View, Image, ScrollView } from 'react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import React from 'react';
-import Entypo from '@expo/vector-icons/Entypo';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Typography, Button } from '@/components';
 
@@ -69,8 +67,8 @@ export default function AccountScreen() {
           </Button>
 
           <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => router.push('/people')}>
-            <FontAwesome6 name="heart-pulse" size={24} color="black" />
-            <Typography variant='black' size='lg' weight='400' className='text-center' >Mina Vårdkontakter</Typography>
+            <MaterialCommunityIcons name="pill" size={24} color="black" />
+            <Typography variant='black' size='lg' weight='400' className='text-center' >Mina Mediciner</Typography>
           </Button>
         </View>
 

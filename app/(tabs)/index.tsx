@@ -13,7 +13,7 @@ import EvilIcons from '@expo/vector-icons/EvilIcons';
 export default function HomeScreen() {
   const { user, userAvatar } = useAuth();  
   const [events, setEvents] = useState<EventSource[]>([]);
-
+  console.log(user)
   // handle back button behavior
   useFocusEffect(
     React.useCallback(() => {

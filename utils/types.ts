@@ -13,6 +13,11 @@ export type User = {
   description?: string;
   date_of_birth?: Date | null;
   selected_version: number | null;
+  own_medicins?: OwnAddedMedicinProps[];
+  medicins?: MedicinProps[];
+  diary_entries?: DiaryEntry[];
+  events?: EventSource[];
+  diagnosis?: string;
 };
 
 export type EventSource = {
@@ -36,6 +41,7 @@ export type AuthContextType = {
   selectedMediaFile: string | null;
   setSelectedMediaFile: (file: string | null) => void;
   getPhotoForAvatar?: boolean;
+  fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
 };
@@ -142,3 +148,19 @@ export interface DiaryMediaUpload {
   type: string;
   url: string;
 }
+
+export type OwnAddedMedicinProps = {
+  namn: string;
+  ordination: string;
+  utskrivare: string;
+  avdelning: string;
+};
+
+export type MedicinProps = {
+  id: string;
+  name: string;
+  ordination: string;
+  utskrivande_avdelning: string;
+  utskrivare: string;
+  user_id: string;
+};
