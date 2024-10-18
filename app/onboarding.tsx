@@ -19,14 +19,6 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  //if the user backtracks, we dont want them to see the onboarding again
-  
-  useEffect(() => {
-    if (user?.first_time === false) {
-      router.push('/(tabs)');
-    }
-  }, [user?.first_time]);
-
   //Fetch the textdata from the CMS
   useEffect(() => {
     const fetchData = async () => {

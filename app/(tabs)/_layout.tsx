@@ -2,9 +2,10 @@ import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useAuth } from '@/providers/AuthProvider';
 
 export default function TabLayout() {
-  
+  const { user } = useAuth();
   return (
     <Tabs
       screenOptions={{
@@ -38,17 +39,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="diary"
         options={{
-          title: '',      
+          title: '',   
+          headerTitle: `${user?.first_name}s dagbok`,   
           tabBarIcon: () => 
           <View className="absolute">
-            <Ionicons name="add-circle" size={75} color="black" />   
-          </View>,
-        }}
+            <Ionicons name="add-circle" size={75} color="#005b89" />   
+          </View>
+        }}        
       />
       <Tabs.Screen
         name="people"
         options={{
-          title: 'Kontakter',      
+          title: 'Vården',      
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "medkit" : "medkit-outline"} size={24} color="black" />   
         }}
       />

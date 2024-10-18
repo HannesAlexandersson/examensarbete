@@ -28,6 +28,15 @@ const getUser = async (id: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
+  // Call fetchMedicins to get medicines
+  const medicins = await fetchMedicins(id);
+  // Combine the fetched user data with the medicines
+  const updatedUser = {
+    ...data,            
+    medicins: medicins.medicins || [],       
+    own_medicins: medicins.own_medicins || [] 
+  };
+
   if (data?.date_of_birth) {
     data.date_of_birth = new Date(data.date_of_birth);
   }
@@ -94,6 +103,7 @@ const signUp = async (firstname: string, lastname: string, email: string, passwo
   .insert(
     {
       id: data.user?.id,
+      user_id: data.user?.id,
       first_name: trimmedFirstname,
       last_name: trimmedLastname,
       email: trimmedEmail,
@@ -248,7 +258,48 @@ const userMediaFiles = ({ file }: {file: string}) => {
     return file;  
 }
 
+const saveDiaryEntry = async (diaryEntry: any) => {
+  const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);
+  if (error) {
+    console.error('Error saving diary entry:', error);
+    return;
+  }
+  console.log('Diary entry saved:', data);
+}
+
+
+const fetchMedicins = async (userId: string) => {
+  try {
+    //fetch the medicines associated with the user
+    const { data: medicins, error: medicinsError } = await supabase
+      .from('medicins')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (medicinsError) throw medicinsError;
+
+    //fetch the users own added medicines
+    const { data: ownMedicins, error: ownMedicinsError } = await supabase
+      .from('own_medicins')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (ownMedicinsError) throw ownMedicinsError;
+    
+    return {
+      medicins: medicins || [],
+      own_medicins: ownMedicins || []
+    };
+  } catch (error) {
+    console.error('Error fetching medicines:', error);
+    return {
+      medicins: [],
+      own_medicins: []
+    };
+  }
+};
+
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar  }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }
