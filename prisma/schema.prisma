@@ -4,11 +4,11 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public"]
-  extensions = [uuidOssp(map: "uuid-ossp")]
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp")]
+  schemas    = ["auth", "public"]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -327,43 +327,35 @@ model users {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model profiles {
-  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id          String?            @db.Uuid
-  first_name       String
-  last_name        String
-  email            String             @unique
-  avatar_url       String?
-  phone_number     String?
-  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  Images           Images[]
-  Messages         Messages[]
-  users            users?             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  profilesContacts profilesContacts[]
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String?               @db.Uuid
+  first_name          String
+  last_name           String
+  email               String                @unique
+  avatar_url          String?
+  phone_number        String?
+  created_at          DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamptz(6)
+  first_time          Boolean               @default(true)
+  selected_version    Int                   @default(2)
+  date_of_birth       DateTime?             @db.Date
+  description         String?
+  Images              Images[]
+  Messages            Messages[]
+  ProfilesDepartments ProfilesDepartments[]
+  diary_posts         diary_posts[]         @ignore
+  users               users?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profilesContacts    profilesContacts[]
+  videos              videos[]
 
   @@schema("public")
 }
 
 model Contacts {
   id               Int                @id @default(autoincrement())
-  name             String             @db.VarChar(255)
-  email            String             @unique @db.VarChar(255)
-  phone_number     BigInt?
-  address          String?            @db.VarChar(255)
-  ContactsStaff    ContactsStaff[]
   Images           Images[]
   Messages         Messages[]
   profilesContacts profilesContacts[]
-
-  @@schema("public")
-}
-
-model ContactsStaff {
-  id         Int      @id @default(autoincrement())
-  contact_id Int
-  staff_id   Int
-  Contacts   Contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contact")
-  Staff      Staff    @relation(fields: [staff_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_staff")
 
   @@schema("public")
 }
@@ -373,8 +365,9 @@ model Images {
   id         Int       @id @default(autoincrement())
   user_id    String    @db.Uuid
   contact_id Int?
-  image_url  String
+  image_uri  String
   created_at DateTime? @default(now()) @db.Timestamptz(6)
+  title      String?   @default("")
   Contacts   Contacts? @relation(fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contact")
   profiles   profiles  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
 
@@ -394,10 +387,10 @@ model Messages {
 }
 
 model Staff {
-  id            Int             @id @default(autoincrement())
-  name          String          @db.VarChar(255)
-  profession    String?         @db.VarChar(255)
-  ContactsStaff ContactsStaff[]
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staff_name       String
+  staff_occupation String
+  DepartmentsStaff DepartmentsStaff[]
 
   @@schema("public")
 }
@@ -408,6 +401,72 @@ model profilesContacts {
   contact_id  Int
   Contacts    Contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contact")
   profiles    profiles @relation(fields: [profiles_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Departments {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String?
+  address             String?
+  phonenumber         BigInt?
+  DepartmentsStaff    DepartmentsStaff[]
+  ProfilesDepartments ProfilesDepartments[]
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model DepartmentsStaff {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_id String?      @db.Uuid
+  staff_id      String?      @db.Uuid
+  Departments   Departments? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Staff         Staff?       @relation(fields: [staff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ProfilesDepartments {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_id String?      @db.Uuid
+  profile_id    String?      @db.Uuid
+  Departments   Departments? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles      profiles?    @relation(fields: [profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model diary_posts {
+  user_id     String   @default(dbgenerated("auth.uid()")) @db.Uuid
+  image_url   String?
+  video_url   String?
+  drawing_url String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  post_title  String?  @default("")
+  post_text   String?  @default("")
+  post_date   DateTime @default(now()) @db.Date
+  id          String?  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profiles    profiles @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@ignore
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model videos {
+  id         Int      @id @unique @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  user_id    String   @db.Uuid
+  title      String?  @unique(map: "videos_video_url_key") @default("")
+  video_uri  String?  @unique
+  profiles   profiles @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@schema("public")
 }
