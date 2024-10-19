@@ -391,7 +391,8 @@ model Staff {
   staff_name       String
   staff_occupation String
   DepartmentsStaff DepartmentsStaff[]
-
+  department      Departments @relation(fields: [department_id], references: [id])
+  department_id   String
   @@schema("public")
 }
 

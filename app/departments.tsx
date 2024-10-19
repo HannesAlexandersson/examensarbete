@@ -1,7 +1,7 @@
 import React, { useState, useEffect} from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
-import { View, ScrollView, Modal, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { DepartmentProps, StaffProps, ContactsProps } from '@/utils/types';
 
@@ -54,26 +54,6 @@ export default function Departments() {
 
     fetchDepartmentsAndStaff();
   }, []);
-
-  /* LAST KNOWN WORKING CODE
-  const handleDepartmentSearch = (text: string) => {
-    setSearchTerm(text); // This tracks the input as a search term
-    const filtered = departments?.filter(dept =>
-      dept.name?.toLowerCase().includes(text.toLowerCase())
-    );
-    setFilteredDepartments(filtered);
-  };
-
-  const handleStaffSearch = (text: string) => {
-    setSearchTerm(text); // This tracks the search term for staff
-    if (selectedDepartment) { // Ensure there's a selected department first
-      const filtered = staff.filter(person =>
-        person.staff_name?.toLowerCase().includes(text.toLowerCase()) &&
-        person.department_id === selectedDepartment.id // Check the department_id
-      );
-      setFilteredStaff(filtered);
-    }
-  }; */
 
   const handleDepartmentSearch = (text: string) => {
     setSearchTerm(text); // This tracks the input as a search term
