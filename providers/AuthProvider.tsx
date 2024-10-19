@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, EnrichMedicinProps } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, EnrichMedicinProps, ContactIds } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -22,6 +22,7 @@ const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
+const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 
 const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
@@ -46,7 +47,7 @@ const getUser = async (id: string) => {
     diary_entries: data.diary_entries || [], 
     events: data.events || [],
   };
-
+  await getContactIds(id);
   setUser(updatedUser);
   if (data?.first_time) { 
     //redirect to the special onboarding route thats only getting renderd once
@@ -79,6 +80,23 @@ const getUser = async (id: string) => {
   router.push('/(tabs)');
   }
 };
+
+//get the users contacts from departments
+const getContactIds = async (userId: string) => {
+  const { data, error } = await supabase.from('ProfilesDepartments').select('*').eq('profile_id', userId);
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+  
+  setContactIds(
+    data.map((contact) => ({
+      department_id: contact.department_id,
+      staff_id: contact.staff_id
+    }))
+  );
+};
+
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -336,6 +354,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, contactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

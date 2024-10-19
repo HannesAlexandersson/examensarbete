@@ -9,5 +9,5 @@ Button,
 Typography,
 VideoThumbnail,
 RoundCheckmark,
-Draw
+Draw,
 };

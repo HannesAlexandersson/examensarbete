@@ -18,6 +18,7 @@ export type User = {
   diary_entries?: DiaryEntry[] | null;
   events?: EventSource[] | null;
   diagnosis?: string | null;
+  
 };
 
 export type EventSource = {
@@ -35,6 +36,7 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   selectedOption: number;
   userAge: number | null;
+  contactIds?: ContactIds[] | null;
   userAvatar: string | null;
   setSelectedOption: (option: number) => void;
   userMediaFiles: ({ file }: { file: string; }) => string | null
@@ -196,3 +198,16 @@ export type ContactsProps = {
   phonenumber: string | null;
   address: string | null;
 };
+
+export type ContactIds = {
+  department_id?: string | null;
+  staff_id?: string | null;
+}
+
+export type CompContProps = {
+  contacts: ContactsProps[] | null;
+  setContacts: (contacts: ContactsProps[] | null) => void;
+  contactIds: ContactIds[];
+  departments: DepartmentProps[];
+  staff: StaffProps[];
+}
