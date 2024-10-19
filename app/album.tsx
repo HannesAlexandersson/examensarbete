@@ -5,7 +5,7 @@ import { supabase } from '@/utils/supabase';
 import { router } from 'expo-router';
 import { Button, Typography, VideoThumbnail } from '@/components';
 
-export default function album() {
+export default function Album() {
   const { user, userMediaFiles } = useAuth();
 
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);  
@@ -24,7 +24,7 @@ export default function album() {
       const { data: imageRecords, error: imageError } = await supabase
         .from('Images') 
         .select('*')
-        .eq('user_id', user.id); // Match user objects ID from the context with id of the images in the DB
+        .eq('user_id', user.id); 
 
       if (imageError) {
         console.error('Error fetching images from the database:', imageError);
@@ -155,9 +155,9 @@ export default function album() {
           <Typography variant='black' weight='400' size='sm' className='uppercase'>Välj media</Typography>
         </Button>
       </View>
-  <ScrollView className="flex-1 px-4 mt-4">
+  <ScrollView className="flex-1 px-8 my-4">
     <Typography variant='black' weight='700' size='h1'>Foton</Typography>
-    <View className="flex-row flex-wrap justify-between">
+    <View className="flex-row flex-wrap justify-between gap-1">
       {mediaFiles.map((fileUrl, index) => (
         <TouchableOpacity 
           key={index}                 
