@@ -32,7 +32,10 @@ export default function Departments() {
   }]);
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentProps[] | undefined>([]);
   const [filteredStaff, setFilteredStaff] = useState<StaffProps[] | null>([]);
-  const [searchTerm, setSearchTerm] = useState<string | null>('');
+  const [departmentSearchTerm, setDepartmentSearchTerm] = useState<string | null>('');
+  const [staffSearchTerm, setStaffSearchTerm] = useState<string | null>('');
+  const [isActive, setIsActive] = useState(false);
+  
 
   useEffect(() => {
     const fetchDepartmentsAndStaff = async () => {
@@ -56,7 +59,7 @@ export default function Departments() {
   }, []);
 
   const handleDepartmentSearch = (text: string) => {
-    setSearchTerm(text); // This tracks the input as a search term
+    setDepartmentSearchTerm(text); 
     const filtered = departments?.filter(dept =>
       dept.name?.toLowerCase().includes(text.toLowerCase())
     );
@@ -64,23 +67,29 @@ export default function Departments() {
   };
   
   const handleStaffSearch = (text: string) => {
-    setSearchTerm(text); // This tracks the search term for staff
-    if (selectedDepartment) { // Ensure there's a selected department first
+    setStaffSearchTerm(text); 
+    if (selectedDepartment) { 
       const filtered = staff.filter(person =>
         person.staff_name?.toLowerCase().includes(text.toLowerCase()) &&
-        person.department_id === selectedDepartment.id // Check the department_id
+        person.department_id === selectedDepartment.id //check the department_id of the staff to only get staff from the selected department
       );
       setFilteredStaff(filtered);
     } else {
-      // If no department is selected, filter staff without department
+      //if no department is selected, filter staff without department
       const filtered = staff.filter(person =>
         person.staff_name?.toLowerCase().includes(text.toLowerCase())
       );
       setFilteredStaff(filtered);
     }
-  };
+  };  
 
-  console.log('selectedDepartment:', selectedDepartment);
+  //we want to set the cursor to the start due to the long names of the departments
+  const handleFocus = () => {
+    setIsActive(true); //so when a input field is active we set the state to true
+  };
+  const handleBlur = () => {
+    setIsActive(false); //and when the user is done with the input field we set the state to false wich makes the cursor go to the start based on the selection prop
+  };
 
   return(
     <ScrollView className='bg-vgrBlue'>
@@ -113,37 +122,48 @@ export default function Departments() {
             {/* Department Name with Searchable List */}
             <TextInput
               placeholder="Avdelningsnamn"
-              value={searchTerm || ''}
+              value={departmentSearchTerm || ''}
               autoFocus={true}
-              onChangeText={handleDepartmentSearch} 
+              onChangeText={handleDepartmentSearch}              
               className="border border-gray-400 mt-4 p-2"
+              onFocus={handleFocus} // Set focus state when user uses the input field
+              onBlur={handleBlur} // Reset focus state when user is done using the input field
+              selection={isActive ? undefined : { start: 0 }}
             />
-            <FlatList
-              data={filteredDepartments}
-              keyExtractor={(item) => item.id || Math.random().toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                onPress={() => {
-                  setNewContact({
-                    ...newContact,
-                    name: item.name,
-                    phonenumber: item.phonenumber,
-                    address: item.address,
-                  });
-                    setSelectedDepartment(item);
-                    setFilteredDepartments([]);
-                    setSearchTerm(item.name);
-                  }}
-                >
-                  <Typography variant="black" className='text-gray-300' size="sm">{item.name}</Typography>
-                </TouchableOpacity>
+            
+
+            {filteredDepartments && filteredDepartments.length > 0 && (
+                <View style={{ maxHeight: 150, overflow: 'scroll' }}>
+                  <FlatList
+                    data={filteredDepartments}
+                    keyExtractor={(item) => item.id || Math.random().toString()}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setNewContact({
+                            ...newContact,
+                            name: item.name,
+                            phonenumber: item.phonenumber,
+                            address: item.address,
+                          });
+                          setSelectedDepartment(item);
+                          setFilteredDepartments([]);
+                          setDepartmentSearchTerm(item.name); 
+                        }}
+                      >
+                        <Typography variant="black" className="" size="sm">
+                          {item.name}
+                        </Typography>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
               )}
-            />
 
             {/* Staff Name with Searchable List */}
             <TextInput
               placeholder="Kontaktperson"
-              value={newContact.contactperson || ''}
+              value={staffSearchTerm || ''}
               onChangeText={handleStaffSearch} // Filter staff based on input
               className="border border-gray-400 mt-4 p-2"
             />
@@ -158,6 +178,7 @@ export default function Departments() {
                     contactperson: item.staff_name,
                   });
                   setFilteredStaff([]); 
+                  setStaffSearchTerm(item.staff_name);
                 }}
               >
                   <Typography variant="black" className='text-gray-300' size="sm">{item.staff_name}</Typography>
