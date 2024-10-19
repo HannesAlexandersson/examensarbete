@@ -7,7 +7,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'expo-router';
 import { CameraMode } from '@/utils/types';
 
-export default function() {
+export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();

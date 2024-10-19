@@ -167,7 +167,7 @@ const editUser = async (
   if (avatarUrl && avatarUrl !== user?.avatar_url) {
     // Move old avatar to the 'oictures' bucket instead of avatar buckets. 
     if (user?.avatar_url) {
-      console.log('user avatar url:', user.avatar_url);
+     
       await moveAvatarToPictures(user.avatar_url);
     }
 
@@ -230,7 +230,7 @@ const editUser = async (
 
 // Function to move avatar to the "pictures" bucket
 const moveAvatarToPictures = async (oldAvatarUrl: string) => {
-  console.log('inside moveAvatarToPictures', oldAvatarUrl);
+  
 
   if (!oldAvatarUrl) {
     console.error('Old avatar path is undefined or empty.');

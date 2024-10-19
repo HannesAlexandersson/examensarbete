@@ -5,7 +5,7 @@ import { supabase } from '@/utils/supabase';
 import { router } from 'expo-router';
 import { Button, Typography, VideoThumbnail } from '@/components';
 
-export default function album() {
+export default function Album() {
   const { user, userMediaFiles } = useAuth();
 
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);  

@@ -175,3 +175,24 @@ export type EnrichMedicinProps = {
   utskrivareName: string | null;
   ordinationName: string | null;
 };
+
+export type DepartmentProps = {
+  id: string | null;
+  name: string | null;
+  address: string | null;
+  phonenumber: string | null;  
+};
+
+export type StaffProps = {
+  id?: string;
+  staff_name: string | null;
+  staff_occupation: string | null;
+  department_id: string | null;  
+};
+
+export type ContactsProps = {
+  name: string | null;
+  contactperson: string | null;
+  phonenumber: string | null;
+  address: string | null;
+};
