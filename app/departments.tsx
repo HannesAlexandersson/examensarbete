@@ -114,6 +114,7 @@ export default function Departments() {
             <TextInput
               placeholder="Avdelningsnamn"
               value={searchTerm || ''}
+              autoFocus={true}
               onChangeText={handleDepartmentSearch} 
               className="border border-gray-400 mt-4 p-2"
             />
