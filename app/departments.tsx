@@ -14,6 +14,8 @@ export default function Departments() {
     contactperson: '',
     phonenumber: '',
     address: '',
+    _C_department_id: '',
+    _C_staff_id: '',
   });
   const [contacts, setContacts] = useState<ContactsProps[] | null>([]);
   const [selectedContact, setSelectedContact] = useState<ContactsProps | null>(null);
@@ -35,6 +37,7 @@ export default function Departments() {
   const [departmentSearchTerm, setDepartmentSearchTerm] = useState<string | null>('');
   const [staffSearchTerm, setStaffSearchTerm] = useState<string | null>('');  
   const [isActive, setIsActive] = useState(false);
+  const [isFullviewModalVisible, setIsFullviewModalVisible] = useState<boolean>(false);
   
 
   useEffect(() => {
@@ -119,8 +122,89 @@ export default function Departments() {
     setIsActive(false); //and when the user is done with the input field we set the state to false wich makes the cursor go to the start based on the selection prop
   };
 
-  console.log('contacts:', contacts);
+  //open the fullview modal on press for the selected contact
+  const handleSelectContact = (contact: ContactsProps) => {
+    setSelectedContact(contact); 
+    setIsFullviewModalVisible(true); 
+  };
 
+  //close the modal and clear the state
+  const closeModal = () => {
+    setIsFullviewModalVisible(false);
+    setSelectedContact(null); 
+  };
+
+  const handleAddContact = async () => {
+    if (!selectedDepartment || !newContact.contactperson) {
+      alert("Du måste fylla i alla fält för att lägga till en kontakt");
+      return;
+    }
+  
+    try {
+      // Insert the new contact into the ProfilesDepartments table
+      const { error } = await supabase
+        .from('ProfilesDepartments')
+        .insert({
+          profile_id: user?.id,
+          department_id: selectedDepartment.id,
+          staff_id: staff.find(person => person.staff_name === newContact.contactperson)?.id
+        });
+  
+      if (error) {
+        console.error('Error adding contact:', error);
+        return;
+      }
+  
+      alert('Kontakt tillagd!');
+  
+      // Clear the modal form and close it
+      setNewContact({
+        name: '',
+        contactperson: '',
+        phonenumber: '',
+        address: ''
+      });
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    }
+  };
+
+  const handleRemoveContact = async (contact: ContactsProps) => {
+    const confirmDelete = window.confirm(`Är du säker på att du vill ta bort ${contact.name}?`);
+    if (!confirmDelete) return;
+  
+    try {
+      const { error } = await supabase
+        .from('ProfilesDepartments')
+        .delete()
+        .eq('profile_id', user?.id) 
+        .eq('department_id', contact._C_department_id);
+  
+      if (error) {
+        console.error('Error deleting contact:', error);
+        return; // Early return if there's an error
+      }
+  
+      // Update state to remove the deleted contact
+      setContacts((prevContacts) => 
+        prevContacts ? prevContacts.filter((c) => c._C_department_id !== contact._C_department_id) : null
+      );
+  
+      // Close modal after deleting
+      closeModal();
+      alert('Kontakten borttagen!');
+  
+    } catch (error) {
+      console.error('Error removing contact:', error);
+      alert('Something went wrong while deleting the contact. Please try again.');
+    }
+  };
+
+  const handleSendMessage = (contact: ContactsProps) => {
+    alert(`Meddelande skickat till ${contact.name}`);
+  }
+console.log('contacts', contacts);
   return(
     <ScrollView className='bg-vgrBlue'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -150,43 +234,40 @@ export default function Departments() {
                 autoFocus={true}
                 onChangeText={handleDepartmentSearch}              
                 className="border border-gray-400 mt-4 p-2"
-                onFocus={handleFocus} //set focus state when user uses the input field
-                onBlur={handleBlur} //reset focus state when user is done using the input field
-                selection={isActive ? undefined : { start: 0 }}
               />
 
               {filteredDepartments && filteredDepartments.length > 0 && (
-                  <View style={{ maxHeight: 150, overflow: 'scroll' }}>
-                    <FlatList
-                      data={filteredDepartments}
-                      keyExtractor={(item) => item.id || Math.random().toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => {
-                            setNewContact({
-                              ...newContact,
-                              name: item.name,
-                              phonenumber: item.phonenumber,
-                              address: item.address,
-                            });
-                            setSelectedDepartment(item);
-                            setFilteredDepartments([]);
-                            setDepartmentSearchTerm(item.name); 
-                          }}
-                        >
-                          <Typography variant="black" className="" size="sm">
-                            {item.name}
-                          </Typography>
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </View>
-                )}
+                <View style={{ maxHeight: 150, overflow: 'scroll' }}>
+                  <FlatList
+                    data={filteredDepartments}
+                    keyExtractor={(item) => item.id || Math.random().toString()}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setNewContact({
+                            ...newContact,
+                            name: item.name,
+                            phonenumber: item.phonenumber,
+                            address: item.address,
+                          });
+                          setSelectedDepartment(item); //set selected department for ID extraction
+                          setFilteredDepartments([]);
+                          setDepartmentSearchTerm(item.name); 
+                        }}
+                      >
+                        <Typography variant="black" className="" size="sm">
+                          {item.name}
+                        </Typography>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              )}
               
               <TextInput
                 placeholder="Kontaktperson"
                 value={staffSearchTerm || ''}
-                onChangeText={handleStaffSearch} //filter staff based on input
+                onChangeText={handleStaffSearch} // Filter staff based on input
                 className="border border-gray-400 mt-4 p-2"
               />
               <FlatList
@@ -222,10 +303,7 @@ export default function Departments() {
                 className="border border-gray-400 mt-4 p-2"
               />
               
-              <Button variant="blue" size="md" className="w-full mt-4" onPress={() => {
-                console.log('Kontakt tillagd!');
-                setModalVisible(false);
-              }}>
+              <Button variant="blue" size="md" className="w-full mt-4" onPress={handleAddContact}>
                 <Typography variant="white" size="lg" weight="400" className="text-center">Lägg till kontakt</Typography>
               </Button>
               
@@ -245,23 +323,80 @@ export default function Departments() {
         </Modal>
         
         <View className='flex-col items-center justify-center py-4'>
-          <Typography variant='white' size='h2' weight='700' >Mina Kontakter</Typography>
+          <Typography variant='white' size='md' weight='300' className='text-center' >
+            Klicka på en kontakt för att skicka ett meddelande
+          </Typography>
           
-          <View className='flex-col items-center justify-center py-4'>
+          <View className='flex-col items-center justify-center w-full py-4'>
             {contacts && contacts.length > 0 ? (
               contacts.map((contact, index) => (
-                <View key={index} className='bg-white w-4/5 p-4 rounded-lg my-2'>
-                  <Typography variant='black' size='md' weight='700' className='text-center'>{contact.name}</Typography>
-                  <Typography variant='black' size='sm' weight='400' className='text-center'>{contact.contactperson}</Typography>
-                  <Typography variant='black' size='sm' weight='400' className='text-center'>{contact.phonenumber}</Typography>
-                  <Typography variant='black' size='sm' weight='400' className='text-center'>{contact.address}</Typography>
-                </View>
+                <TouchableOpacity  key={index} className='bg-white p-4 w-4/5 rounded-lg my-2' onPress={() => handleSelectContact(contact)}>
+                  <Typography variant='black' size='md' weight='700' className='text-center mb-6'>{contact.name}</Typography>
+                  <View className='flex-col items-start justify-between mt-2'>
+                    <Typography variant='black' size='sm' weight='400' className='text-center'>Kontaktperson: {contact.contactperson}</Typography>                    
+                  </View>
+                </TouchableOpacity >
               ))
             ) : (
               <Typography variant='white' size='md' weight='400' className='text-center'>Inga kontakter hittades</Typography>
             )}
           </View>
         </View>
+
+        {/* fullview modal */}
+        {selectedContact && (
+          <Modal
+            visible={isFullviewModalVisible}
+            animationType="slide"
+            onRequestClose={closeModal}             
+          >
+            <ScrollView className="bg-vgrBlue">
+            <View className="flex-1 bg-white h-screen w-full px-4 pt-12"> 
+              <Typography variant="black" weight='700' size='h2' className="text-center mb-12">
+                {selectedContact.name}
+              </Typography>
+              <Typography variant='black' weight='400' size='md' className="mb-2">
+                Kontaktperson: {selectedContact.contactperson}
+              </Typography>
+              <Typography variant='black' weight='400' size='md' className="mb-2">
+                Telefonnummer: {selectedContact.phonenumber}
+              </Typography>
+              <Typography variant='black' weight='400' size='md' className="mb-2">
+                Address: {selectedContact.address}
+              </Typography>
+
+              
+              <Button
+                variant='blue'
+                size='md'
+                className="mt-4 rounded"
+                onPress={() => {
+                  handleSendMessage(selectedContact);
+                }}
+              >
+                <Typography variant='white' size='md' weight='400' className="text-center">Skicka Meddelande</Typography>
+              </Button>
+
+              <Button
+                variant='blue'
+                size='md'
+                className="mt-4 rounded"
+                onPress={() => handleRemoveContact(selectedContact)}
+              >
+                <Typography className="text-white text-center">Ta Bort Kontakt</Typography>
+              </Button>
+
+              <Button
+                variant='white'
+                className="bg-gray-500 p-3 mt-4 rounded"
+                onPress={closeModal}
+              >
+                <Typography variant='white' weight='400' size='md' className="text-center">Stäng</Typography>
+              </Button>
+            </View>
+            </ScrollView>
+          </Modal>
+        )}
 
       </View>
     </ScrollView>

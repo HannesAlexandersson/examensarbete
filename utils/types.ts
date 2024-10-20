@@ -193,6 +193,8 @@ export type StaffProps = {
 };
 
 export type ContactsProps = {
+  _C_department_id?: string | null;
+  _C_staff_id?: string | null;
   name: string | null;
   contactperson: string | null;
   phonenumber: string | null;
