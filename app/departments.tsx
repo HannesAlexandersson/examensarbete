@@ -167,6 +167,8 @@ export default function Departments() {
         address: ''
       });
       setModalVisible(false);
+      // refresh the page so the new contact is displayed
+      refreshContacts();
     } catch (error) {
       console.error('Error adding contact:', error);
     }
@@ -227,8 +229,10 @@ export default function Departments() {
 };
 
   const refreshContacts = async () => {
-    await getContactIds(user?.id); // Re-fetch contacts
-    // Optionally, refresh the contacts here too if necessary
+    if(user?.id) {
+      await getContactIds(user?.id); // Re-fetch contacts
+    }
+
   };
 
   const handleSendMessage = (contact: ContactsProps) => {
