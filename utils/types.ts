@@ -37,6 +37,8 @@ export type AuthContextType = {
   selectedOption: number;
   userAge: number | null;
   contactIds?: ContactIds[] | null;
+  setContactIds: (contactIds: ContactIds[]) => void;  
+  getContactIds: (userId: string) => Promise<never[] | undefined>;
   userAvatar: string | null;
   setSelectedOption: (option: number) => void;
   userMediaFiles: ({ file }: { file: string; }) => string | null

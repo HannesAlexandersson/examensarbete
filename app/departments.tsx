@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo} from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
-import { View, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView } from 'react-native';
+import { View, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
 import { supabase } from '@/utils/supabase';
-import { DepartmentProps, StaffProps, ContactsProps } from '@/utils/types';
+import { DepartmentProps, StaffProps, ContactsProps, ContactIds } from '@/utils/types';
 
 
 export default function Departments() {
-  const { user, contactIds } = useAuth();
+  const { user, contactIds, setContactIds, getContactIds } = useAuth();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newContact, setNewContact] = useState<ContactsProps>({
     name: '',
@@ -71,6 +71,8 @@ export default function Departments() {
   
           if (contact) {
             return {
+              _C_department_id: department.id, 
+              _C_staff_id: contact?.staff_id || null, 
               name: department.name || null,
               contactperson: contactPerson?.staff_name || 'No contact person',
               phonenumber: department.phonenumber?.toString() || null,
@@ -171,34 +173,62 @@ export default function Departments() {
   };
 
   const handleRemoveContact = async (contact: ContactsProps) => {
-    const confirmDelete = window.confirm(`Är du säker på att du vill ta bort ${contact.name}?`);
-    if (!confirmDelete) return;
-  
-    try {
-      const { error } = await supabase
-        .from('ProfilesDepartments')
-        .delete()
-        .eq('profile_id', user?.id) 
-        .eq('department_id', contact._C_department_id);
-  
-      if (error) {
-        console.error('Error deleting contact:', error);
-        return; // Early return if there's an error
-      }
-  
-      // Update state to remove the deleted contact
-      setContacts((prevContacts) => 
-        prevContacts ? prevContacts.filter((c) => c._C_department_id !== contact._C_department_id) : null
-      );
-  
-      // Close modal after deleting
-      closeModal();
-      alert('Kontakten borttagen!');
-  
-    } catch (error) {
-      console.error('Error removing contact:', error);
-      alert('Something went wrong while deleting the contact. Please try again.');
-    }
+  Alert.alert(
+    'Bekräfta borttagning',
+    `Är du säker på att du vill ta bort ${contact.name}?`,
+    [
+      {
+        text: 'Avbryt',
+        onPress: () => console.log('Borttagning avbruten'),
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: async () => {
+          try {
+            // Step 1: Delete contact from the database
+            const { error } = await supabase
+              .from('ProfilesDepartments')
+              .delete()
+              .eq('profile_id', user?.id)
+              .eq('department_id', contact._C_department_id);
+
+            if (error) {
+              console.error('Error deleting contact:', error);
+              return;
+            }
+
+            if(!contactIds) return;
+            const updatedContactIds = contactIds?.filter(
+              (c) => c.department_id !== contact._C_department_id
+            );
+
+            
+            setContactIds(updatedContactIds);
+
+            
+            setContacts((prevContacts) =>
+              prevContacts
+                ? prevContacts.filter((c) => c._C_department_id !== contact._C_department_id)
+                : null
+            );
+
+            
+            closeModal();
+            alert('Kontakten borttagen!');
+          } catch (error) {
+            console.error('Error removing contact:', error);
+            alert('Något gick fel vid borttagningen. Försök igen.');
+          }
+        },
+      },
+    ]
+  );
+};
+
+  const refreshContacts = async () => {
+    await getContactIds(user?.id); // Re-fetch contacts
+    // Optionally, refresh the contacts here too if necessary
   };
 
   const handleSendMessage = (contact: ContactsProps) => {
@@ -216,10 +246,7 @@ console.log('contacts', contacts);
         <View className='flex-row gap-1'>
           <Button variant='white' size='md' className='' onPress={() =>  setModalVisible(true)}>           
             <Typography variant='blue' size='sm' weight='400' className='text-center' >Lägg till kontakt</Typography>
-          </Button>
-          <Button variant='white' size='md' className='' onPress={() => console.log('medicin borttagen!')}>
-            <Typography variant='blue' size='sm' weight='400' className='text-center' >Ta bort vald kontakt</Typography>
-          </Button>
+          </Button>          
         </View>        
     
         {/* Modal for adding contact */}
@@ -234,6 +261,9 @@ console.log('contacts', contacts);
                 autoFocus={true}
                 onChangeText={handleDepartmentSearch}              
                 className="border border-gray-400 mt-4 p-2"
+                onFocus={handleFocus} //set focus state when user uses the input field
+                onBlur={handleBlur} //reset focus state when user is done using the input field
+                selection={isActive ? undefined : { start: 0 }}
               />
 
               {filteredDepartments && filteredDepartments.length > 0 && (
