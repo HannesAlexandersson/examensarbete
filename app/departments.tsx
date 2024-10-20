@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo} from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
-import { View, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
 import { supabase } from '@/utils/supabase';
 import { DepartmentProps, StaffProps, ContactsProps, ContactIds } from '@/utils/types';
 
@@ -358,17 +358,21 @@ console.log('contacts', contacts);
         
         <View className='flex-col items-center justify-center py-4'>
           <Typography variant='white' size='md' weight='300' className='text-center' >
-            Klicka på en kontakt för att skicka ett meddelande
+            Klicka på en kontakt för mer info
           </Typography>
           
           <View className='flex-col items-center justify-center w-full py-4'>
             {contacts && contacts.length > 0 ? (
               contacts.map((contact, index) => (
-                <TouchableOpacity  key={index} className='bg-white p-4 w-4/5 rounded-lg my-2' onPress={() => handleSelectContact(contact)}>
-                  <Typography variant='black' size='md' weight='700' className='text-center mb-6'>{contact.name}</Typography>
-                  <View className='flex-col items-start justify-between mt-2'>
-                    <Typography variant='black' size='sm' weight='400' className='text-center'>Kontaktperson: {contact.contactperson}</Typography>                    
+                <TouchableOpacity  key={index} className='bg-white py-6 px-4 w-4/5 rounded-lg my-2' onPress={() => handleSelectContact(contact)}>
+                  <View className='flex-row items-center justify-center mb-2'>
+                  {contact?.name?.includes('barnsjukhus') ? (
+                    <Image source={require('@/assets/images/bös.png')} style={{ width: 155, height: 65, }} />
+                  ) : (
+                    <Image source={require('@/assets/images/ronald.png')} style={{ width: 50, height: 50 }} />
+                  )}
                   </View>
+                  <Typography variant='black' size='md' weight='700' className='text-center'>{contact.name}</Typography>                  
                 </TouchableOpacity >
               ))
             ) : (
