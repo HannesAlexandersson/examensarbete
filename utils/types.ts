@@ -228,3 +228,10 @@ export interface QuestionProps {
   contact_name: string;
   sender_name: string
 }
+
+export type ProcedureProps = {
+  id: string | null;
+  procedure_title: string | null;
+  procedure_text: string | null;
+  user_id?: string | null;
+}

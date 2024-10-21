@@ -27,9 +27,9 @@ export default function PeopleScreen() {
         <Typography variant='black' size='lg' weight='400' className='text-center' >Min Diagnos</Typography>
       </Button>
 
-      <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => router.push('/question')}>
+      <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => router.push('/procedures')}>
         <MaterialCommunityIcons name="comment-question" size={24} color="black" />
-        <Typography variant='black' size='lg' weight='400' className='text-center' >Skriv en Fråga</Typography>
+        <Typography variant='black' size='lg' weight='400' className='text-center' >Mina procedurer</Typography>
       </Button>
 
     </View>    
