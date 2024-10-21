@@ -40,8 +40,8 @@ export type AuthContextType = {
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
   answers: string[];
-  response: string[];
-  setResponse: (response: string[]) => void;
+  response: string | null;
+  setResponse: (response: string | null) => void;
   userAvatar: string | null;
   setSelectedOption: (option: number) => void;
   userMediaFiles: ({ file }: { file: string; }) => string | null

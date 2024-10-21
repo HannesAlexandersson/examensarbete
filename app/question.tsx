@@ -1,11 +1,12 @@
 import React from 'react';
 import axios from 'axios';
+import OpenAI from "openai";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { Typography, Button } from '@/components';
 import { View, SafeAreaView, TextInput, KeyboardAvoidingView } from 'react-native';
-import { QuestionProps } from '@/utils/types';
+
 
 export default function Questions() {
   const { user, setResponse, response } = useAuth();
@@ -20,6 +21,10 @@ export default function Questions() {
     senderName: user?.first_name + ' ' + user?.last_name,
     senderId: user?.id
   });
+
+  const openai = new OpenAI({
+    apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
+});
 
   //save message to supabase
   const handleSendMessage = async () => {
@@ -62,32 +67,12 @@ export default function Questions() {
       ...message,
       txt: ''
     });
-
+    let responseTxt: string | null = null;
     try{
-      const { data } = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful medical proffesional such as a nurse or a doctor. Answer the question as you are talking to a young patient. Keep the answer short and concist.'
-            },
-            {
-              role: 'user',
-              content: updatedMessage.txt
-            }
-          ]
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.EXPO_OPENAI_API_KEY}`,
-          },
-        }
-      );
+      responseTxt = await getOpenAIResponse(msgTxt);
       
-      setResponse(data.choices[0].message.content);
+      setResponse(responseTxt);
+      
     } catch (error) {
       console.error('Error sending message to openAI:', error);
     } finally {
@@ -98,16 +83,37 @@ export default function Questions() {
           {
             profile_id: user?.id,
             question_id: questionId,
-            answer_text: response
+            answer_txt: responseTxt
           }
       );
       if(AnswerError) console.error('Error saving answer:', AnswerError);
     }
   }
-
-
   router.back();
 };
+
+const getOpenAIResponse = async(userMessage: string) => {  
+  try {
+    const chatCompletion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful medical proffesional such as a nurse or a doctor. Answer the question as you are talking to a young patient. Keep the answer short and concist."
+        },
+        {
+          role: "user",
+          content: userMessage
+        }
+      ],
+      model: "gpt-3.5-turbo", // Choose the right model
+    });
+
+    return chatCompletion.choices[0].message.content;
+  } catch (error) {
+    console.error('Error in OpenAI API call:', error);
+    throw error;
+  }
+}
 
 const handleAbort = () => {
   setMsgTxt('');

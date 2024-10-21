@@ -24,7 +24,7 @@ const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 const [answers, setAnswers] = React.useState<string[]>([]);
-const [ response, setResponse ] = React.useState<string[]>([]);
+const [ response, setResponse ] = React.useState<string | null>(null);
 
 //get the users question answers frmo Answers table using the users id as profile_id
 const getAnswers = async (id: string) => {
