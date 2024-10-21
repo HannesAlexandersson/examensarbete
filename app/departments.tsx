@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo} from 'react';
+import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
 import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
@@ -7,7 +8,7 @@ import { DepartmentProps, StaffProps, ContactsProps, ContactIds } from '@/utils/
 
 
 export default function Departments() {
-  const { user, contactIds, setContactIds, getContactIds } = useAuth();
+  const { user, contactIds, setContactIds, getContactIds } = useAuth();  
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newContact, setNewContact] = useState<ContactsProps>({
     name: '',
@@ -142,8 +143,7 @@ export default function Departments() {
       return;
     }
   
-    try {
-      // Insert the new contact into the ProfilesDepartments table
+    try {      
       const { error } = await supabase
         .from('ProfilesDepartments')
         .insert({
@@ -157,9 +157,8 @@ export default function Departments() {
         return;
       }
   
-      alert('Kontakt tillagd!');
-  
-      // Clear the modal form and close it
+      alert('Kontakt tillagd!');  
+      
       setNewContact({
         name: '',
         contactperson: '',
@@ -167,7 +166,7 @@ export default function Departments() {
         address: ''
       });
       setModalVisible(false);
-      // refresh the page so the new contact is displayed
+      //refresh the page so the new contact is displayed
       refreshContacts();
     } catch (error) {
       console.error('Error adding contact:', error);
@@ -234,11 +233,19 @@ export default function Departments() {
     }
 
   };
-
+  
   const handleSendMessage = (contact: ContactsProps) => {
-    alert(`Meddelande skickat till ${contact.name}`);
-  }
-console.log('contacts', contacts);
+    router.push({
+      pathname: '/question',
+      params: {
+        department: contact.name,
+        department_id: contact._C_department_id,
+        contactperson: contact.contactperson,
+        staff_id: contact._C_staff_id,
+      },
+    });
+  };
+
   return(
     <ScrollView className='bg-vgrBlue'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
