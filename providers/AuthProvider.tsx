@@ -23,6 +23,19 @@ const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
+const [answers, setAnswers] = React.useState<string[]>([]);
+const [ response, setResponse ] = React.useState<string[]>([]);
+
+//get the users question answers frmo Answers table using the users id as profile_id
+const getAnswers = async (id: string) => {
+  const { data, error } = await supabase.from('Answers').select('*').eq('profile_id', id);
+  if (error) {
+    console.error('Error fetching answers:', error);
+    return [];
+  }
+  setAnswers(data);
+};
+
 
 const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
@@ -354,6 +367,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, answers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

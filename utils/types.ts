@@ -39,6 +39,9 @@ export type AuthContextType = {
   contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
+  answers: string[];
+  response: string[];
+  setResponse: (response: string[]) => void;
   userAvatar: string | null;
   setSelectedOption: (option: number) => void;
   userMediaFiles: ({ file }: { file: string; }) => string | null
@@ -214,4 +217,14 @@ export type CompContProps = {
   contactIds: ContactIds[];
   departments: DepartmentProps[];
   staff: StaffProps[];
+}
+
+export interface QuestionProps {
+  id: string;
+  sender_id: string;
+  reciver_id: string;
+  msg_text: string;
+  reciver_name: string;
+  contact_name: string;
+  sender_name: string
 }

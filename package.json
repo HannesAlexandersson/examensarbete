@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-     "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "preset": "jest-expo"
@@ -25,6 +25,7 @@
     "@sanity/client": "^6.22.1",
     "@shopify/react-native-skia": "^1.4.2",
     "@supabase/supabase-js": "^2.45.4",
+    "axios": "^1.7.7",
     "expo": "~51.0.28",
     "expo-av": "~14.0.7",
     "expo-camera": "~15.0.16",

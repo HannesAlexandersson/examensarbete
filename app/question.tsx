@@ -1,12 +1,14 @@
 import React from 'react';
+import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { Typography, Button } from '@/components';
 import { View, SafeAreaView, TextInput, KeyboardAvoidingView } from 'react-native';
+import { QuestionProps } from '@/utils/types';
 
 export default function Questions() {
-  const { user } = useAuth();
+  const { user, setResponse, response } = useAuth();
   const { department, department_id, contactperson, staff_id } = useLocalSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [ msgTxt, setMsgTxt ] = React.useState('');
@@ -21,6 +23,11 @@ export default function Questions() {
 
   //save message to supabase
   const handleSendMessage = async () => {
+    if (!msgTxt.trim()) {
+      alert('Du måste skriva ett meddelande för att skicka!');
+      return;
+    }
+
     setIsLoading(true);
 
     //update the state before saving
@@ -40,20 +47,65 @@ export default function Questions() {
         contact_name: updatedMessage.contactperson,
         sender_name: updatedMessage.senderName,
       }
-  );
+    )
+    .select();
 
   if(QuestionError) {
     console.error('Error sending message:', QuestionError);
-  } else {
-    alert('Meddelandet skickat!');
+  }else if (QuestionData && QuestionData.length > 0) {
+    const questionId = QuestionData[0].id;//use this when saving the openAI response to supabase
+    
+    //clear the states
+    setIsLoading(false);
+    setMsgTxt('');
+    setMessage({
+      ...message,
+      txt: ''
+    });
+
+    try{
+      const { data } = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful medical proffesional such as a nurse or a doctor. Answer the question as you are talking to a young patient. Keep the answer short and concist.'
+            },
+            {
+              role: 'user',
+              content: updatedMessage.txt
+            }
+          ]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.EXPO_OPENAI_API_KEY}`,
+          },
+        }
+      );
+      
+      setResponse(data.choices[0].message.content);
+    } catch (error) {
+      console.error('Error sending message to openAI:', error);
+    } finally {
+      //save the response to supabase table Answers
+      const { data: AnswerData, error: AnswerError } = await supabase
+        .from('Answers')
+        .insert(
+          {
+            profile_id: user?.id,
+            question_id: questionId,
+            answer_text: response
+          }
+      );
+      if(AnswerError) console.error('Error saving answer:', AnswerError);
+    }
   }
 
-  setIsLoading(false);
-  setMsgTxt('');
-  setMessage({
-    ...message,
-    txt: ''
-  });
+
   router.back();
 };
 
@@ -65,7 +117,7 @@ const handleAbort = () => {
   });
   router.back();
 };
-
+//EXPO_OPENAI_API_KEY
   return(
     <SafeAreaView className='bg-vgrBlue flex-1 '>
       <View className='items-center justify-center flex-col px-4 pt-12'>
