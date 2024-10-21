@@ -23,18 +23,24 @@ export default function Questions() {
   const handleSendMessage = async () => {
     setIsLoading(true);
 
-    const { data: QuestionData, error: QuestionError } = await supabase
+    //update the state before saving
+  const updatedMessage = {
+    ...message,
+    txt: msgTxt // ensure message.txt is updated with the latest input value
+  };
+
+  const { data: QuestionData, error: QuestionError } = await supabase
     .from('Questions')
     .insert(
       {
-        sender_id: message.senderId,
-        reciver_id: message.department_id,
-        msg_text: message.txt,        
-        reciver_name: message.department,
-        contact_name: message.contactperson,
-        sender_name: message.senderName,
+        sender_id: updatedMessage.senderId,
+        reciver_id: updatedMessage.department_id,
+        msg_text: updatedMessage.txt,        
+        reciver_name: updatedMessage.department,
+        contact_name: updatedMessage.contactperson,
+        sender_name: updatedMessage.senderName,
       }
-    );
+  );
 
   if(QuestionError) {
     console.error('Error sending message:', QuestionError);
@@ -59,7 +65,7 @@ const handleAbort = () => {
   });
   router.back();
 };
-console.log(message.txt)
+
   return(
     <SafeAreaView className='bg-vgrBlue flex-1 '>
       <View className='items-center justify-center flex-col px-4 pt-12'>
