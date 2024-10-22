@@ -17,7 +17,7 @@ export type User = {
   medicins?: MedicinProps[] | null;
   diary_entries?: DiaryEntry[] | null;
   events?: EventSource[] | null;
-  diagnosis?: string | null;
+  diagnoses?: DiagnosisProps[] | null;
   answers?: string[] | null;
   departments?: DepartmentProps[] | null;
   staff?: StaffProps[] | null;

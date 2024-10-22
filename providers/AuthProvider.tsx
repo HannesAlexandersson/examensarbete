@@ -51,6 +51,8 @@ const getUser = async (id: string) => {
   //get the departments and associated staff
   const { departments, staff } = await fetchDepartmentsAndStaff();
 
+  //get the users diagoisis
+  const diagnosis = await fetchDiagnosis(id);
 
   const updatedUser: User = {
     ...data,
@@ -59,6 +61,7 @@ const getUser = async (id: string) => {
     diary_entries: diaryEntries || [], 
     departments: departments || [],
     staff: staff || [],
+    diagnoses: diagnosis || [],
   };
   await getContactIds(id);
   setUser(updatedUser);
@@ -91,6 +94,25 @@ const getUser = async (id: string) => {
 
   setUser(updatedUser);    
   router.push('/(tabs)');
+  }
+};
+
+const fetchDiagnosis = async (id: string) => {
+  try{
+    const { data: diagnosisData, error: diagnosisError } = await supabase
+    .from('Diagnosis')
+    .select('*')
+    .eq('user_id', id);
+
+    if (diagnosisError) {
+      console.error('Error fetching diagnosis:', diagnosisError);
+      return [];
+    }
+
+    return diagnosisData || [];
+  } catch (error) {
+    console.error('Error in fetchDiagnosis:', error);
+    return [];
   }
 };
 
