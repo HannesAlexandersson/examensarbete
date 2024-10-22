@@ -163,7 +163,7 @@ export default function ProceduresScreen() {
           procedure_video: uploadedMedia.video_url,
           procedure_drawing: uploadedMedia.drawing_url 
         }]);
-        
+
         //update the global userobject with the new procedure
         if (user) {
         user.procedures = [...procedures, { 
@@ -199,7 +199,12 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
     console.error('Error deleting procedure:', error);
     alert('Något gick fel, försök igen senare!');
   } else {
+    //update the local state
     setProcedures(procedures.filter(procedure => procedure.id !== procedur.id));
+    //update the global user object
+    if (user) {
+      user.procedures = procedures.filter(procedure => procedure.id !== procedur.id);
+    }
     alert('Procedur borttagen!');
     setModalVisible(false);
   }

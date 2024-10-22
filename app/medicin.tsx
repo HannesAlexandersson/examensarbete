@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Typography } from '@/components';
 import { router } from 'expo-router';
-import { View, ScrollView, Modal } from 'react-native';
+import { View, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
@@ -13,12 +13,15 @@ export default function Medicin() {
   const [ownMedicins, setOwnMedicins] = React.useState<OwnAddedMedicinProps[]>([]);
   const [newMedicin, setNewMedicin] = React.useState<OwnAddedMedicinProps>({
     namn: '',
+    medicin_namn: '',
     ordination: '',
     utskrivare: '',
-    avdelning: '',  
+    avdelning: '', 
+    fritext: '',     
   });
   const [addMedicinModalvisible, setAddMedicinModalVisible] = React.useState(false);
-  const [selectedMedicin, setSelectedMedicin] = React.useState(null);
+  const [selectedMedicin, setSelectedMedicin] = React.useState<OwnAddedMedicinProps | null>(null);
+  
 
   //set the states with the users medicins on mount
   useEffect(() => {
@@ -26,40 +29,72 @@ export default function Medicin() {
     setOwnMedicins(user?.own_medicins || []); 
   }, [user]);
 
-  /* const handleMedicinSelect = (medicin) => {
-    setSelectedMedicin(medicin);
-  }; */
-
- 
-
   const addMedicin = async (newMedicin: OwnAddedMedicinProps) => {
     try {
       const {data, error} = await supabase
-        .from('medicins')
+        .from('Own_added_medicins')
         .insert(
           {
-            medicin_namn: newMedicin.namn,
+            medicin_namn: newMedicin.medicin_namn,
             ordination: newMedicin.ordination,
             avd_namn: newMedicin.avdelning,
             doktor_namn: newMedicin.utskrivare,
             user_id: user?.id,
+            fritext: newMedicin.fritext,
           }
-        );
+        )
+        .select();
 
       if (error) {
         throw error;
+      } else if(data && data.length > 0){        
+        //update the local state with the new medicin
+        setOwnMedicins([...ownMedicins, data[0]]);
+        //update the global user object with the new medicin
+        if (user) {
+          const newlyAddedMedicin = data[0];
+          user.own_medicins = [...ownMedicins, newlyAddedMedicin];
+        }        
       }
-
-      setOwnMedicins([...ownMedicins, newMedicin]);
     } catch (error) {
       console.error(error);
     }
-  }
-  /*own_medicins": 
-  [{"avd_namn": "substitutionsmottagningen"dd74ee82-edc7-4bf0-8d16-3e6d773d81a3", 
-  "utskrivare_name": "Dr. Peter Andersson"}]
-  */
+  }  
  
+  const handleDelete = async (medicin: OwnAddedMedicinProps | null) => {    
+    
+    //delete the medicin from the supabase table
+    const {data, error} = await supabase
+      .from('Own_added_medicins')
+      .delete()
+      .eq('id', medicin?.id);
+
+      if(error) {
+        console.error(error);
+        return;
+      }
+
+      //remove the medicin from the local state     
+      setOwnMedicins(ownMedicins.filter((m) => m.id !== medicin?.id));
+      
+      //remove the medicin from the global userobject
+      if (user) {      
+        user.own_medicins = user.own_medicins?.filter((m) => m.id !== medicin?.id);
+           
+      }
+    alert('Medicin borttagen!');
+    //clear the states
+    setSelectedMedicin(null);
+    setNewMedicin({
+      namn: '',
+      medicin_namn: '',
+      ordination: '',
+      utskrivare: '',
+      avdelning: '',
+      fritext: '',
+    });
+  }
+  
   return(
     <ScrollView className='bg-vgrBlue w-full'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -75,7 +110,7 @@ export default function Medicin() {
             }}>
             <Typography variant='blue' size='sm' weight='400' className='text-center' >Lägg till medicin</Typography>
           </Button>
-          <Button variant='white' size='md' className='' onPress={() => console.log('medicin borttagen!')}>
+          <Button variant='white' size='md' className='' onPress={() => handleDelete(selectedMedicin)}>
             <Typography variant='blue' size='sm' weight='400' className='text-center' >Ta bort vald medicin</Typography>
           </Button>
         </View>
@@ -87,14 +122,17 @@ export default function Medicin() {
           </View>
           {ownMedicins && (
             ownMedicins.map((medicin, index) => (
-              <View key={index} className='flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white'>
-                <Typography variant='black' size='lg' weight='700' className='mb-2 '>{medicin.medicin_namn}</Typography>
-                <Typography variant='black' size='sm' weight='400' className='items-start w-full pl-1 mb-2'>{medicin.ordination}</Typography>
-                <View className='flex-col gap-2 items-start justify-between w-full'>
-                  <Typography variant='black' size='sm' weight='400' className='italic'>Ordinerat av {medicin.doktor_namn}</Typography>
-                  <Typography variant='black' size='sm' weight='400' className='italic'>på {medicin.avd_namn}</Typography>
+              <TouchableOpacity key={index} onPress={() => setSelectedMedicin(medicin)}>
+                <View className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-black border  border-purple-700` :`flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`} >
+                  <Typography variant='black' size='lg' weight='700' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `text-white mb-2` :`mb-2 `}>{medicin.medicin_namn}</Typography>
+                  <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `text-white items-start w-full pl-1 mb-2` : `items-start w-full pl-1 mb-2`}>{medicin.ordination}</Typography>
+                  <View className='flex-col gap-2 items-start justify-between w-full'>
+                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white`:`italic`}>Ordinerat av {medicin.doktor_namn}</Typography>
+                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white`:`italic`}>från {medicin.avd_namn}</Typography>
+                    <Typography variant='blue' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white mt-2`:`italic mt-2`}>{medicin.fritext}</Typography>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             )))}
           <View>
             <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner vården lagt till:</Typography>
@@ -125,8 +163,8 @@ export default function Medicin() {
           <TextInput
             placeholder='Läkemedelsnamn'
             style={{ borderColor: 'gray', borderWidth: 1, marginTop: 10, padding: 4, height: 40 }}            
-            value={newMedicin.namn}
-            onChangeText={text => setNewMedicin({...newMedicin, namn: text})}
+            value={newMedicin.medicin_namn || ''}
+            onChangeText={text => setNewMedicin({...newMedicin, medicin_namn: text})}
           />
           <TextInput
             placeholder='Dosering'
@@ -146,8 +184,15 @@ export default function Medicin() {
             value={newMedicin.avdelning}
             onChangeText={text => setNewMedicin({...newMedicin, avdelning: text})}
           />
+          <TextInput
+            placeholder='Din egen kommentar'
+            style={{ borderColor: 'gray', borderWidth: 1, marginTop: 10, padding: 4, height: 40 }}           
+            value={newMedicin.fritext || ''}
+            multiline={true}
+            onChangeText={text => setNewMedicin({...newMedicin, fritext: text})}
+          />
           <Button variant='blue' size='md' className=' w-full items-center mt-4' onPress={() => {
-            console.log('medicin tillagd!')           
+            addMedicin(newMedicin)           
             setAddMedicinModalVisible(false)
             }}>
             <Typography variant='white' size='lg' weight='400' className='text-center' >Lägg till medicin</Typography>
@@ -155,9 +200,11 @@ export default function Medicin() {
           <Button variant='blue' size='md' className=' w-full items-center mt-2 mb-4' onPress={() => {
             setNewMedicin({
               namn: '',
+              medicin_namn: '',
               ordination: '',
               utskrivare: '',
-              avdelning: '',  
+              avdelning: '',
+              fritext: '',
             })
             setAddMedicinModalVisible(false)            
             }}>
@@ -167,11 +214,7 @@ export default function Medicin() {
           </View>
         </Modal>
 
-        <View className='flex-col items-center justify-center py-4'>
-          <Button variant='black' size='lg' className='' onPress={() => router.push('/people')}>
-            <Typography variant='white' size='md' weight='700' className='text-center' >Tillbaka</Typography>
-          </Button>
-        </View>
+        
       </View>
     </ScrollView>
   );

@@ -162,6 +162,7 @@ export interface DiaryMediaUpload {
 }
 
 export type OwnAddedMedicinProps = {
+  id?: number;
   namn: string;
   ordination: string;
   utskrivare: string;
@@ -169,6 +170,8 @@ export type OwnAddedMedicinProps = {
   doktor_namn?: string | null;
   avd_namn?: string | null;
   medicin_namn?: string | null;
+  fritext?: string | null;
+  user_id?: string | null;
 };
 
 export type MedicinProps = {
@@ -179,7 +182,7 @@ export type MedicinProps = {
   utskrivare: string;
   utskrivare_name?: string | null;
   ordinationName?: string | null;
-  user_id: string;
+  user_id: string;  
 };
 
 export type EnrichMedicinProps = {
