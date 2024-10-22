@@ -48,13 +48,17 @@ const getUser = async (id: string) => {
   //call the fetch diaryposts function to get the users diary entries
   const diaryEntries = await fetchUserEntries(true);
 
+  //get the departments and associated staff
+  const { departments, staff } = await fetchDepartmentsAndStaff();
+
 
   const updatedUser: User = {
     ...data,
     own_medicins: medicins?.own_medicins || [],
     medicins: enrichedMedicins,
     diary_entries: diaryEntries || [], 
-    diagnosis: data?.diagnosis || null,
+    departments: departments || [],
+    staff: staff || [],
   };
   await getContactIds(id);
   setUser(updatedUser);
@@ -87,6 +91,35 @@ const getUser = async (id: string) => {
 
   setUser(updatedUser);    
   router.push('/(tabs)');
+  }
+};
+
+const fetchDepartmentsAndStaff = async () => {
+  try {
+    const { data: departmentData, error: departmentError } = await supabase
+    .from('Departments')
+    .select('*');
+    const { data: staffData, error: staffError } = await supabase
+    .from('Staff')
+    .select('*');
+
+    if (departmentError) {
+      console.error('Error fetching departments:', departmentError);
+      return { departments: [], staff: [] };
+    }
+
+    if (staffError) {
+      console.error('Error fetching staff:', staffError);
+      return { departments: departmentData || [], staff: [] };
+    }
+
+    return {
+      departments: departmentData || [],
+      staff: staffData || [],
+    };
+  } catch (error) {
+    console.error('Error fetching departments and staff:', error);
+    return { departments: [], staff: [] };
   }
 };
 

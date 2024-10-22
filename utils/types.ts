@@ -19,6 +19,8 @@ export type User = {
   events?: EventSource[] | null;
   diagnosis?: string | null;
   answers?: string[] | null;
+  departments?: DepartmentProps[] | null;
+  staff?: StaffProps[] | null;
 };
 
 export type EventSource = {

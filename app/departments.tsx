@@ -40,8 +40,14 @@ export default function Departments() {
   const [isActive, setIsActive] = useState(false);
   const [isFullviewModalVisible, setIsFullviewModalVisible] = useState<boolean>(false);
   
-
   useEffect(() => {
+    if (user?.departments && user?.staff) {
+      setDepartments(user.departments);
+      setStaff(user.staff);
+    }
+  }, []);
+
+  /* useEffect(() => {
     const fetchDepartmentsAndStaff = async () => {
       const { data: departmentData, error: departmentError } = await supabase.from('Departments').select('*');
       const { data: staffData, error: staffError } = await supabase.from('Staff').select('*');
@@ -59,7 +65,7 @@ export default function Departments() {
       }
     }; 
     fetchDepartmentsAndStaff();    
-  }, []);
+  }, []); */
 
   //we want to filter out the departments that the user has contact with
   const userDepartments = useMemo(() => {
