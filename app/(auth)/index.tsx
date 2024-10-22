@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Image } from 'react-native';
+import { View, TextInput, Image, KeyboardAvoidingView } from 'react-native';
 import { Link } from 'expo-router'
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
@@ -20,15 +20,15 @@ export default function () {
         style={{ width: 300, height: 150, resizeMode: 'contain' }} 
       />
       
-    <View className='flex-1 flex-col items-center justify-center w-full p-4'>
-      <Typography weight='700' variant='white'  className="text-2xl mb-4" >
-        Välkommen till Hälsokollen
-      </Typography>
-      <TextInput
-          placeholder="Email"
-          className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
-          value={email}
-          onChangeText={setEmail}
+      <View className='flex-1 flex-col items-center justify-center w-full p-4'>
+        <Typography weight='700' variant='white'  className="text-2xl mb-4" >
+          Välkommen till Hälsokollen
+        </Typography>
+        <TextInput
+            placeholder="Email"
+            className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'
+            value={email}
+            onChangeText={setEmail}
         />
         <TextInput
           secureTextEntry={true}          

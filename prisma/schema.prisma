@@ -342,8 +342,10 @@ model profiles {
   description         String?
   Images              Images[]
   Messages            Messages[]
+  Own_added_medicins  Own_added_medicins[]
   ProfilesDepartments ProfilesDepartments[]
   diary_posts         diary_posts[]         @ignore
+  medicins            medicins[]
   users               users?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   profilesContacts    profilesContacts[]
   videos              videos[]
@@ -390,7 +392,10 @@ model Staff {
   id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   staff_name       String
   staff_occupation String
+  department_id    String             @db.Uuid
   DepartmentsStaff DepartmentsStaff[]
+  department       Departments        @relation("DepartmentToStaff", fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_department_id")
+  medicins         medicins[]
 
   @@schema("public")
 }
@@ -410,9 +415,11 @@ model Departments {
   id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                String?
   address             String?
-  phonenumber         BigInt?
+  phonenumber         String?
   DepartmentsStaff    DepartmentsStaff[]
   ProfilesDepartments ProfilesDepartments[]
+  staff               Staff[]               @relation("DepartmentToStaff")
+  medicins            medicins[]
 
   @@schema("public")
 }
@@ -467,6 +474,36 @@ model videos {
   title      String?  @unique(map: "videos_video_url_key") @default("")
   video_uri  String?  @unique
   profiles   profiles @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Own_added_medicins {
+  id           BigInt   @id @default(autoincrement())
+  medicin_namn String?
+  doktor_namn  String?
+  avd_namn     String?
+  ordination   String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  user_id      String   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profiles     profiles @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model medicins {
+  id                    String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String?
+  ordination            String?
+  utskrivande_avdelning String?      @db.Uuid
+  utskrivare            String?      @db.Uuid
+  user_id               String?      @db.Uuid
+  profiles              profiles?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Departments           Departments? @relation(fields: [utskrivande_avdelning], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Staff                 Staff?       @relation(fields: [utskrivare], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("public")
 }

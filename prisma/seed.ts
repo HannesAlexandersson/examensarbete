@@ -77,7 +77,7 @@ main()
 }); */
 
 
-
+/* 
 // Assign the staffs to the departments junction table, and profiles to the profilesDepartments junction table
 async function main() {
   // Fetch the existing Departments, Staff, and Profiles
@@ -154,4 +154,211 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
+  }); */
+
+
+  /* const firstNames: string[] = [
+    'Anders', 'Hans', 'Rune', 'Annika', 'Göran', 
+    'Beatrice', 'Marie', 'Lisa', 'Asta', 'Ingrid', 
+    'Hannes', 'Johannes', 'Johan', 'Kerstin', 'Gertrud'
+  ];
+  
+  const lastNames: string[] = [
+    'Johansson', 'Andersson', 'Persson', 'Alexandersson', 
+    'Dixdotter', 'Af Silverstierna', 'Von Hammerskiöld', 
+    'Af Bernadotte', 'Af Natt och Dag'
+  ];
+  
+  // Define the types for staff and departments
+  interface StaffData {
+    staff_name: string;
+    staff_occupation: string;
+    department_id: string; // Use string for UUIDs
+  }
+  
+  // Function to generate random staff based on role
+  const generateStaff = (role: string, departmentId: string): StaffData[] => {
+    const staff: StaffData[] = [];
+  
+    // Generate 1 doctor
+    const doctorName = `Dr. ${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+    staff.push({
+      staff_name: doctorName,
+      staff_occupation: role,
+      department_id: departmentId,
+    });
+  
+    // Generate 2 nurses
+    for (let i = 0; i < 2; i++) {
+      const nurseName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+      staff.push({
+        staff_name: nurseName,
+        staff_occupation: role,
+        department_id: departmentId,
+      });
+    }
+  
+    return staff;
+  };
+  
+  const main = async () => {
+    // Get all departments
+    const departments = await prisma.departments.findMany();
+  
+    // Check if there are any departments
+    if (departments.length === 0) {
+      console.log("No departments found. Please add departments before seeding staff.");
+      return;
+    }
+  
+    // Loop through each department and create staff
+    for (const department of departments) {
+      // Generate staff for each department
+      const doctors = generateStaff('Doktor', department.id);
+      const nurses = generateStaff('Sjuksköterska', department.id);
+      const physiotherapists = generateStaff('Sjukgymnast', department.id);
+  
+      // Combine all staff
+      const allStaff = [...doctors, ...nurses, ...physiotherapists];
+  
+      // Save all staff to the database
+      await prisma.staff.createMany({
+        data: allStaff,
+        skipDuplicates: true, // Avoid errors for duplicate entries
+      });
+  
+      // Retrieve the created staff records to get their IDs
+      const createdStaff = await prisma.staff.findMany({
+        where: {
+          department_id: department.id, // Only retrieve staff for this department
+        },
+      });
+  
+      // Map the created staff IDs to their respective department IDs
+      const departmentsStaffData = createdStaff.map((staff) => ({
+        department_id: department.id,
+        staff_id: staff.id,
+      }));
+  
+      // Seed DepartmentsStaff table
+      await prisma.departmentsStaff.createMany({
+        data: departmentsStaffData,
+      });
+    }
+  
+    console.log("Staff and DepartmentsStaff have been seeded successfully!");
+  };
+  
+  main()
+    .catch(e => {
+      console.error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    }); */
+
+    const firstNames: string[] = [
+      'Anders', 'Hans', 'Rune', 'Annika', 'Göran',
+      'Beatrice', 'Marie', 'Lisa', 'Asta', 'Ingrid',
+      'Hannes', 'Johannes', 'Johan', 'Kerstin', 'Gertrud',
+      'Karl', 'Erik', 'Sven', 'Lars', 'Bengt',
+      'Maja', 'Eva', 'Anna', 'Karin', 'Lena',
+    ];
+    
+    const lastNames: string[] = [
+      'Johansson', 'Andersson', 'Persson', 'Alexandersson',
+      'Dixdotter', 'Af Silverstierna', 'Von Hammerskiöld',
+      'Af Bernadotte', 'Af Natt och Dag',
+      'Karlsson', 'Eriksson', 'Svensson', 'Larsson', 'Bengtsson',      
+    ];
+    
+    // Define the types for staff
+    interface StaffData {
+      staff_name: string;
+      staff_occupation: string;
+      department_id: string; // Use string for UUIDs
+    }
+    
+    // Function to generate random staff based on role
+    const generateStaff = (departmentId: string): StaffData[] => {
+      const staff: StaffData[] = [];
+    
+      // Generate 1 doctor
+      const doctorName = `Dr. ${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+      staff.push({
+        staff_name: doctorName,
+        staff_occupation: 'Doktor',
+        department_id: departmentId,
+      });
+    
+      // Generate 2 nurses
+      for (let i = 0; i < 2; i++) {
+        const nurseName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+        staff.push({
+          staff_name: nurseName,
+          staff_occupation: 'Sjuksköterska',
+          department_id: departmentId,
+        });
+      }
+    
+      // Generate 1 physiotherapist
+      const physioName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+      staff.push({
+        staff_name: physioName,
+        staff_occupation: 'Sjukgymnast',
+        department_id: departmentId,
+      });
+    
+      return staff;
+    };
+    
+    const main = async () => {
+      // Get all departments
+      const departments = await prisma.departments.findMany();
+    
+      // Check if there are any departments
+      if (departments.length === 0) {
+        console.log("No departments found. Please add departments before seeding staff.");
+        return;
+      }
+    
+      // Loop through each department and create staff
+      for (const department of departments) {
+        // Generate staff for each department (doctor, nurses, physiotherapist)
+        const staff = generateStaff(department.id);
+    
+        // Save all staff to the database
+        const createdStaff = await prisma.staff.createMany({
+          data: staff,
+          skipDuplicates: true, // Avoid errors for duplicate entries
+        });
+    
+        // Retrieve the created staff records to get their IDs
+        const createdStaffRecords = await prisma.staff.findMany({
+          where: {
+            department_id: department.id, // Only retrieve staff for this department
+          },
+        });
+    
+        // Map the created staff IDs to their respective department IDs
+        const departmentsStaffData = createdStaffRecords.map((staff) => ({
+          department_id: department.id,
+          staff_id: staff.id,
+        }));
+    
+        // Seed DepartmentsStaff table
+        await prisma.departmentsStaff.createMany({
+          data: departmentsStaffData,
+        });
+      }
+    
+      console.log("Staff and DepartmentsStaff have been seeded successfully!");
+    };
+    
+    main()
+      .catch(e => {
+        console.error(e);
+      })
+      .finally(async () => {
+        await prisma.$disconnect();
+      });

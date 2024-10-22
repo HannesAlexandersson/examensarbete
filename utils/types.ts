@@ -13,11 +13,12 @@ export type User = {
   description?: string;
   date_of_birth?: Date | null;
   selected_version: number | null;
-  own_medicins?: OwnAddedMedicinProps[];
-  medicins?: MedicinProps[];
-  diary_entries?: DiaryEntry[];
-  events?: EventSource[];
-  diagnosis?: string;
+  own_medicins?: OwnAddedMedicinProps[] | null;
+  medicins?: MedicinProps[] | null;
+  diary_entries?: DiaryEntry[] | null;
+  events?: EventSource[] | null;
+  diagnosis?: string | null;
+  
 };
 
 export type EventSource = {
@@ -35,6 +36,12 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   selectedOption: number;
   userAge: number | null;
+  contactIds?: ContactIds[] | null;
+  setContactIds: (contactIds: ContactIds[]) => void;  
+  getContactIds: (userId: string) => Promise<never[] | undefined>;
+  answers: string[];
+  response: string | null;
+  setResponse: (response: string | null) => void;
   userAvatar: string | null;
   setSelectedOption: (option: number) => void;
   userMediaFiles: ({ file }: { file: string; }) => string | null
@@ -154,6 +161,9 @@ export type OwnAddedMedicinProps = {
   ordination: string;
   utskrivare: string;
   avdelning: string;
+  doktor_namn?: string | null;
+  avd_namn?: string | null;
+  medicin_namn?: string | null;
 };
 
 export type MedicinProps = {
@@ -162,5 +172,92 @@ export type MedicinProps = {
   ordination: string;
   utskrivande_avdelning: string;
   utskrivare: string;
+  utskrivare_name?: string | null;
+  ordinationName?: string | null;
   user_id: string;
 };
+
+export type EnrichMedicinProps = {
+  medicin?: MedicinProps;
+  utskrivareName: string | null;
+  ordinationName: string | null;
+};
+
+export type DepartmentProps = {
+  id: string | null;
+  name: string | null;
+  address: string | null;
+  phonenumber: string | null;  
+};
+
+export type StaffProps = {
+  id?: string;
+  staff_name: string | null;
+  staff_occupation: string | null;
+  department_id: string | null;  
+};
+
+export type ContactsProps = {
+  _C_department_id?: string | null;
+  _C_staff_id?: string | null;
+  name: string | null;
+  contactperson: string | null;
+  phonenumber: string | null;
+  address: string | null;
+};
+
+export type ContactIds = {
+  department_id?: string | null;
+  staff_id?: string | null;
+}
+
+export type CompContProps = {
+  contacts: ContactsProps[] | null;
+  setContacts: (contacts: ContactsProps[] | null) => void;
+  contactIds: ContactIds[];
+  departments: DepartmentProps[];
+  staff: StaffProps[];
+}
+
+export interface QuestionProps {
+  id: string;
+  sender_id: string;
+  reciver_id: string;
+  msg_text: string;
+  reciver_name: string;
+  contact_name: string;
+  sender_name: string
+}
+
+export type ProcedureProps = {
+  id: string | null;
+  procedure_title: string | null;
+  procedure_text: string | null;
+  user_id?: string | null;
+  procedure_img?: string | null;
+  procedure_video?: string | null;
+  procedure_drawing?: string | null;
+}
+
+export interface MediaPickerProps {
+  setSelectedImage: (uri: string | null) => void;
+  setSelectedVideo: (uri: string | null) => void;
+}
+
+export interface DrawingPickerProps {
+  setDrawing: (drawing: FilelikeObject | null) => void;
+  setDrawingPreview: (preview: string | null) => void;
+  isDrawingMode: boolean;
+  setIsDrawingMode: (mode: boolean) => void;
+}
+
+export type MediaUpload = {
+  type: string;
+  url: string;
+}
+
+export type DiagnosisProps = {
+  id: string;
+  name: string;
+  description: string;
+}

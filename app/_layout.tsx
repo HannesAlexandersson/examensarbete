@@ -82,6 +82,7 @@ export default function RootLayout() {
         <Stack.Screen name="departments"  options={{ headerShown: false }}  />
         <Stack.Screen name="question"  options={{ headerShown: false }}  />
         <Stack.Screen name="diagnosis"  options={{ headerShown: false }}  />
+        <Stack.Screen name="procedures" options={{ headerShown: false }}  />
       </Stack>
     </AuthProvider>
     </GestureHandlerRootView>

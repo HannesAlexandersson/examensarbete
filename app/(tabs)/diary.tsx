@@ -1,17 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
-import { Button, Typography } from '@/components';
+import { Button, Typography, DisplayEntryMedia, MediaPicker, DrawingPicker } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as ImagePicker from 'expo-image-picker';
 import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
-import * as FileSystem from 'expo-file-system';
-import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
-import type { SkImage } from '@shopify/react-native-skia';
-import DisplayEntryMedia from '@/components/DisplayEntryMedia';
-
 
 export default function DiaryScreen() {
   const { user } = useAuth(); 
@@ -49,9 +42,8 @@ export default function DiaryScreen() {
       return;
     }
     
-    try{
+    try{      
       
-      /* const {data: diaryEntries, error: diaryError} = await supabase */
       let query = supabase
       .from('diary_posts')
       .select('*')
@@ -75,22 +67,22 @@ export default function DiaryScreen() {
         return;
       }
 
-      // Map the database fields to the expected structure (DiaryEntry)
-    const formattedEntries: DiaryEntry[] = await Promise.all(
-      diaryEntries.map(async (entry: any) => {
-        
-        const mediaUrls = await getMediaFiles(entry);
+      //map the database fields to the entry structure
+      const formattedEntries: DiaryEntry[] = await Promise.all(
+        diaryEntries.map(async (entry: any) => {
+          
+          const mediaUrls = await getMediaFiles(entry);
 
-        return {
-          titel: entry.post_title,   
-          text: entry.post_text,   
-          image: mediaUrls.image || null,  
-          video: mediaUrls.video || null, 
-          drawing: mediaUrls.drawing || null, 
-          date: new Date(entry.post_date)  
-        };
-      })
-    );
+          return {
+            titel: entry.post_title,   
+            text: entry.post_text,   
+            image: mediaUrls.image || null,  
+            video: mediaUrls.video || null, 
+            drawing: mediaUrls.drawing || null, 
+            date: new Date(entry.post_date)  
+          };
+        })
+      );
     
       
     //set the diary entrys to the state
@@ -135,62 +127,6 @@ export default function DiaryScreen() {
     return mediaUrls;
 }
   
-
-  // Open Image Picker to select image or video
-  const pickImageOrVideo = async () => {
-    const mediaResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-  
-    if (!mediaResult.canceled && mediaResult.assets.length > 0) {
-      const asset = mediaResult.assets[0];
-      if (asset.type === 'image') {
-        setSelectedImage(asset.uri);
-      } else if (asset.type === 'video') {
-        setSelectedVideo(asset.uri);
-      }
-    }
-  };
-
-
-  // Handle Drawing (Save the drawing to state)
-  const handleSaveDrawing = async (snapshot: SkImage) => {
-    try {
-      // Generate base64 for preview
-      const base64Image = snapshot.encodeToBase64();
-      const base64ImageUri = `data:image/png;base64,${base64Image}`;
-      setDrawingPreview(base64ImageUri);
-
-      // Save file to device storage
-      const snapshotBytes = await snapshot.encodeToBytes();
-      const drawingFileName = `user-drawing-${new Date().toISOString()}.png`;
-      const fileUri = `${FileSystem.documentDirectory}${drawingFileName}`;
-      
-      // Write bytes directly to file
-      await FileSystem.writeAsStringAsync(fileUri, base64Image, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
-      
-
-      // Create FilelikeObject
-      const userDrawing: FilelikeObject = {
-        uri: Platform.OS === 'ios' ? fileUri.replace('file://', '') : fileUri,
-        name: drawingFileName,
-        type: 'image/png',
-      };
-      
-      setDrawing(userDrawing);
-
-      console.log('Drawing saved successfully');
-    } catch (error) {
-      console.error('Error saving drawing:', error);
-    }
-  };
-
   // Function to handle form submission (saving post)
   const handleSavePost = async () => {
     if (!postText && !selectedImage && !selectedVideo && !drawing) {
@@ -281,7 +217,7 @@ export default function DiaryScreen() {
     }
   }
 
-  // Check if there were any media uploads before proceeding
+  //if there were any media uploads, get the uri's
   const uploadedMedia = {
     drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
     image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
@@ -329,8 +265,7 @@ export default function DiaryScreen() {
   setDrawing(null);
   setDrawingPreview(null);
   setSelectedDate(new Date());
-
-  /*  await fetchUserEntries(); */
+  
   setRemountKey((prevKey) => prevKey + 1);
   // Close modal
   setIsModalVisible(false);
@@ -407,37 +342,20 @@ const fetchFewerEntries = async () => {
                 onChangeText={setPostText}
               />
               
-              <View className="flex flex-row justify-between mt-4">
-                <Button variant='blue' size='sm' onPress={pickImageOrVideo}>
-                  <Typography variant='white' weight='700' size='sm'>Lägg till Bild/Video</Typography>
-                </Button>
-                <Button variant='blue' size='sm' onPress={() => setIsDrawingMode(true)}>
-                  <Typography variant='white' weight='700' size='sm'>Måla/teckna</Typography>
-                </Button>
+              <View className="flex flex-row justify-between mt-4">                
+                <MediaPicker setSelectedImage={setSelectedImage} setSelectedVideo={setSelectedVideo} />
+                <DrawingPicker
+                  setDrawing={setDrawing}
+                  setDrawingPreview={setDrawingPreview}
+                  isDrawingMode={isDrawingMode}
+                  setIsDrawingMode={setIsDrawingMode}
+                />
               </View>
 
               {/* Show selected image/video or drawing canvas */}
               {selectedImage && <Image source={{ uri: selectedImage }} style={{ width: 100, height: 100, marginTop: 10 }} />}
               {selectedVideo && <Text style={{ marginTop: 10 }}>Video added: {selectedVideo}</Text>}
-              
-              {/*drawing modal */}
-              {isDrawingMode && (
-                <Modal
-                visible={isModalVisible}
-                transparent={false}
-                animationType="slide"
-                onRequestClose={() => setIsDrawingMode(false)}
-              >
-                <Draw
-                  style={{ height: '100%', width: '100%' }}
-                  onSave={(snapshot) => handleSaveDrawing(snapshot)}
-                  strokeColor={'black'}
-                  strokeWidth={5}
-                  onClose={() => setIsDrawingMode(false)}
-                />
-                </Modal>
-              )}
-              
+            
               
               <Button variant='blue' size='lg' className='my-4 items-center' onPress={handleSavePost}>
                 <Typography variant='white' weight='700' size='md'>Spara post</Typography>
@@ -473,10 +391,7 @@ const fetchFewerEntries = async () => {
             ) : (
               <Typography variant='black' size='sm'>Inget datum har angivits</Typography>
             )}
-            <DisplayEntryMedia entry={entry} />
-            {/* {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
-            {entry.video && <Text>Video added: {entry.video}</Text>}
-            {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />} */}
+            <DisplayEntryMedia entry={entry} />           
           </View>
         ))}
         

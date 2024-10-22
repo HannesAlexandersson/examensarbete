@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, EnrichMedicinProps, ContactIds } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -22,31 +22,51 @@ const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
+const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
+const [answers, setAnswers] = React.useState<string[]>([]);
+const [ response, setResponse ] = React.useState<string | null>(null);
+
+//get the users question answers frmo Answers table using the users id as profile_id
+const getAnswers = async (id: string) => {
+  const { data, error } = await supabase.from('Answers').select('*').eq('profile_id', id);
+  if (error) {
+    console.error('Error fetching answers:', error);
+    return [];
+  }
+  setAnswers(data);
+};
+
 
 const getUser = async (id: string) => {
   // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
-  // Call fetchMedicins to get medicines
-  const medicins = await fetchMedicins(id);
-  // Combine the fetched user data with the medicines
-  const updatedUser = {
-    ...data,            
-    medicins: medicins.medicins || [],       
-    own_medicins: medicins.own_medicins || [] 
-  };
-
+  
   if (data?.date_of_birth) {
     data.date_of_birth = new Date(data.date_of_birth);
   }
 
-  if (data?.first_time) {    
-    setUser(data);
-    // Redirect to the special onboarding route thats only getting renderd once
+  // Call fetchMedicins to get medicines
+  const medicins = await fetchMedicins(id);
+
+  // Enrich medicines with staff and department details
+  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
+
+  const updatedUser: User = {
+    ...data,
+    own_medicins: medicins?.own_medicins || [],
+    medicins: enrichedMedicins,
+    diary_entries: data.diary_entries || [], 
+    events: data.events || [],
+  };
+  await getContactIds(id);
+  setUser(updatedUser);
+  if (data?.first_time) { 
+    //redirect to the special onboarding route thats only getting renderd once
     router.push('/onboarding');  
   } else {
-    // Fetch avatar if the avatar_url exists
+    //fetch avatar if avatar_url exists
     if (data.avatar_url) {
       const { data: avatarData, error: avatarError } = await supabase.storage
         .from('avatars')
@@ -57,7 +77,7 @@ const getUser = async (id: string) => {
         return;
       }
       
-      // Read the blob data as a base64 string
+      //read the blob data
       const reader = new FileReader();
       reader.onloadend = () => {        
         if (typeof reader.result === 'string') {
@@ -69,10 +89,27 @@ const getUser = async (id: string) => {
       reader.readAsDataURL(avatarData); 
     }
 
-    setUser(data);    
-    router.push('/(tabs)');
+  setUser(updatedUser);    
+  router.push('/(tabs)');
   }
 };
+
+//get the users contacts from departments
+const getContactIds = async (userId: string) => {
+  const { data, error } = await supabase.from('ProfilesDepartments').select('*').eq('profile_id', userId);
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+  
+  setContactIds(
+    data.map((contact) => ({
+      department_id: contact.department_id,
+      staff_id: contact.staff_id
+    }))
+  );
+};
+
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -161,7 +198,7 @@ const editUser = async (
   if (avatarUrl && avatarUrl !== user?.avatar_url) {
     // Move old avatar to the 'oictures' bucket instead of avatar buckets. 
     if (user?.avatar_url) {
-      console.log('user avatar url:', user.avatar_url);
+     
       await moveAvatarToPictures(user.avatar_url);
     }
 
@@ -224,7 +261,7 @@ const editUser = async (
 
 // Function to move avatar to the "pictures" bucket
 const moveAvatarToPictures = async (oldAvatarUrl: string) => {
-  console.log('inside moveAvatarToPictures', oldAvatarUrl);
+  
 
   if (!oldAvatarUrl) {
     console.error('Old avatar path is undefined or empty.');
@@ -280,7 +317,7 @@ const fetchMedicins = async (userId: string) => {
 
     //fetch the users own added medicines
     const { data: ownMedicins, error: ownMedicinsError } = await supabase
-      .from('own_medicins')
+      .from('Own_added_medicins')
       .select('*')
       .eq('user_id', userId);
 
@@ -299,7 +336,37 @@ const fetchMedicins = async (userId: string) => {
   }
 };
 
+const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
+  if (!medicins || medicins.length === 0) return medicins;
+
+  try {
+    const staffIds = [...new Set(medicins.map((med) => med.utskrivare))];
+    const departmentIds = [...new Set(medicins.map((med) => med.utskrivande_avdelning))];
+
+    const [staffData, departmentData] = await Promise.all([
+      supabase.from('Staff').select('id, staff_name').in('id', staffIds),
+      supabase.from('Departments').select('id, name').in('id', departmentIds)
+    ]);
+
+    if (staffData.error) throw staffData.error;
+    if (departmentData.error) throw departmentData.error;
+
+    const staffLookup = Object.fromEntries(staffData.data.map(staff => [staff.id, staff.staff_name]));
+    const departmentLookup = Object.fromEntries(departmentData.data.map(dept => [dept.id, dept.name]));
+
+    return medicins.map((med) => ({
+      ...med,
+      utskrivare_name: staffLookup[med.utskrivare] || 'Okänd utskrivare',
+      ordinationName: departmentLookup[med.utskrivande_avdelning] || 'Okänd avdelning',
+    }));
+  } catch (error) {
+    console.error('Error fetching staff and department details:', error);
+    return medicins;
+  }
+};
+
+
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, answers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

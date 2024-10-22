@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Typography } from '@/components';
-import { View, ScrollView, SafeAreaView, Modal } from 'react-native';
+import { router } from 'expo-router';
+import { View, ScrollView, Modal } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
@@ -54,7 +55,11 @@ export default function Medicin() {
       console.error(error);
     }
   }
-
+  /*own_medicins": 
+  [{"avd_namn": "substitutionsmottagningen"dd74ee82-edc7-4bf0-8d16-3e6d773d81a3", 
+  "utskrivare_name": "Dr. Peter Andersson"}]
+  */
+ 
   return(
     <ScrollView className='bg-vgrBlue w-full'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -76,29 +81,33 @@ export default function Medicin() {
         </View>
 
 
-        <View>
+        <View className='w-full px-4'>
           <View>
-            <Typography variant='black' size='lg' weight='700' className='text-white mt-2'>Mediciner du lagt till själv:</Typography>
+            <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner du lagt till själv:</Typography>
           </View>
           {ownMedicins && (
             ownMedicins.map((medicin, index) => (
-              <View key={index} className='flex-col gap-4 items-center justify-between w-full px-4 py-2 border-b border-gray-200'>
-                <Typography variant='black' size='lg' weight='400' className='text-white'>{medicin.namn}</Typography>
-                <Typography variant='black' size='lg' weight='400' className='text-white'>{medicin.ordination}</Typography>
-                <Typography variant='black' size='lg' weight='400' className='text-white'>{medicin.utskrivare}</Typography>
-                <Typography variant='black' size='lg' weight='400' className='text-white'>{medicin.avdelning}</Typography>
+              <View key={index} className='flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white'>
+                <Typography variant='black' size='lg' weight='700' className='mb-2 '>{medicin.medicin_namn}</Typography>
+                <Typography variant='black' size='sm' weight='400' className='items-start w-full pl-1 mb-2'>{medicin.ordination}</Typography>
+                <View className='flex-col gap-2 items-start justify-between w-full'>
+                  <Typography variant='black' size='sm' weight='400' className='italic'>Ordinerat av {medicin.doktor_namn}</Typography>
+                  <Typography variant='black' size='sm' weight='400' className='italic'>på {medicin.avd_namn}</Typography>
+                </View>
               </View>
             )))}
           <View>
-            <Typography variant='black' size='lg' weight='700' className='text-white mt-2'>Mediciner vården lagt till in:</Typography>
+            <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner vården lagt till:</Typography>
           </View>
           {medicins && (
             medicins.map((medicin, index) => (
-              <View key={index} className='flex-col gap-2 items-center justify-between w-full px-4 py-2 border-b border-gray-200'>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.name}</Typography>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.ordination}</Typography>
-                <Typography variant='white' size='lg' weight='400' className='text-white'>{medicin.utskrivare}</Typography>
-                <Typography variant='white' size='sm' weight='300' className='text-gray-400 '>Klicka för mer information</Typography>
+              <View key={index} className='flex-col gap-2 items-center justify-between w-full px-4 py-2 my-1 rounded bg-white'>
+                <Typography variant='black' size='lg' weight='700' className=''>{medicin.name}</Typography>
+                <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordination}</Typography>
+                <View className='flex-col gap-2 items-start justify-between w-full'>
+                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.utskrivare_name}</Typography>
+                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordinationName}</Typography>
+                </View>
               </View>
             )))}
         </View>
@@ -158,15 +167,11 @@ export default function Medicin() {
           </View>
         </Modal>
 
-        {/* <View className='flex-col gap-4 items-center justify-center bg-white'>
-          {medicins && (
-          medicins.map((medicin, index) => (
-            <View key={index} className='flex-row gap-4 items-center justify-between w-full px-4 py-2 border-b border-gray-200'>
-              <Typography variant='black' size='lg' weight='400'>{medicin.name}</Typography>
-              <Typography variant='black' size='lg' weight='400'>{medicin.dosage}</Typography>
-            </View>
-          )))}
-        </View> */}
+        <View className='flex-col items-center justify-center py-4'>
+          <Button variant='black' size='lg' className='' onPress={() => router.push('/people')}>
+            <Typography variant='white' size='md' weight='700' className='text-center' >Tillbaka</Typography>
+          </Button>
+        </View>
       </View>
     </ScrollView>
   );
