@@ -47,9 +47,8 @@ export default function DiaryScreen() {
       return;
     }
     
-    try{
+    try{      
       
-      /* const {data: diaryEntries, error: diaryError} = await supabase */
       let query = supabase
       .from('diary_posts')
       .select('*')
@@ -73,22 +72,22 @@ export default function DiaryScreen() {
         return;
       }
 
-      // Map the database fields to the expected structure (DiaryEntry)
-    const formattedEntries: DiaryEntry[] = await Promise.all(
-      diaryEntries.map(async (entry: any) => {
-        
-        const mediaUrls = await getMediaFiles(entry);
+      //map the database fields to the entry structure
+      const formattedEntries: DiaryEntry[] = await Promise.all(
+        diaryEntries.map(async (entry: any) => {
+          
+          const mediaUrls = await getMediaFiles(entry);
 
-        return {
-          titel: entry.post_title,   
-          text: entry.post_text,   
-          image: mediaUrls.image || null,  
-          video: mediaUrls.video || null, 
-          drawing: mediaUrls.drawing || null, 
-          date: new Date(entry.post_date)  
-        };
-      })
-    );
+          return {
+            titel: entry.post_title,   
+            text: entry.post_text,   
+            image: mediaUrls.image || null,  
+            video: mediaUrls.video || null, 
+            drawing: mediaUrls.drawing || null, 
+            date: new Date(entry.post_date)  
+          };
+        })
+      );
     
       
     //set the diary entrys to the state

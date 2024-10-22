@@ -34,17 +34,79 @@ export default function ProceduresScreen() {
 
 
   const getProcedures = async (id: string) => {
-    const { data, error } = await supabase
+    //define the query
+    const query = supabase
     .from('Procedures')
     .select('*')
-    .eq('user_id', user?.id);
+    .eq('user_id', id);
+    
+    try{
+      //fetch the data
+      const { data: procedureEntrys, error: procedureErrors } = await query;
 
-    if(error) {
-      console.error(error);
+      if(procedureErrors) {
+        console.error(procedureErrors);
+        return [];
+      }
+
+      //map the database fields to the entry structure
+      const formattedProcedures: ProcedureProps[] = await Promise.all(
+        procedureEntrys?.map(async(procedure: any) => {
+          const mediaUrls = await getMediaUrls(procedure);
+          
+          return {
+            id: procedure.id,
+            procedure_title: procedure.procedure_title,
+            procedure_text: procedure.procedure_text,
+            user_id: procedure.user_id,
+            procedure_img: mediaUrls.img || null,
+            procedure_video: mediaUrls.video || null,
+            procedure_drawing: mediaUrls.drawing || null,
+          };
+        })
+      );
+
+      
+      return formattedProcedures;
+    } catch (error) {
+      console.error('Error fetching procedures:', error);
       return [];
     }
-    return data;
   };
+
+  const getMediaUrls = async (entry: any) => {
+    const mediaUrls: any = {
+      image: null,
+      video: null,
+      drawing: null,
+    };    
+  
+    // Fetch image URL if exists
+    if (entry.img_url) {
+      const { data: imageUrl } = supabase.storage
+        .from('procedureMedia')
+        .getPublicUrl(entry.img_url);  // Use the actual field from the database
+      if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
+    }
+  
+    // Fetch video URL if exists
+    if (entry.video_url) {
+      const { data: videoUrl } = supabase.storage
+        .from('procedureMedia')
+        .getPublicUrl(entry.video_url);
+      if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
+    }
+  
+    // Fetch drawing URL if exists
+    if (entry.drawing_url) {
+      const { data: drawingUrl } = supabase.storage
+        .from('procedureMedia')
+        .getPublicUrl(entry.drawing_url);
+      if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
+    }
+  
+    return mediaUrls;
+}
 
   const handleCloseTooltip = () => {
     setToolTipVisible(false);
@@ -184,9 +246,10 @@ export default function ProceduresScreen() {
         setProcedureTxt('');
         setProcedureTitle('');
         setDrawing(null);
+        setDrawingPreview(null);
         setSelectedImage(null);
         setSelectedVideo(null);
-        setModalVisible(false);
+        setAddNewModal(false);
       }
   }
 }
@@ -312,18 +375,7 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
                 <Typography variant='black' size='md' weight='700' className="pb-2">{procedure.procedure_title}</Typography>
                 <Typography variant='black' size='md' weight='400'>{procedure.procedure_text}</Typography>
               </View>
-              <View className='flex-row justify-between items-center mt-2'>                
-                {procedure.procedure_img && (
-                <View className='border-b border-gray-400'>
-                  <Image source={{ uri: procedure.procedure_img }} style={{ width: 100, height: 100, marginTop: 10 }} />
-                </View>
-                )}
-                {procedure.procedure_drawing && (
-                <View className='border-b border-gray-400'>
-                  <Image source={{ uri: procedure.procedure_drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />
-                </View>
-                )}
-              </View>
+              
             </TouchableOpacity>
           ))
         ) : (
@@ -339,12 +391,25 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
             setModalVisible(!modalVisible);
           }}
         >
-          <View className='flex-1 justify-center items-center bg-black bg-opacity-50'>
+          <View className='flex-1 justify-center items-center bg-vgrBlue bg-opacity-50'>
             <View className='bg-white rounded-lg p-4 w-80'>
               {selectedProcedure && (
                 <>
                   <Typography variant='black' size='lg' weight='700'>{selectedProcedure.procedure_title}</Typography>
                   <Typography variant='black' size='md' weight='400'>{selectedProcedure.procedure_text}</Typography>
+
+                  <View className='flex-row justify-between items-center mt-2'>
+                    {selectedProcedure.procedure_img && (
+                    <View className='border-b border-gray-400'>
+                      <Image source={{ uri: selectedProcedure.procedure_img }} style={{ width: 100, height: 100, marginTop: 10 }} />
+                    </View>
+                    )}
+                    {selectedProcedure.procedure_drawing && (
+                    <View className='border-b border-gray-400'>
+                      <Image source={{ uri: selectedProcedure.procedure_drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />
+                    </View>
+                    )}
+                  </View>
                   
                   <Button
                     variant="blue"
