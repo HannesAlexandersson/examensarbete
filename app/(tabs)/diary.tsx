@@ -3,11 +3,11 @@ import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'r
 import { Button, Typography, DisplayEntryMedia, MediaPicker, DrawingPicker } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { DiaryEntry, DiaryMediaUpload, FilelikeObject, User } from '@/utils/types';
+import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
 import { supabase } from '@/utils/supabase';
 
 export default function DiaryScreen() {
-  const { user, fetchUserEntries, setUser } = useAuth(); 
+  const { user, setUser } = useAuth(); 
   
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null); 
   const [loadedAll, setLoadedAll] = useState<boolean>(false);
@@ -193,14 +193,10 @@ export default function DiaryScreen() {
   setIsModalVisible(false);
 };
 
-const fetchAllEntries = async () => {
-  /* const allEntrys: DiaryEntry[] = await fetchUserEntries(false, user?.id || '') || [];
-  setDiary(allEntrys); */
+const fetchAllEntries = async () => { 
   setLoadedAll(true);
 }
-const fetchFewerEntries = async () => { 
-  /* const latestEntrys: DiaryEntry[] = await fetchUserEntries(true, user?.id || '') || [];
-  setDiary(latestEntrys); */
+const fetchFewerEntries = async () => {   
   setLoadedAll(false);
 }
 

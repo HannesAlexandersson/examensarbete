@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo} from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
-import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { supabase } from '@/utils/supabase';
-import { DepartmentProps, StaffProps, ContactsProps, ContactIds } from '@/utils/types';
+import { DepartmentProps, StaffProps, ContactsProps } from '@/utils/types';
 
 
 export default function Departments() {
@@ -45,27 +45,7 @@ export default function Departments() {
       setDepartments(user.departments);
       setStaff(user.staff);
     }
-  }, []);
-
-  /* useEffect(() => {
-    const fetchDepartmentsAndStaff = async () => {
-      const { data: departmentData, error: departmentError } = await supabase.from('Departments').select('*');
-      const { data: staffData, error: staffError } = await supabase.from('Staff').select('*');
-
-      if (departmentError) {
-        console.error('Error fetching departments:', departmentError);
-      } else {
-        setDepartments(departmentData);
-      }
-
-      if (staffError) {
-        console.error('Error fetching staff:', staffError);
-      } else {
-        setStaff(staffData);
-      }
-    }; 
-    fetchDepartmentsAndStaff();    
-  }, []); */
+  }, []);  
 
   //we want to filter out the departments that the user has contact with
   const userDepartments = useMemo(() => {
