@@ -255,3 +255,9 @@ export type MediaUpload = {
   type: string;
   url: string;
 }
+
+export type DiagnosisProps = {
+  id: string;
+  name: string;
+  description: string;
+}
