@@ -23,19 +23,7 @@ export default function Diagnosis() {
       setDiagnoses(user.diagnoses); 
     }
   }, []);
-
-  /* const fetchDiagnosis = async () => {
-    const { data: diagnosisData, error: diagnosisError } = await supabase
-    .from('Diagnosis')
-    .select('*')
-    .eq('user_id', user?.id);
-
-    if (diagnosisError) {
-      console.error('Error fetching diagnosis:', diagnosisError);
-    } else {
-      setDiagnoses(diagnosisData);
-    }
-  } */
+ 
 
   const handleAddDiagnosis = async() => {
     try{

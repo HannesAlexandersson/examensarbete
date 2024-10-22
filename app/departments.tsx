@@ -193,7 +193,7 @@ export default function Departments() {
             
             setContactIds(updatedContactIds);
 
-            
+            //update the local state with the new contact
             setContacts((prevContacts) =>
               prevContacts
                 ? prevContacts.filter((c) => c._C_department_id !== contact._C_department_id)

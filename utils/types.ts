@@ -21,6 +21,7 @@ export type User = {
   answers?: string[] | null;
   departments?: DepartmentProps[] | null;
   staff?: StaffProps[] | null;
+  procedures?: ProcedureProps[] | null;
 };
 
 export type EventSource = {

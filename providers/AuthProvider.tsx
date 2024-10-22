@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, EnrichMedicinProps, ContactIds, DiaryEntry } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -54,6 +54,9 @@ const getUser = async (id: string) => {
   //get the users diagoisis
   const diagnosis = await fetchDiagnosis(id);
 
+  //get user procedures
+  const procedures = await getProcedures(id);
+
   const updatedUser: User = {
     ...data,
     own_medicins: medicins?.own_medicins || [],
@@ -62,6 +65,7 @@ const getUser = async (id: string) => {
     departments: departments || [],
     staff: staff || [],
     diagnoses: diagnosis || [],
+    procedures: procedures || [],
   };
   await getContactIds(id);
   setUser(updatedUser);
@@ -94,6 +98,47 @@ const getUser = async (id: string) => {
 
   setUser(updatedUser);    
   router.push('/(tabs)');
+  }
+};
+
+const getProcedures = async (id: string) => {
+  //define the query
+  const query = supabase
+  .from('Procedures')
+  .select('*')
+  .eq('user_id', id);
+  
+  try{
+    //fetch the data
+    const { data: procedureEntrys, error: procedureErrors } = await query;
+
+    if(procedureErrors) {
+      console.error(procedureErrors);
+      return [];
+    }
+
+    //map the database fields to the entry structure
+    const formattedProcedures: ProcedureProps[] = await Promise.all(
+      procedureEntrys?.map(async(procedure: any) => {
+        const mediaUrls = await getMediaFiles(procedure, 'procedureMedia');
+        
+        return {
+          id: procedure.id,
+          procedure_title: procedure.procedure_title,
+          procedure_text: procedure.procedure_text,
+          user_id: procedure.user_id,
+          procedure_img: mediaUrls.img || null,
+          procedure_video: mediaUrls.video || null,
+          procedure_drawing: mediaUrls.drawing || null,
+        };
+      })
+    );
+
+    
+    return formattedProcedures;
+  } catch (error) {
+    console.error('Error fetching procedures:', error);
+    return [];
   }
 };
 
