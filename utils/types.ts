@@ -18,7 +18,7 @@ export type User = {
   diary_entries?: DiaryEntry[] | null;
   events?: EventSource[] | null;
   diagnosis?: string | null;
-  
+  answers?: string[] | null;
 };
 
 export type EventSource = {
@@ -51,6 +51,7 @@ export type AuthContextType = {
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
+  fetchUserEntries: (limitEntries: boolean) => Promise<DiaryEntry[] | undefined>;
 };
 
 export type OnboardingText = {

@@ -7,7 +7,7 @@ import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
 import { supabase } from '@/utils/supabase';
 
 export default function DiaryScreen() {
-  const { user } = useAuth(); 
+  const { user, fetchUserEntries } = useAuth(); 
   
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null); 
   const [loadedAll, setLoadedAll] = useState<boolean>(false);
@@ -29,13 +29,14 @@ export default function DiaryScreen() {
   useEffect(() => {
     setIsDrawingMode(false);
     setIsModalVisible(false);   
-    fetchUserEntries(true); 
+    /* fetchUserEntries(true); */ 
+    setDiary(user?.diary_entries || null);
   }, [remountKey]);
 
   
   
   //fetch the  diary entrys 
-  const fetchUserEntries = async (limitEntries: boolean = true) => {
+  /* const fetchUserEntries = async (limitEntries: boolean = true) => {
     //first check if user is logged in
     if (!user?.id) {
       console.error('User ID is missing');
@@ -91,9 +92,9 @@ export default function DiaryScreen() {
   }catch (error) {
     console.error('Error fetching user images:', error);
   } 
-}
+} */
 
-  const getMediaFiles = async (entry: DiaryEntry) => {
+  /* const getMediaFiles = async (entry: DiaryEntry) => {
     const mediaUrls: any = {
       image: null,
       video: null,
@@ -125,7 +126,7 @@ export default function DiaryScreen() {
     }
   
     return mediaUrls;
-}
+} */
   
   // Function to handle form submission (saving post)
   const handleSavePost = async () => {

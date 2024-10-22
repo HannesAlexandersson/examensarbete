@@ -8,6 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/providers/AuthProvider';
 
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
