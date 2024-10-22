@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image, Platform } from 'react-native';
-import { Button, Typography, DisplayEntryMedia, Draw } from '@/components';
+import { Button, Typography, DisplayEntryMedia, MediaPicker, DrawingPicker } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -134,7 +134,7 @@ export default function DiaryScreen() {
   
 
   // Open Image Picker to select image or video
-  const pickImageOrVideo = async () => {
+ /*  const pickImageOrVideo = async () => {
     const mediaResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
@@ -150,11 +150,11 @@ export default function DiaryScreen() {
         setSelectedVideo(asset.uri);
       }
     }
-  };
+  }; */
 
 
   // Handle Drawing (Save the drawing to state)
-  const handleSaveDrawing = async (snapshot: SkImage) => {
+ /*  const handleSaveDrawing = async (snapshot: SkImage) => {
     try {
       // Generate base64 for preview
       const base64Image = snapshot.encodeToBase64();
@@ -186,7 +186,7 @@ export default function DiaryScreen() {
     } catch (error) {
       console.error('Error saving drawing:', error);
     }
-  };
+  }; */
 
   // Function to handle form submission (saving post)
   const handleSavePost = async () => {
@@ -405,12 +405,19 @@ const fetchFewerEntries = async () => {
               />
               
               <View className="flex flex-row justify-between mt-4">
-                <Button variant='blue' size='sm' onPress={pickImageOrVideo}>
+                {/* <Button variant='blue' size='sm' onPress={pickImageOrVideo}>
                   <Typography variant='white' weight='700' size='sm'>Lägg till Bild/Video</Typography>
                 </Button>
                 <Button variant='blue' size='sm' onPress={() => setIsDrawingMode(true)}>
                   <Typography variant='white' weight='700' size='sm'>Måla/teckna</Typography>
-                </Button>
+                </Button> */}
+                <MediaPicker setSelectedImage={setSelectedImage} setSelectedVideo={setSelectedVideo} />
+                <DrawingPicker
+                  setDrawing={setDrawing}
+                  setDrawingPreview={setDrawingPreview}
+                  isDrawingMode={isDrawingMode}
+                  setIsDrawingMode={setIsDrawingMode}
+                />
               </View>
 
               {/* Show selected image/video or drawing canvas */}
@@ -418,7 +425,7 @@ const fetchFewerEntries = async () => {
               {selectedVideo && <Text style={{ marginTop: 10 }}>Video added: {selectedVideo}</Text>}
               
               {/*drawing modal */}
-              {isDrawingMode && (
+              {/* {isDrawingMode && (
                 <Modal
                 visible={isModalVisible}
                 transparent={false}
@@ -433,7 +440,7 @@ const fetchFewerEntries = async () => {
                   onClose={() => setIsDrawingMode(false)}
                 />
                 </Modal>
-              )}
+              )} */}
               
               
               <Button variant='blue' size='lg' className='my-4 items-center' onPress={handleSavePost}>
