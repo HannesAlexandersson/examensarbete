@@ -33,6 +33,7 @@ export type EventSource = {
 
 export type AuthContextType = {
   user: User | null;
+  setUser: (user: User | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -53,7 +54,7 @@ export type AuthContextType = {
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
-  fetchUserEntries: (limitEntries: boolean) => Promise<DiaryEntry[] | undefined>;
+  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;
 };
 
 export type OnboardingText = {

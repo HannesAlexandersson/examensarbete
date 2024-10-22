@@ -46,7 +46,7 @@ const getUser = async (id: string) => {
   const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
 
   //call the fetch diaryposts function to get the users diary entries
-  const diaryEntries = await fetchUserEntries(true);
+  const diaryEntries = await fetchUserEntries(false, id);
 
   //get the departments and associated staff
   const { departments, staff } = await fetchDepartmentsAndStaff();
@@ -123,9 +123,9 @@ const fetchDepartmentsAndStaff = async () => {
   }
 };
 
-const fetchUserEntries = async (limitEntries: boolean = true) => {
+const fetchUserEntries = async (limitEntries: boolean = true, id: string | null) => {
   //first check if user is logged in
-  if (!user?.id) {
+  if (!id) {
     console.error('User ID is missing');
     return;
   }
@@ -135,7 +135,7 @@ const fetchUserEntries = async (limitEntries: boolean = true) => {
     let query = supabase
     .from('diary_posts')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', id)
     .order('created_at', { ascending: false });//post_date or created_at
       
       
@@ -487,6 +487,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, fetchUserEntries, answers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser,  fetchUserEntries, answers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

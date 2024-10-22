@@ -40,7 +40,7 @@ export default function TabLayout() {
         name="diary"
         options={{
           title: '',   
-          headerTitle: `${user?.first_name}s dagbok`,   
+          headerTitle: `${user?.first_name} ${user?.last_name} dagbok`,   
           tabBarIcon: () => 
           <View className="absolute">
             <Ionicons name="add-circle" size={75} color="#005b89" />   
