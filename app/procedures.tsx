@@ -1,19 +1,26 @@
 import React from "react";
 import { supabase } from "@/utils/supabase";
-import { Typography, Button } from "@/components";
+import { Typography, Button, MediaPicker, DrawingPicker } from "@/components";
 import { useAuth } from "@/providers/AuthProvider";
-import { ScrollView, TouchableOpacity, View, TouchableWithoutFeedback, Modal, TextInput } from "react-native";
+import { ScrollView, TouchableOpacity, View, TouchableWithoutFeedback, Modal, TextInput, Text, Image } from "react-native";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ProcedureProps } from "@/utils/types";
+import { ProcedureProps, FilelikeObject, MediaUpload } from "@/utils/types";
 
 export default function ProceduresScreen() {
   const { user } = useAuth();
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
+  const [ addNewModal, setAddNewModal ] = React.useState<boolean>(false);
   const [toolTipVisible, setToolTipVisible] = React.useState<boolean>(false);
   const [procedureTitle, setProcedureTitle ] = React.useState<string>('');
   const [procedureTxt, setProcedureTxt ] = React.useState<string>('');
   const [procedures, setProcedures] = React.useState<ProcedureProps[]>([]);
   const [selectedProcedure, setSelectedProcedure] = React.useState<ProcedureProps | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
+  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
+  const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
+  const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
+  
   
 
 
@@ -46,7 +53,10 @@ export default function ProceduresScreen() {
   const handleAbort = () => {
     setProcedureTxt('');
     setProcedureTitle('');
-    setModalVisible(false);
+    setDrawing(null);
+    setSelectedImage(null);
+    setSelectedVideo(null);
+    setAddNewModal(false);
   };
 
   const handleSave = async () => {
@@ -55,15 +65,104 @@ export default function ProceduresScreen() {
       return;
     }
 
+    const mediaUploads: MediaUpload[] = [];
+
+    //only try to upload the media if there is any
+    if (drawing) {          
+      const drawingData = new FormData();     
+      drawingData.append('file', {
+      uri: drawing.uri,
+      type: drawing.type,
+      name: drawing.name,
+      } as any);
+
+      //generate a unique filename
+      const drawingFileName = `drawing-${Date.now()}.${drawing.name.split('.').pop()}`;
+
+      //save to bucket
+      const { data: drawingBucketData, error: drawingError } = await supabase
+      .storage
+      .from('procedureMedia')
+      .upload(drawingFileName, drawingData, {
+        cacheControl: '3600000000',
+        upsert: false,
+      });
+
+      if (drawingError) {
+        console.error("Error uploading drawing:", drawingError);
+      } else {
+        //insert the url to the mediaUploads array
+        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
+      }
+    }
+
+    if (selectedImage) {
+      const imageData = new FormData();
+      const imageFileName = selectedImage?.split('/').pop() || 'default-image-name.png';
+      imageData.append('file', {
+        uri: selectedImage,
+        type: `image/${imageFileName?.split('.').pop()}`,
+        name: imageFileName,
+      } as any);
+  
+      const { data: imageBucketData, error: imageError } = await supabase
+        .storage
+        .from('procedureMedia')
+        .upload(imageFileName, imageData, {
+          cacheControl: '3600000000',
+          upsert: false,
+        });
+  
+      if (imageError) {
+        console.error("Error uploading image:", imageError);
+      } else {
+        mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+      }
+    }
+  
+    if (selectedVideo) {
+      const videoData = new FormData();
+      const videoFileName = selectedVideo?.split('/').pop() || 'default-video-name.mp4';
+      videoData.append('file', {
+        uri: selectedVideo,
+        type: `video/${videoFileName?.split('.').pop()}`,
+        name: videoFileName,
+      } as any);
+  
+      const { data: videoBucketData, error: videoError } = await supabase
+        .storage
+        .from('procedureMedia')
+        .upload(videoFileName, videoData, {
+          cacheControl: '3600000000',
+          upsert: false,
+        });
+  
+      if (videoError) {
+        console.error("Error uploading video:", videoError);
+      } else {
+        mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+      }
+    }
+
+    //if there were any media uploads, get the uri's
+    const uploadedMedia = {
+      drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
+    };
+
+    const procedureEntry = {
+      user_id: user?.id,
+      procedure_title: procedureTitle,
+      procedure_text: procedureTxt,
+      img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
+      drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+    }
+
     const { data, error } = await supabase
     .from('Procedures')
-    .insert([
-      { 
-        user_id: user?.id,
-        procedure_title: procedureTitle,
-        procedure_text: procedureTxt,
-      }
-    ])
+    .insert([procedureEntry])
     .select();
 
     if (error) {
@@ -76,11 +175,17 @@ export default function ProceduresScreen() {
           id: newProcedure.id, 
           procedure_title: procedureTitle, 
           procedure_text: procedureTxt, 
-          user_id: user?.id 
+          user_id: user?.id,
+          procedure_img: uploadedMedia.img_url,
+          procedure_video: uploadedMedia.video_url,
+          procedure_drawing: uploadedMedia.drawing_url 
         }]);
 
         setProcedureTxt('');
         setProcedureTitle('');
+        setDrawing(null);
+        setSelectedImage(null);
+        setSelectedVideo(null);
         setModalVisible(false);
       }
   }
@@ -130,13 +235,13 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
           
         </View>
         <View className='flex-row gap-1'>
-          <Button variant='white' size='md' className='mb-8' onPress={() =>  setModalVisible(true)}>           
+          <Button variant='white' size='md' className='mb-8' onPress={() =>  setAddNewModal(true)}>           
             <Typography variant='blue' size='sm' weight='400' className='text-center' >Lägg till procedur</Typography>
           </Button>          
         </View>
 
         {/* Modal for adding procedure */}
-        <Modal visible={modalVisible} transparent={true} animationType="slide" onRequestClose={() => setModalVisible(false)}>
+        <Modal visible={addNewModal} transparent={true} animationType="slide" onRequestClose={() => setAddNewModal(false)}>
           <View className="flex-1 justify-center items-center bg-vgrBlue bg-opacity-50">
             <View className="bg-white p-6 w-4/5 rounded-lg">
               <Typography variant="black" size="h3" weight="700">Lägg till procedur</Typography>
@@ -155,7 +260,17 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
                 value={procedureTxt}
                 onChangeText={setProcedureTxt}
               />
-              <View className='flex-row gap-4 mt-4'>
+              <View className="flex flex-row justify-between mt-4">
+                <MediaPicker setSelectedImage={setSelectedImage} setSelectedVideo={setSelectedVideo} />
+                <DrawingPicker
+                  setDrawing={setDrawing}
+                  setDrawingPreview={setDrawingPreview}
+                  isDrawingMode={isDrawingMode}
+                  setIsDrawingMode={setIsDrawingMode}
+                />
+              </View>
+              
+              <View className='flex flex-row justify-between mt-4'>
                 <Button variant='blue' size='md' onPress={handleAbort}>
                   <Typography variant='white' size='md' weight='700'>AVBRYT</Typography>
                 </Button>
@@ -163,6 +278,24 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
                   <Typography variant='white' size='md' weight='700'>SPARA</Typography>
                 </Button>
               </View>
+
+              {/* Show selected image/video or drawing canvas */}
+              <View className='flex-col items-center justify-center mt-4'>
+              {selectedImage && <Image source={{ uri: selectedImage }} style={{ width: 100, height: 100, marginTop: 10 }} />}
+              {selectedVideo && <Text style={{ marginTop: 10 }}>Video: {selectedVideo}</Text>}
+              {drawingPreview &&
+                <View className='mt-2 items-center justify-center'>
+                  <Text >Förhandsgranskning:</Text>              
+                  <Image 
+                    source={{ uri: drawingPreview }} 
+                    style={{ width: 100, height: 100, 
+                    marginTop: 10, borderWidth: 1, 
+                    borderColor: 'black' }} 
+                  />
+                </View>
+                }
+              </View>
+
             </View>
           </View>
         </Modal>
@@ -178,6 +311,18 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
               <View className='flex-col bg-white w-full min-w-full p-4 rounded-lg mt-4'>
                 <Typography variant='black' size='md' weight='700' className="pb-2">{procedure.procedure_title}</Typography>
                 <Typography variant='black' size='md' weight='400'>{procedure.procedure_text}</Typography>
+              </View>
+              <View className='flex-row justify-between items-center mt-2'>                
+                {procedure.procedure_img && (
+                <View className='border-b border-gray-400'>
+                  <Image source={{ uri: procedure.procedure_img }} style={{ width: 100, height: 100, marginTop: 10 }} />
+                </View>
+                )}
+                {procedure.procedure_drawing && (
+                <View className='border-b border-gray-400'>
+                  <Image source={{ uri: procedure.procedure_drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />
+                </View>
+                )}
               </View>
             </TouchableOpacity>
           ))

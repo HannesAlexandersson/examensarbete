@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
-import { Button, Typography } from '@/components';
+import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image, Platform } from 'react-native';
+import { Button, Typography, DisplayEntryMedia, Draw } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
 import * as FileSystem from 'expo-file-system';
-import { Draw } from '@/components';
 import { supabase } from '@/utils/supabase';
 import type { SkImage } from '@shopify/react-native-skia';
-import DisplayEntryMedia from '@/components/DisplayEntryMedia';
+
 
 
 export default function DiaryScreen() {
@@ -281,7 +279,7 @@ export default function DiaryScreen() {
     }
   }
 
-  // Check if there were any media uploads before proceeding
+  //if there were any media uploads, get the uri's
   const uploadedMedia = {
     drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
     image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
@@ -473,10 +471,7 @@ const fetchFewerEntries = async () => {
             ) : (
               <Typography variant='black' size='sm'>Inget datum har angivits</Typography>
             )}
-            <DisplayEntryMedia entry={entry} />
-            {/* {entry.image && <Image source={{ uri: entry.image }} style={{ width: 100, height: 100, marginTop: 10 }} />}
-            {entry.video && <Text>Video added: {entry.video}</Text>}
-            {entry.drawing && <Image source={{ uri: entry.drawing }} style={{ width: 100, height: 100, marginTop: 10 }} />} */}
+            <DisplayEntryMedia entry={entry} />           
           </View>
         ))}
         

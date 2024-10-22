@@ -234,4 +234,24 @@ export type ProcedureProps = {
   procedure_title: string | null;
   procedure_text: string | null;
   user_id?: string | null;
+  procedure_img?: string | null;
+  procedure_video?: string | null;
+  procedure_drawing?: string | null;
+}
+
+export interface MediaPickerProps {
+  setSelectedImage: (uri: string | null) => void;
+  setSelectedVideo: (uri: string | null) => void;
+}
+
+export interface DrawingPickerProps {
+  setDrawing: (drawing: FilelikeObject | null) => void;
+  setDrawingPreview: (preview: string | null) => void;
+  isDrawingMode: boolean;
+  setIsDrawingMode: (mode: boolean) => void;
+}
+
+export type MediaUpload = {
+  type: string;
+  url: string;
 }
