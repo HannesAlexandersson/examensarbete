@@ -8,13 +8,14 @@ import Typography from './Typography';
 
 
 
-const FullViewModal: React.FC<FullViewModalProps> = ({ isVisible, onClose, event }: FullViewModalProps) => {
+const FullViewModal = ({ isVisible, onClose, event }: FullViewModalProps) => {
   const {user} = useAuth();
   const [question, setQuestion] = useState<QuestionProps | null>(null);
 
   useEffect(() => {
     if(!event) return;
 
+    //fetch the question that corresponds to the event
     const fetchQuestion = async () => {
       const { data, error } = await supabase
       .from('Questions')
@@ -48,6 +49,7 @@ const FullViewModal: React.FC<FullViewModalProps> = ({ isVisible, onClose, event
 
           <Typography variant='black' weight='400' size='sm' className='mt-2'>Från: {question?.contact_name}</Typography>
          
+        {/*Ready to integrate with different kind of events */}
 
         {/*   {event.event_type === 'Own_added_medicins' && (
             <Text>
@@ -68,7 +70,7 @@ const FullViewModal: React.FC<FullViewModalProps> = ({ isVisible, onClose, event
             </Text>
           )} */}
 
-          {/* Close button */}
+         
           <TouchableOpacity onPress={onClose}>
             <Text style={{ color: 'blue', textAlign: 'right', marginTop: 10 }}>Close</Text>
           </TouchableOpacity>

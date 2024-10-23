@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Text, View, Image, TouchableOpacity, Alert, BackHandler, Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/providers/AuthProvider';
@@ -10,12 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
-import { supabase } from '@/utils/supabase';
-import { showNotification, truncateText } from '@/utils/utils';
-
-
-
-
+import { truncateText } from '@/utils/utils';
 
 export default function HomeScreen() {
   const { user, userAvatar, answers, setAnswers } = useAuth();
@@ -64,8 +59,6 @@ export default function HomeScreen() {
     }, [user])
   );
 
-
-
   const handleDiary = () => {
     router.push('/diary');
   }
@@ -74,8 +67,6 @@ export default function HomeScreen() {
     alert('Välj en vårdkontakt för att ställa en fråga');
     router.push('/departments');
   }
-
-  console.log('answers', answers);
   
   return (
     <View className="flex-1 items-center justify-start gap-4 bg-slate-100">
@@ -109,19 +100,21 @@ export default function HomeScreen() {
       </View>
 
       
-      <View className='flex flex-col gap-2 items-start justify-start w-full pl-4'>
-        <Typography variant='black' weight='400' className='text-[24px]'>Mina händelser</Typography>
+      <View className='flex flex-col gap-2 items-start justify-start w-full'>
+        <Typography variant='black' weight='400' className='text-[24px] pl-4'>Mina händelser</Typography>
         {answers && answers?.length > 0 ? (
           <>
         {answers.map((answer) => (
-          <View key={answer.id} className='bg-white flex-row justify-between w-full px-4 py-1 border-b border-t border-black'>
-            <View className='flex-col gap-2 items-center justify-start w-[90%]'>            
-              <MaterialCommunityIcons name="chat-question" size={24} color="black" />                
+          <View key={answer.id} className='bg-white flex-row justify-between w-full py-1 border-b border-t border-black'>
+            <View className='items-end justify-center w-[20%]'>
+              <MaterialCommunityIcons name="chat-question" size={40} color="black" />
+            </View>                
+            <View className='flex-col gap-2 items-start justify-start w-[55%]'>            
               <Typography variant='black' weight='700' size='lg'>Fråga besvarad</Typography>            
               <Typography variant='black' weight='400' size='sm'>{new Date(answer.created_at).toLocaleDateString()}</Typography>            
-              <Typography variant='black' weight='400' size='md'>{truncateText(answer.answer_txt || '', 20)}</Typography>              
+              <Typography variant='black' weight='400' size='md'>{truncateText(answer.answer_txt || '', 25)}</Typography>              
             </View>
-            <View className='items-center justify-center'>
+            <View className='items-start justify-center w-[20%]'>
               <TouchableOpacity onPress={() => openModal(answer)}>
                 <EvilIcons name="chevron-right" size={60} color="black" />
               </TouchableOpacity>
