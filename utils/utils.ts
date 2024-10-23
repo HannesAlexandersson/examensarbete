@@ -1,3 +1,6 @@
+import Toast from 'react-native-toast-message';
+import { EventProps } from './types';
+
 //format date strings
 export const formatDate = (date: Date): string => {
   const year = date.getFullYear();
@@ -28,4 +31,18 @@ export const base64ToBlob = (base64: string, mimeType: string) => {
   }
 
   return new Blob(byteArrays, { type: mimeType });
+};
+
+// Function to show the notification
+export const showNotification = (newEvent: EventProps) => {
+  Toast.show({
+    type: 'success',
+    text1: 'Nytt meddelande!',
+    text2: 'Du har fått ett nytt svar på en fråga.',
+    position: 'top',
+  });
+};
+
+export const truncateText = (text: string, length: number) => {
+  return text.length > length ? `${text.substring(0, length)}...` : text;
 };

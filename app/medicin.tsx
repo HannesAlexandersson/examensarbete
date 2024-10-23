@@ -21,6 +21,7 @@ export default function Medicin() {
   });
   const [addMedicinModalvisible, setAddMedicinModalVisible] = React.useState(false);
   const [selectedMedicin, setSelectedMedicin] = React.useState<OwnAddedMedicinProps | null>(null);
+  const [selectedMedicinX, setSelectedMedicinX] = React.useState<MedicinProps | null>(null);
   
 
   //set the states with the users medicins on mount
@@ -54,7 +55,23 @@ export default function Medicin() {
         if (user) {
           const newlyAddedMedicin = data[0];
           user.own_medicins = [...ownMedicins, newlyAddedMedicin];
-        }        
+        }
+        alert('Medicin tillagd!');
+
+        const {data:Eventdata, error:EventError} = await supabase
+          .from('Events')
+          .insert(
+            {
+              profile_id: user?.id,
+              event_type: 'Own_added_medicins',
+              event_name: `Ny medicin tillagd: ${newMedicin.medicin_namn}`,
+              event_id: data[0].id
+            }
+          )
+          .select();
+        if(EventError) console.error('Error saving event', EventError);
+
+        console.log('event added:', Eventdata);
       }
     } catch (error) {
       console.error(error);
@@ -116,7 +133,7 @@ export default function Medicin() {
         </View>
 
 
-        <View className='w-full px-4'>
+        <View className='w-full px-4 mb-4'>
           <View>
             <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner du lagt till själv:</Typography>
           </View>
@@ -139,14 +156,16 @@ export default function Medicin() {
           </View>
           {medicins && (
             medicins.map((medicin, index) => (
-              <View key={index} className='flex-col gap-2 items-center justify-between w-full px-4 py-2 my-1 rounded bg-white'>
-                <Typography variant='black' size='lg' weight='700' className=''>{medicin.name}</Typography>
-                <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordination}</Typography>
+              <TouchableOpacity key={index} onPress={() => setSelectedMedicinX(medicin)}>
+              <View className={selectedMedicinX?.name === medicin.name ? `flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-black border  border-purple-700` : `flex-col gap-2 items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`}>
+                <Typography variant='black' size='lg' weight='700' className={selectedMedicinX?.name === medicin.name ? `text-white`:`text-black`}>{medicin.name}</Typography>
+                <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `text-white italic items-start`: `italic items-start text-black`}>{medicin.ordination}</Typography>
                 <View className='flex-col gap-2 items-start justify-between w-full'>
-                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.utskrivare_name}</Typography>
-                  <Typography variant='black' size='md' weight='400' className='italic'>{medicin.ordinationName}</Typography>
+                  <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `italic text-white`: `italic text-black`}>{medicin.utskrivare_name}</Typography>
+                  <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `italic text-white`: `italic text-black`}>{medicin.ordinationName}</Typography>
                 </View>
               </View>
+              </TouchableOpacity>
             )))}
         </View>
 

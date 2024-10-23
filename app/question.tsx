@@ -68,6 +68,7 @@ export default function Questions() {
       txt: ''
     });
     let responseTxt: string | null = null;
+    let answerId: string | null = null;
     try{
       responseTxt = await getOpenAIResponse(msgTxt);
       
@@ -85,8 +86,24 @@ export default function Questions() {
             question_id: questionId,
             answer_txt: responseTxt
           }
-      );
+        )
+        .select();
       if(AnswerError) console.error('Error saving answer:', AnswerError);
+      if(AnswerData && AnswerData.length > 0) {
+      answerId = AnswerData[0].id;
+      }
+
+      const {data:Eventdata, error:EventError} = await supabase
+      .from('Events')
+      .insert(
+        {
+          profile_id: user?.id,
+          event_id: answerId,
+          event_type: 'Answer',
+          event_name: 'Answer from' + updatedMessage.contactperson,
+        }
+      );
+      if(EventError) console.error('Error saving event:', EventError);
     }
   }
   router.back();

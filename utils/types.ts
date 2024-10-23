@@ -32,6 +32,29 @@ export type EventSource = {
   icon: Image;
 };
 
+export type EventProps = {
+  id: string | null;
+  date: Date | null;
+  event_type: string | null;
+  event_name: string | null;
+  profile_id: string | null;  
+  event_details?: Answers[] | null; 
+};
+
+export type Answers = {
+  id: string;
+  question_id: string;
+  profile_id: string;
+  answer_txt: string;
+  created_at: string;
+};
+
+export interface FullViewModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  event: Answers | null;
+}
+
 export type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
@@ -43,7 +66,8 @@ export type AuthContextType = {
   contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
-  answers: string[];
+  answers: Answers[];
+  setAnswers: (answers: Answers[]) => void;
   response: string | null;
   setResponse: (response: string | null) => void;
   userAvatar: string | null;

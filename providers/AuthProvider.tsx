@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -23,8 +23,10 @@ const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
-const [answers, setAnswers] = React.useState<string[]>([]);//
+const [answers, setAnswers] = React.useState<Answers[]>([]);
 const [ response, setResponse ] = React.useState<string | null>(null);
+const [events, setEvents] = React.useState<EventSource[]>([]);
+const [newEvents, setNewEvents] = React.useState<EventSource[]>([]);
 
 
 
@@ -56,6 +58,9 @@ const getUser = async (id: string) => {
 
   //get user procedures
   const procedures = await getProcedures(id);
+
+  //call the get answers function to set the users answers
+  await getAnswers(id);
 
   const updatedUser: User = {
     ...data,
@@ -99,6 +104,19 @@ const getUser = async (id: string) => {
   setUser(updatedUser);    
   router.push('/(tabs)');
   }
+};
+
+const getAnswers = async (id: string) => {
+  const { data, error } = await supabase
+  .from('Answers')
+  .select('*')
+  .eq('profile_id', id);
+  if (error) {
+    console.error('Error fetching answers:', error);
+    return [];
+  }
+  
+  setAnswers(data as Answers[] || []);
 };
 
 const getProcedures = async (id: string) => {
@@ -554,6 +572,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, setUser,  fetchUserEntries, answers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser,  fetchUserEntries, answers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }
