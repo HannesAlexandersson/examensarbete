@@ -20,93 +20,13 @@ export default function ProceduresScreen() {
   const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
-  
-  
 
-
+  //set the sates on mount
   React.useEffect(() => {
-    const fetchProcedures = async () => {
-      const data: ProcedureProps[] | null = await getProcedures(user?.id || '');
-      setProcedures(data);
-    };
-    fetchProcedures();
+    if (user?.procedures) {
+      setProcedures(user.procedures);
+    }
   }, []);
-
-
-  const getProcedures = async (id: string) => {
-    //define the query
-    const query = supabase
-    .from('Procedures')
-    .select('*')
-    .eq('user_id', id);
-    
-    try{
-      //fetch the data
-      const { data: procedureEntrys, error: procedureErrors } = await query;
-
-      if(procedureErrors) {
-        console.error(procedureErrors);
-        return [];
-      }
-
-      //map the database fields to the entry structure
-      const formattedProcedures: ProcedureProps[] = await Promise.all(
-        procedureEntrys?.map(async(procedure: any) => {
-          const mediaUrls = await getMediaUrls(procedure);
-          
-          return {
-            id: procedure.id,
-            procedure_title: procedure.procedure_title,
-            procedure_text: procedure.procedure_text,
-            user_id: procedure.user_id,
-            procedure_img: mediaUrls.img || null,
-            procedure_video: mediaUrls.video || null,
-            procedure_drawing: mediaUrls.drawing || null,
-          };
-        })
-      );
-
-      
-      return formattedProcedures;
-    } catch (error) {
-      console.error('Error fetching procedures:', error);
-      return [];
-    }
-  };
-
-  const getMediaUrls = async (entry: any) => {
-    const mediaUrls: any = {
-      image: null,
-      video: null,
-      drawing: null,
-    };    
-  
-    // Fetch image URL if exists
-    if (entry.img_url) {
-      const { data: imageUrl } = supabase.storage
-        .from('procedureMedia')
-        .getPublicUrl(entry.img_url);  // Use the actual field from the database
-      if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
-    }
-  
-    // Fetch video URL if exists
-    if (entry.video_url) {
-      const { data: videoUrl } = supabase.storage
-        .from('procedureMedia')
-        .getPublicUrl(entry.video_url);
-      if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
-    }
-  
-    // Fetch drawing URL if exists
-    if (entry.drawing_url) {
-      const { data: drawingUrl } = supabase.storage
-        .from('procedureMedia')
-        .getPublicUrl(entry.drawing_url);
-      if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
-    }
-  
-    return mediaUrls;
-}
 
   const handleCloseTooltip = () => {
     setToolTipVisible(false);
@@ -232,7 +152,8 @@ export default function ProceduresScreen() {
     } else {
       if (data && data.length > 0) {
         
-        const newProcedure = data[0]; 
+        const newProcedure = data[0];
+        //update the local state with the new procedure
         setProcedures([...procedures, { 
           id: newProcedure.id, 
           procedure_title: procedureTitle, 
@@ -242,6 +163,19 @@ export default function ProceduresScreen() {
           procedure_video: uploadedMedia.video_url,
           procedure_drawing: uploadedMedia.drawing_url 
         }]);
+
+        //update the global userobject with the new procedure
+        if (user) {
+        user.procedures = [...procedures, { 
+          id: newProcedure.id, 
+          procedure_title: procedureTitle, 
+          procedure_text: procedureTxt, 
+          user_id: user?.id,
+          procedure_img: uploadedMedia.img_url,
+          procedure_video: uploadedMedia.video_url,
+          procedure_drawing: uploadedMedia.drawing_url 
+        }];
+      }
 
         setProcedureTxt('');
         setProcedureTitle('');
@@ -265,7 +199,12 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
     console.error('Error deleting procedure:', error);
     alert('Något gick fel, försök igen senare!');
   } else {
+    //update the local state
     setProcedures(procedures.filter(procedure => procedure.id !== procedur.id));
+    //update the global user object
+    if (user) {
+      user.procedures = procedures.filter(procedure => procedure.id !== procedur.id);
+    }
     alert('Procedur borttagen!');
     setModalVisible(false);
   }

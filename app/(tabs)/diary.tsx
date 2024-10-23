@@ -7,7 +7,7 @@ import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
 import { supabase } from '@/utils/supabase';
 
 export default function DiaryScreen() {
-  const { user } = useAuth(); 
+  const { user, setUser } = useAuth(); 
   
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null); 
   const [loadedAll, setLoadedAll] = useState<boolean>(false);
@@ -28,104 +28,12 @@ export default function DiaryScreen() {
   //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
   useEffect(() => {
     setIsDrawingMode(false);
-    setIsModalVisible(false);   
-    fetchUserEntries(true); 
-  }, [remountKey]);
+    setIsModalVisible(false);
+     
+    setDiary(user?.diary_entries || null);
+  }, []);
 
   
-  
-  //fetch the  diary entrys 
-  const fetchUserEntries = async (limitEntries: boolean = true) => {
-    //first check if user is logged in
-    if (!user?.id) {
-      console.error('User ID is missing');
-      return;
-    }
-    
-    try{      
-      
-      let query = supabase
-      .from('diary_posts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });//post_date or created_at
-        
-        
-      if (limitEntries) {
-        query = query.limit(3); // Change the number as needed
-      }
-
-      const { data: diaryEntries, error: diaryError } = await query;
-
-      if (diaryError) {
-        console.error('Error fetching diary posts:', diaryError);
-        return;
-      }
-
-      if (!diaryEntries || diaryEntries.length === 0) {
-        console.log('No diary posts found for this user.');
-        return;
-      }
-
-      //map the database fields to the entry structure
-      const formattedEntries: DiaryEntry[] = await Promise.all(
-        diaryEntries.map(async (entry: any) => {
-          
-          const mediaUrls = await getMediaFiles(entry);
-
-          return {
-            titel: entry.post_title,   
-            text: entry.post_text,   
-            image: mediaUrls.image || null,  
-            video: mediaUrls.video || null, 
-            drawing: mediaUrls.drawing || null, 
-            date: new Date(entry.post_date)  
-          };
-        })
-      );
-    
-      
-    //set the diary entrys to the state
-    setDiary(formattedEntries);   
-
-  }catch (error) {
-    console.error('Error fetching user images:', error);
-  } 
-}
-
-  const getMediaFiles = async (entry: DiaryEntry) => {
-    const mediaUrls: any = {
-      image: null,
-      video: null,
-      drawing: null,
-    };
-  
-    // Fetch image URL if exists
-    if (entry.image_url) {
-      const { data: imageUrl } = supabase.storage
-        .from('diary_media')
-        .getPublicUrl(entry.image_url);  // Use the actual field from the database
-      if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
-    }
-  
-    // Fetch video URL if exists
-    if (entry.video_url) {
-      const { data: videoUrl } = supabase.storage
-        .from('diary_media')
-        .getPublicUrl(entry.video_url);  // Use the actual field from the database
-      if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
-    }
-  
-    // Fetch drawing URL if exists
-    if (entry.drawing_url) {
-      const { data: drawingUrl } = supabase.storage
-        .from('diary_media')
-        .getPublicUrl(entry.drawing_url);  // Use the actual field from the database
-      if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
-    }
-  
-    return mediaUrls;
-}
   
   // Function to handle form submission (saving post)
   const handleSavePost = async () => {
@@ -257,6 +165,20 @@ export default function DiaryScreen() {
   // Save the entry to local diary state
   setDiary(prevDiary => [...(prevDiary || []), newEntry]);
 
+  // Update global user diary entries  
+  if (user) {
+    // If diary_entries is not defined, initialize it as an empty array
+    if (!user.diary_entries) {
+      user.diary_entries = [];
+    }
+  
+    // Push the new entry to the user.diary_entries array
+    user.diary_entries.push(newEntry);
+  
+    // Update the user state
+    setUser({ ...user });
+  }
+
   // Reset modal fields
   setPostTitel('');
   setPostText('');
@@ -271,15 +193,15 @@ export default function DiaryScreen() {
   setIsModalVisible(false);
 };
 
-const fetchAllEntries = async () => {
-  fetchUserEntries(false);
+const fetchAllEntries = async () => { 
   setLoadedAll(true);
 }
-const fetchFewerEntries = async () => {
-  setDiary(null);
-  fetchUserEntries(true);
+const fetchFewerEntries = async () => {   
   setLoadedAll(false);
 }
+
+// Display only the first three entries, or all entries if loadedAll is true
+const displayedEntries = loadedAll ? diary : diary?.slice(0, 3);
 
   return (
     <ScrollView>
@@ -382,17 +304,19 @@ const fetchFewerEntries = async () => {
         </Modal>
 
         {/* Display Diary Entries */}
-        {diary?.map((entry, index) => (
-          <View key={index} className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 my-4'>
-            <Typography variant='black' weight='700' size='md'>{entry.titel}</Typography>
-            <Typography variant='black' weight='500' size='md'>{entry.text}</Typography>
-            {entry.date ? (
-              <Typography variant='black' size='sm'>{new Date(entry.date).toLocaleDateString()}</Typography>
-            ) : (
-              <Typography variant='black' size='sm'>Inget datum har angivits</Typography>
-            )}
-            <DisplayEntryMedia entry={entry} />           
-          </View>
+        {displayedEntries?.map((entry, index) => (
+          <ScrollView key={index} className='flex-1 w-full'>
+            <View className='flex flex-col items-start justify-start border border-black w-full bg-slate-100 p-4 my-4'>
+              <Typography variant='black' weight='700' size='md'>{entry.titel}</Typography>
+              <Typography variant='black' weight='500' size='md' className='mb-2'>{entry.text}</Typography>
+              <DisplayEntryMedia entry={entry} />  
+              {entry.date ? (
+                <Typography variant='black' size='sm' className='mt-2'>{new Date(entry.date).toLocaleDateString()}</Typography>
+              ) : (
+                <Typography variant='black' size='sm' className='mt-2'>Inget datum har angivits</Typography>
+              )}
+            </View>         
+          </ScrollView>
         ))}
         
         

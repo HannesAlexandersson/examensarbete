@@ -6,7 +6,7 @@ import { supabase } from '@/utils/supabase';
 import { DiagnosisProps } from '@/utils/types';
 
 export default function Diagnosis() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
   const [diagnosis, setDiagnoses] = React.useState<DiagnosisProps[] | null>([]);
   const [newDiagnosis, setNewDiagnoses] = React.useState<DiagnosisProps>({
@@ -19,21 +19,11 @@ export default function Diagnosis() {
   const [isFullviewModalVisible, setIsFullviewModalVisible] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    fetchDiagnosis();
-  }, []);
-
-  const fetchDiagnosis = async () => {
-    const { data: diagnosisData, error: diagnosisError } = await supabase
-    .from('Diagnosis')
-    .select('*')
-    .eq('user_id', user?.id);
-
-    if (diagnosisError) {
-      console.error('Error fetching diagnosis:', diagnosisError);
-    } else {
-      setDiagnoses(diagnosisData);
+    if (user?.diagnoses) {
+      setDiagnoses(user.diagnoses); 
     }
-  }
+  }, []);
+ 
 
   const handleAddDiagnosis = async() => {
     try{
@@ -60,6 +50,15 @@ export default function Diagnosis() {
       }
      //add the new diagnosis to the list of diagnoses
       setDiagnoses((prevDiagnoses) => (prevDiagnoses ? [...prevDiagnoses, newDiagnosis] : [newDiagnosis]));
+      //add the new diagnosis to the user object
+      if(user){
+        if(!user.diagnoses){
+          user.diagnoses = [];
+        }
+        user?.diagnoses.push(newDiagnosis);
+
+        setUser({ ...user });
+      }
       setNewDiagnoses({ name: '', description: '', id: '' });
     } catch (error) {
       console.error('Error adding diagnosis:', error);
@@ -104,8 +103,16 @@ export default function Diagnosis() {
       }
 
       alert('Diagnos borttagen!');  
-      //refresh the page so the new contact is displayed
-      fetchDiagnosis();
+      
+      //remove the deleted diagnosis from the list of diagnoses
+      setDiagnoses((prevDiagnoses: DiagnosisProps[] | null) => 
+        prevDiagnoses ? prevDiagnoses.filter((prevDiagnosis) => prevDiagnosis.id !== diagnosis.id) : null
+      );
+      //remove the deleted diagnosis from the user object
+      if(user){
+        user.diagnoses = user.diagnoses?.filter((prevDiagnosis) => prevDiagnosis.id !== diagnosis.id);
+        setUser({ ...user });
+      }
     } catch (error) {
       console.error('Error removing diagnosis:', error);
     }

@@ -17,8 +17,11 @@ export type User = {
   medicins?: MedicinProps[] | null;
   diary_entries?: DiaryEntry[] | null;
   events?: EventSource[] | null;
-  diagnosis?: string | null;
-  
+  diagnoses?: DiagnosisProps[] | null;
+  answers?: string[] | null;
+  departments?: DepartmentProps[] | null;
+  staff?: StaffProps[] | null;
+  procedures?: ProcedureProps[] | null;
 };
 
 export type EventSource = {
@@ -29,8 +32,32 @@ export type EventSource = {
   icon: Image;
 };
 
+export type EventProps = {
+  id: string | null;
+  date: Date | null;
+  event_type: string | null;
+  event_name: string | null;
+  profile_id: string | null;  
+  event_details?: Answers[] | null; 
+};
+
+export type Answers = {
+  id: string;
+  question_id: string;
+  profile_id: string;
+  answer_txt: string;
+  created_at: string;
+};
+
+export interface FullViewModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  event: Answers | null;
+}
+
 export type AuthContextType = {
   user: User | null;
+  setUser: (user: User | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -39,7 +66,8 @@ export type AuthContextType = {
   contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
-  answers: string[];
+  answers: Answers[];
+  setAnswers: (answers: Answers[]) => void;
   response: string | null;
   setResponse: (response: string | null) => void;
   userAvatar: string | null;
@@ -51,6 +79,7 @@ export type AuthContextType = {
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
+  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;
 };
 
 export type OnboardingText = {
@@ -157,6 +186,7 @@ export interface DiaryMediaUpload {
 }
 
 export type OwnAddedMedicinProps = {
+  id?: number;
   namn: string;
   ordination: string;
   utskrivare: string;
@@ -164,6 +194,8 @@ export type OwnAddedMedicinProps = {
   doktor_namn?: string | null;
   avd_namn?: string | null;
   medicin_namn?: string | null;
+  fritext?: string | null;
+  user_id?: string | null;
 };
 
 export type MedicinProps = {
@@ -174,7 +206,7 @@ export type MedicinProps = {
   utskrivare: string;
   utskrivare_name?: string | null;
   ordinationName?: string | null;
-  user_id: string;
+  user_id: string;  
 };
 
 export type EnrichMedicinProps = {
