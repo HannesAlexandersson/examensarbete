@@ -80,6 +80,12 @@ export type AuthContextType = {
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
   fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;
+  mediaFiles: string[];
+  setMediaFiles: (files: string[]) => void;
+  videoFiles: string[];
+  setVideoFiles: (files: string[]) => void;
+  drawingFiles: string[];
+  setDrawingFiles: (files: string[]) => void;
 };
 
 export type OnboardingText = {

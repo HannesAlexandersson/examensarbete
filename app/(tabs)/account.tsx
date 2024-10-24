@@ -11,7 +11,7 @@ export default function AccountScreen() {
   
   const handleQuestions = () => {
     alert('Välj en vårdkontakt för att ställa en fråga');
-    router.push('/people');
+    router.push('/departments');
   }
 
   const handleEditAccount = () => {
@@ -65,14 +65,10 @@ export default function AccountScreen() {
             <MaterialCommunityIcons name="image-album" size={24} color="black" />
             <Typography variant='black' size='lg' weight='400' className='text-center' >Mina album</Typography>
           </Button>
-
-          <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => router.push('/people')}>
-            <MaterialCommunityIcons name="pill" size={24} color="black" />
-            <Typography variant='black' size='lg' weight='400' className='text-center' >Mina Mediciner</Typography>
-          </Button>
+          
         </View>
 
-        <Button variant='black' size='md' className='mb-8' onPress={signOut}>
+        <Button variant='blue' size='md' className='mb-8' onPress={signOut}>
           <Typography variant='white' weight='700' className=' text-3xl'>Logga ut</Typography>
         </Button>
       </View>

@@ -230,6 +230,12 @@ export default function Departments() {
       },
     });
   };
+const [avatarModal, setAvatarModal] = useState<boolean>(false);
+  const addAvatars = () => {
+    console.log('Add avatars');
+    setAvatarModal(true);
+    
+  }
 
   return(
     <ScrollView className='bg-vgrBlue'>
@@ -394,6 +400,21 @@ export default function Departments() {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
+
+              <View className='my-4 flex-col items-center justify-between' >
+                <Typography variant='black' weight='700' size='md' className="mb-2 text-center">
+                  Personal jag känner här:
+                </Typography>
+                <Button
+                variant='white'
+                className="bg-gray-500 p-3 mt-4 rounded w-full"
+                onPress={addAvatars}
+              >
+                <Typography variant='white' weight='400' size='md' className="text-center">
+                  Lägg personal
+                </Typography>
+              </Button>
+              </View>
 
               
               <Button
