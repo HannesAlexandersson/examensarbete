@@ -40,6 +40,7 @@ export default function Departments() {
   const [isActive, setIsActive] = useState(false);
   const [isFullviewModalVisible, setIsFullviewModalVisible] = useState<boolean>(false);
   
+  
   useEffect(() => {
     if (user?.departments && user?.staff) {
       setDepartments(user.departments);
@@ -102,7 +103,7 @@ export default function Departments() {
       setFilteredStaff(filtered);
     }
   };  
-
+  
   //we want to set the cursor to the start due to the long names of the departments
   const handleFocus = () => {
     setIsActive(true); //so when a input field is active we set the state to true
@@ -114,13 +115,14 @@ export default function Departments() {
   //open the fullview modal on press for the selected contact
   const handleSelectContact = (contact: ContactsProps) => {
     setSelectedContact(contact); 
-    setIsFullviewModalVisible(true); 
+    setIsFullviewModalVisible(true);     
   };
 
   //close the modal and clear the state
   const closeModal = () => {
     setIsFullviewModalVisible(false);
     setSelectedContact(null); 
+    setSelectedDepartment(null);
   };
 
   const handleAddContact = async () => {
@@ -229,13 +231,7 @@ export default function Departments() {
         staff_id: contact._C_staff_id,
       },
     });
-  };
-const [avatarModal, setAvatarModal] = useState<boolean>(false);
-  const addAvatars = () => {
-    console.log('Add avatars');
-    setAvatarModal(true);
-    
-  }
+  }; 
 
   return(
     <ScrollView className='bg-vgrBlue'>
@@ -400,22 +396,6 @@ const [avatarModal, setAvatarModal] = useState<boolean>(false);
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
-
-              <View className='my-4 flex-col items-center justify-between' >
-                <Typography variant='black' weight='700' size='md' className="mb-2 text-center">
-                  Personal jag känner här:
-                </Typography>
-                <Button
-                variant='white'
-                className="bg-gray-500 p-3 mt-4 rounded w-full"
-                onPress={addAvatars}
-              >
-                <Typography variant='white' weight='400' size='md' className="text-center">
-                  Lägg personal
-                </Typography>
-              </Button>
-              </View>
-
               
               <Button
                 variant='blue'

@@ -295,7 +295,10 @@ export type MediaUpload = {
 }
 
 export type DiagnosisProps = {
-  id: string;
-  name: string;
-  description: string;
+  id: string | null;
+  name: string | null;
+  image?: string | null;
+  drawing?: string | null;
+  video?: string | null;
+  description: string | null;
 }

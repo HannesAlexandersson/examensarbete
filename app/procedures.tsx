@@ -189,6 +189,9 @@ export default function ProceduresScreen() {
 }
 
 const handleDeleteProcedure = async (procedur: ProcedureProps) => {
+  if(!procedur){
+    return;
+  }
   
   const { error } = await supabase
   .from('Procedures')

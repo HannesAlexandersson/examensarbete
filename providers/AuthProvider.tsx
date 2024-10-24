@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, DiagnosisProps } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -315,18 +315,39 @@ const getProcedures = async (id: string) => {
 };
 
 const fetchDiagnosis = async (id: string) => {
-  try{
-    const { data: diagnosisData, error: diagnosisError } = await supabase
+  //define the query
+  const query = supabase
     .from('Diagnosis')
     .select('*')
     .eq('user_id', id);
 
+  try{
+    const { data: diagnosisData, error: diagnosisError } = await query
+    
+
     if (diagnosisError) {
-      console.error('Error fetching diagnosis:', diagnosisError);
+      console.error(diagnosisError);
       return [];
     }
 
-    return diagnosisData || [];
+    //map the database fields to the entry structure
+    const formattedDiagnoses: DiagnosisProps[] = await Promise.all(
+      diagnosisData?.map(async (diagnosis: any) => {
+        const mediaUrls = await getMediaFiles(diagnosis, 'diagnosisMedia');
+
+        return {
+          id: diagnosis.id,
+          name: diagnosis.name,
+          description: diagnosis.description,          
+          image: mediaUrls.img || null,
+          video: mediaUrls.video || null,
+          drawing: mediaUrls.drawing || null,
+        };
+      })
+    ); 
+
+    return formattedDiagnoses;
+
   } catch (error) {
     console.error('Error in fetchDiagnosis:', error);
     return [];

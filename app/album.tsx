@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from "@/providers/AuthProvider";
-import { ScrollView, View, Image, TouchableOpacity, Text, ActivityIndicator } from "react-native";
-import { supabase } from '@/utils/supabase';
+import { ScrollView, View, Image, TouchableOpacity } from "react-native";
 import { router } from 'expo-router';
 import { Button, Typography, VideoThumbnail } from '@/components';
 
