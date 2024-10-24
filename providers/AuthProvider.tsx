@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, DiagnosisProps } from '@/utils/types';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -25,8 +25,10 @@ const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 const [answers, setAnswers] = React.useState<Answers[]>([]);
 const [ response, setResponse ] = React.useState<string | null>(null);
-const [events, setEvents] = React.useState<EventSource[]>([]);
-const [newEvents, setNewEvents] = React.useState<EventSource[]>([]);
+
+const [mediaFiles, setMediaFiles] = React.useState<string[]>([]);
+const [videoFiles, setVideoFiles] = React.useState<string[]>([]);
+const [drawingFiles, setDrawingFiles] = React.useState<string[]>([]);
 
 
 
@@ -61,6 +63,11 @@ const getUser = async (id: string) => {
 
   //call the get answers function to set the users answers
   await getAnswers(id);
+
+  //set the users stored media
+  await fetchUserImages(id);
+  await fetchUserVideos(id);
+  await fetchuserDrawings(id);
 
   const updatedUser: User = {
     ...data,
@@ -104,6 +111,153 @@ const getUser = async (id: string) => {
   setUser(updatedUser);    
   router.push('/(tabs)');
   }
+};
+
+const fetchuserDrawings = async (id: string) => {
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: drawingRecords, error: drawingError } = await supabase
+      .from('Drawings') 
+      .select('*')
+      .eq('user_id', id); 
+
+    if (drawingError) {
+      console.error('Error fetching drawings from the database:', drawingError);
+      return;
+    }
+
+    if (!drawingRecords || drawingRecords.length === 0) {
+      console.log('No drawings found for this user.');
+      return;
+    }
+    
+    const drawingUrls = await Promise.all(
+      drawingRecords.map(async (drawing) => {
+        const { drawing_uri } = drawing;
+        
+        const { data: fileUrl } = supabase
+          .storage
+          .from('drawings')  
+          .getPublicUrl(drawing_uri);  
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; 
+      })
+    );
+
+    const validUrls = drawingUrls.filter(Boolean) as string[]; 
+    setDrawingFiles(validUrls); 
+
+  } catch (error) {
+    console.error('Error fetching user drawings:', error);
+  } 
+}
+
+const fetchUserImages = async (id: string) => {
+  //first check if user is logged in
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: imageRecords, error: imageError } = await supabase
+      .from('Images') 
+      .select('*')
+      .eq('user_id', id); 
+
+    if (imageError) {
+      console.error('Error fetching images from the database:', imageError);
+      return;
+    }
+
+    if (!imageRecords || imageRecords.length === 0) {
+      console.log('No images found for this user.');
+      return;
+    }
+    
+    const mediaUrls = await Promise.all(
+      imageRecords.map(async (image) => {
+        const { image_uri } = image;
+
+        // Fetch the public URL from the pictures bucket using image_uri from 'profiles'
+        const { data: fileUrl } = supabase
+          .storage
+          .from('pictures')  
+          .getPublicUrl(image_uri); 
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; //return with the valid public URL
+      })
+    );
+
+    const validUrls = mediaUrls.filter(Boolean) as string[]; //filter out non valids
+    setMediaFiles(validUrls); //store image urls in the media state
+
+  } catch (error) {
+    console.error('Error fetching user images:', error);
+  } 
+};
+
+
+const fetchUserVideos = async (id: string) => {    
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: videoRecords, error: videoError } = await supabase
+      .from('videos') 
+      .select('*')
+      .eq('user_id', id); 
+
+    if (videoError) {
+      console.error('Error fetching videos from the database:', videoError);
+      return;
+    }
+
+    if (!videoRecords || videoRecords.length === 0) {
+      console.log('No videos found for this user.');
+      return;
+    }
+    
+    const videoUrls = await Promise.all(
+      videoRecords.map(async (video) => {
+        const { video_uri } = video;
+        
+        const { data: fileUrl } = supabase
+          .storage
+          .from('videos')  
+          .getPublicUrl(video_uri);  
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; 
+      })
+    );
+
+    const validUrls = videoUrls.filter(Boolean) as string[]; 
+    setVideoFiles(validUrls); 
+
+  } catch (error) {
+    console.error('Error fetching user videos:', error);
+  } 
 };
 
 const getAnswers = async (id: string) => {
@@ -161,18 +315,39 @@ const getProcedures = async (id: string) => {
 };
 
 const fetchDiagnosis = async (id: string) => {
-  try{
-    const { data: diagnosisData, error: diagnosisError } = await supabase
+  //define the query
+  const query = supabase
     .from('Diagnosis')
     .select('*')
     .eq('user_id', id);
 
+  try{
+    const { data: diagnosisData, error: diagnosisError } = await query
+    
+
     if (diagnosisError) {
-      console.error('Error fetching diagnosis:', diagnosisError);
+      console.error(diagnosisError);
       return [];
     }
 
-    return diagnosisData || [];
+    //map the database fields to the entry structure
+    const formattedDiagnoses: DiagnosisProps[] = await Promise.all(
+      diagnosisData?.map(async (diagnosis: any) => {
+        const mediaUrls = await getMediaFiles(diagnosis, 'diagnosisMedia');
+
+        return {
+          id: diagnosis.id,
+          name: diagnosis.name,
+          description: diagnosis.description,          
+          image: mediaUrls.img || null,
+          video: mediaUrls.video || null,
+          drawing: mediaUrls.drawing || null,
+        };
+      })
+    ); 
+
+    return formattedDiagnoses;
+
   } catch (error) {
     console.error('Error in fetchDiagnosis:', error);
     return [];
@@ -572,6 +747,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, setUser,  fetchUserEntries, answers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, mediaFiles, setMediaFiles, drawingFiles, setDrawingFiles, videoFiles, setVideoFiles, fetchUserEntries, answers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }
