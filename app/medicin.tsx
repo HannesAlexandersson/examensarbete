@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Typography } from '@/components';
 import { router } from 'expo-router';
-import { View, ScrollView, Modal, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Modal, TouchableOpacity, Linking, Alert } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
@@ -111,7 +111,64 @@ export default function Medicin() {
       fritext: '',
     });
   }
+
+  const handleDeleteX = async (medicin: MedicinProps | null) => {
+
+    //delete the medicin from the supabase table
+    const {data, error} = await supabase
+      .from('Medicins')
+      .delete()
+      .eq('id', medicin?.id);
+
+      if(error) {
+        console.error(error);
+        return;
+      }
+
+      //remove the medicin from the local state     
+      setMedicins(medicins.filter((m) => m.id !== medicin?.id));
+      
+      //remove the medicin from the global userobject
+      if (user) {      
+        user.medicins = user.medicins?.filter((m) => m.id !== medicin?.id);
+           
+      }
+    alert('Medicin borttagen!');
+    //clear the states
+    setSelectedMedicinX(null);
+    setNewMedicin({
+      namn: '',
+      medicin_namn: '',
+      ordination: '',
+      utskrivare: '',
+      avdelning: '',
+      fritext: '',
+    });
+  }
   
+  const handleOpenFass = (medicin: MedicinProps | null) => {
+    const drugName = medicin?.name;
+    if (!drugName) {
+      Alert.alert("Ingen medicin vald!", "Välj en medicin för att öppna Fass.");
+      return;
+    }
+
+    const searchQuery = encodeURIComponent(drugName);
+    const fassUrl = `https://www.fass.se/LIF/startpage?userType=2&query=${searchQuery}`;
+
+    Linking.openURL(fassUrl).catch((err) =>
+      Alert.alert("Error", "Kunde inte öppna Fass...")
+    );
+  }
+
+  const handleSelectMedicin = (medicin: OwnAddedMedicinProps) => {
+    setSelectedMedicin(selectedMedicin?.medicin_namn === medicin.medicin_namn ? null : medicin);
+  };
+  
+  const handleSelectMedicinX = (medicin: MedicinProps) => {
+    setSelectedMedicinX(selectedMedicinX?.name === medicin.name ? null : medicin);
+  };
+
   return(
     <ScrollView className='bg-vgrBlue w-full'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -139,34 +196,48 @@ export default function Medicin() {
           </View>
           {ownMedicins && (
             ownMedicins.map((medicin, index) => (
-              <TouchableOpacity key={index} onPress={() => setSelectedMedicin(medicin)}>
+              <TouchableOpacity key={index} onPress={() => handleSelectMedicin(medicin)}>
                 <View className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-black border  border-purple-700` :`flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`} >
                   <Typography variant='black' size='lg' weight='700' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `text-white mb-2` :`mb-2 `}>{medicin.medicin_namn}</Typography>
                   <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `text-white items-start w-full pl-1 mb-2` : `items-start w-full pl-1 mb-2`}>{medicin.ordination}</Typography>
-                  <View className='flex-col gap-2 items-start justify-between w-full'>
-                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white`:`italic`}>Ordinerat av {medicin.doktor_namn}</Typography>
-                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white`:`italic`}>från {medicin.avd_namn}</Typography>
-                    <Typography variant='blue' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white mt-2`:`italic mt-2`}>{medicin.fritext}</Typography>
+                  <View className='flex-col items-start justify-between w-full mt-4'>                  
+                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? ` text-white`:``}>Ordinerat av: {medicin.doktor_namn}</Typography>
+                  
+                    <Typography variant='black' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? ` text-white`:``}>från: {medicin.avd_namn}</Typography>
+                    <Typography variant='blue' size='sm' weight='700' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white mt-2`:`italic mt-2`}>Mina tankar:</Typography>
+                    <Typography variant='blue' size='sm' weight='400' className={selectedMedicin?.medicin_namn === medicin.medicin_namn ? `italic text-white`:`italic`}>{medicin.fritext}</Typography>
                   </View>
                 </View>
               </TouchableOpacity>
             )))}
           <View>
-            <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner vården lagt till:</Typography>
+            <Typography variant='black' size='lg' weight='700' className='text-white my-4'>Mediciner vården lagt till:</Typography>
           </View>
-          {medicins && (
-            medicins.map((medicin, index) => (
-              <TouchableOpacity key={index} onPress={() => setSelectedMedicinX(medicin)}>
-              <View className={selectedMedicinX?.name === medicin.name ? `flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-black border  border-purple-700` : `flex-col gap-2 items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`}>
-                <Typography variant='black' size='lg' weight='700' className={selectedMedicinX?.name === medicin.name ? `text-white`:`text-black`}>{medicin.name}</Typography>
-                <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `text-white italic items-start`: `italic items-start text-black`}>{medicin.ordination}</Typography>
-                <View className='flex-col gap-2 items-start justify-between w-full'>
-                  <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `italic text-white`: `italic text-black`}>{medicin.utskrivare_name}</Typography>
-                  <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `italic text-white`: `italic text-black`}>{medicin.ordinationName}</Typography>
+          <View className='flex-row justify-between w-full my-2'>
+            <Button variant='white' size='md' className='' onPress={() => {              
+              handleOpenFass(selectedMedicinX);
+            } }>            
+              <Typography variant='blue' size='sm' weight='400' className='text-center' >Öppna fass</Typography>
+            </Button>
+            <Button variant='white' size='md' className='' onPress={() => handleDeleteX(selectedMedicinX)}>
+              <Typography variant='blue' size='sm' weight='400' className='text-center' >Ta bort vald medicin</Typography>
+            </Button>
+          </View>
+          <View className='flex-col w-full'>
+            {medicins && (
+              medicins.map((medicin, index) => (
+                <TouchableOpacity key={index} onPress={() => handleSelectMedicinX(medicin)}>
+                <View className={selectedMedicinX?.name === medicin.name ? `flex-col items-center justify-between w-full px-4 py-2 my-2 rounded bg-black border  border-purple-700` :`flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`}>
+                  <Typography variant='black' size='lg' weight='700' className={selectedMedicinX?.name === medicin.name ? `text-white`:`text-black`}>{medicin.name}</Typography>
+                  <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? `text-white italic items-start`: `italic items-start text-black`}>{medicin.ordination}</Typography>
+                  <View className='flex-col items-start justify-between w-full mt-4'>
+                    <Typography variant='black' size='md' weight='500' className={selectedMedicinX?.name === medicin.name ? ` text-white`: ` text-black`}>{medicin.utskrivare_name}</Typography>
+                    <Typography variant='black' size='md' weight='400' className={selectedMedicinX?.name === medicin.name ? ` text-white`: ` text-black`}>{medicin.ordinationName}</Typography>
+                  </View>
                 </View>
-              </View>
-              </TouchableOpacity>
-            )))}
+                </TouchableOpacity>
+              )))}
+          </View>
         </View>
 
         {/* Modal for adding medicin */}
