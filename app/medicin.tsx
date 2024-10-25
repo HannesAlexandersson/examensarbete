@@ -152,7 +152,7 @@ export default function Medicin() {
       return;
     }
 
-    const tableName = 'name' in medicin ? 'Medicins' : 'Own_added_medicins';
+    const tableName = 'name' in medicin ? 'medicins' : 'Own_added_medicins';
     const medicinId = medicin.id;
 
     const { error } = await supabase
@@ -210,15 +210,7 @@ export default function Medicin() {
     Linking.openURL(fassUrl).catch((err) =>
       Alert.alert("Error", "Kunde inte öppna Fass...")
     );
-  }
-
-  /* const handleSelectMedicin = (medicin: OwnAddedMedicinProps) => {
-    setSelectedMedicin(selectedMedicin?.medicin_namn === medicin.medicin_namn ? null : medicin);
   };
-  
-  const handleSelectMedicinX = (medicin: MedicinProps) => {
-    setSelectedMedicinX(selectedMedicinX?.name === medicin.name ? null : medicin);
-  }; */
 
   const handleSelectMedicinUnified = (medicin: OwnAddedMedicinProps | MedicinProps) => {  
     setSelectedMedicin(medicin);   
@@ -243,19 +235,21 @@ export default function Medicin() {
 
         <View className='flex-col gap-2'>
           <View className='flex-row gap-1'>
-            <Button variant='white' size='md' className='' onPress={() => {
+            <Button variant='white' size='lg' className='' onPress={() => {
               setAddMedicinModalVisible(true)
               alert('OBS! Kom ihåg att om du lägger till mediciner själv att alltid kontrollera med din läkare så att doseringen blir korrekt!')
               }}>
-              <Typography variant='blue' size='sm' weight='400' className='text-center' >Lägg till medicin</Typography>
+              <Typography variant='blue' size='md' weight='700' className='text-center' >Lägg till medicin</Typography>
             </Button>
-            <Button variant='white' size='md' className='' onPress={() => handleDelete(selectedMedicin)}>
-              <Typography variant='blue' size='sm' weight='400' className='text-center' >Ta bort vald medicin</Typography>
+            <Button variant='white' size='lg' className='' onPress={() => handleDelete(selectedMedicin)}>
+              <Typography variant='blue' size='md' weight='700' className='text-center' >Ta bort medicin</Typography>
             </Button>
           </View>
-          <Button variant='white' size='md' className='' onPress={() => { handleOpenFass(selectedMedicin); } }>                   
-            <Typography variant='blue' size='sm' weight='400' className='text-center' >Öppna fass</Typography>
-          </Button>
+          <View className='flex-row gap-1 items-stretch justify-center'>
+            <Button variant='white' size='lg' className='' onPress={() => { handleOpenFass(selectedMedicin); } }>                   
+              <Typography variant='blue' size='md' weight='700' className='text-center' >Öppna fass</Typography>
+            </Button>
+          </View>
         </View>
 
 
