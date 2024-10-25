@@ -79,13 +79,7 @@ export type AuthContextType = {
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
-  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;
-  mediaFiles: string[];
-  setMediaFiles: (files: string[]) => void;
-  videoFiles: string[];
-  setVideoFiles: (files: string[]) => void;
-  drawingFiles: string[];
-  setDrawingFiles: (files: string[]) => void;
+  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;  
 };
 
 export type OnboardingText = {
