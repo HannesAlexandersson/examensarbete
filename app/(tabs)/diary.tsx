@@ -31,7 +31,8 @@ export default function DiaryScreen() {
     setIsModalVisible(false);
      
     setDiary(user?.diary_entries || null);
-  }, []);
+    console.log('hej');
+  }, [remountKey]);
 
   
   
@@ -146,12 +147,28 @@ export default function DiaryScreen() {
   //insert the diary entry to the database
   const { data: diaryData, error: diaryError } = await supabase
     .from('diary_posts')
-    .insert([uploadEntry]);
+    .insert([uploadEntry])
+    .select();
 
   if (diaryError) {
     console.error("Error saving diary entry:", diaryError);
     return;
   }
+
+  const {data:Eventdata, error:EventError} = await supabase
+    .from('Events')
+    .insert(
+      {
+        profile_id: user?.id,
+        event_type: 'diary_post',
+        event_name: `Nytt dagboksinlägg: ${uploadEntry.post_title}`,
+        event_id: diaryData[0].id
+      }
+    )
+    .select();
+  if(EventError) console.error('Error saving event', EventError);
+
+  console.log('event added:', Eventdata);
 
   const newEntry: DiaryEntry = {
     titel: postTitel,
@@ -163,7 +180,9 @@ export default function DiaryScreen() {
   };
   
   // Save the entry to local diary state
-  setDiary(prevDiary => [...(prevDiary || []), newEntry]);
+  /* setDiary(prevDiary => [...(prevDiary || []), newEntry]); */
+  //save the entry to the local state but append it first not last
+  setDiary(prevDiary => [newEntry, ...(prevDiary || [])]);
 
   // Update global state  
   if (user) {
@@ -173,7 +192,7 @@ export default function DiaryScreen() {
     }
   
     // Push the new entry to the user.diary_entries array
-    user.diary_entries.push(newEntry);
+    user.diary_entries = [newEntry, ...(user.diary_entries || [])];
   
     // Update the user state
     setUser({ ...user });
