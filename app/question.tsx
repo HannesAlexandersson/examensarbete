@@ -9,7 +9,7 @@ import { View, SafeAreaView, TextInput, KeyboardAvoidingView } from 'react-nativ
 
 
 export default function Questions() {
-  const { user, setResponse, response } = useAuth();
+  const { user, setResponse, response, getAnswers } = useAuth();
   const { department, department_id, contactperson, staff_id } = useLocalSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [ msgTxt, setMsgTxt ] = React.useState('');
@@ -92,7 +92,7 @@ export default function Questions() {
       if(AnswerData && AnswerData.length > 0) {
       answerId = AnswerData[0].id;
       }
-
+      //add the event to the Events table
       const {data:Eventdata, error:EventError} = await supabase
       .from('Events')
       .insert(
@@ -104,8 +104,19 @@ export default function Questions() {
         }
       );
       if(EventError) console.error('Error saving event:', EventError);
+
+      //update the question table, the column answerd to true
+      const { data: UpdateData, error: UpdateError } = await supabase
+      .from('Questions')
+      .update({ answerd: true })
+      .eq('id', questionId)
+      .eq('sender_id', user?.id);
+
+      if(UpdateError) console.error('Error updating question:', UpdateError);
     }
   }
+  //set the global state with the new data
+  getAnswers(user?.id || '');
   router.back();
 };
 

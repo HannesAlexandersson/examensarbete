@@ -1,6 +1,6 @@
 import { router, Tabs } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { View, ImageBackground } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -19,20 +19,24 @@ export default function TabLayout() {
           fontFamily: 'Roboto',              
         },
         headerBackground: () => (
-          <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#005b89' }} />
+          <ImageBackground
+            source={require('@/assets/images/wave.png')}
+            style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+            resizeMode="cover"
+          />
         ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Hem',      
+          title: 'Hem',          
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "home-sharp" : "home-outline"} size={24} color="black" />   
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: 'Konto',      
+          title: 'Konto',          
           tabBarIcon: ({ focused }) => <Ionicons name={focused ? "settings" : "settings-outline"} size={24} color="black" />   
         }}
       />
@@ -40,7 +44,7 @@ export default function TabLayout() {
         name="diary"
         options={{
           title: '',   
-          headerTitle: `${user?.first_name} ${user?.last_name} dagbok`,   
+          headerTitle: `Min dagbok`,          
           tabBarIcon: () => 
           <View className="absolute">
             <Ionicons name="add-circle" size={75} color="#005b89" />   

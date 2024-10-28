@@ -52,9 +52,10 @@ export default function RootLayout() {
             fontFamily: 'Roboto',              
           },
           headerBackground: () => (
-            <View 
-              className='bg-vgrBlue'
+            <ImageBackground
+              source={require('@/assets/images/wave.png')}
               style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+              resizeMode="cover"
             />
           ),
         }} 
@@ -87,6 +88,26 @@ export default function RootLayout() {
         <Stack.Screen name="question"  options={{ headerShown: false }}  />
         <Stack.Screen name="diagnosis"  options={{ headerShown: false }}  />
         <Stack.Screen name="procedures" options={{ headerShown: false }}  />
+        <Stack.Screen name="question-collection"  options={{ 
+          headerShown: true,
+          headerTitleAlign: 'center',
+          headerBackVisible: false,
+          title: 'Skickade frågor',
+          headerTitleStyle: {
+            color: 'white',
+            fontSize: 30,
+            fontWeight: 'bold',
+            fontFamily: 'Roboto',              
+          },
+          headerBackground: () => (
+            <ImageBackground
+              source={require('@/assets/images/wave.png')}
+              style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+              resizeMode="cover"
+            />
+          ),
+        }} 
+        />
       </Stack>
     </AuthProvider>
     </GestureHandlerRootView>

@@ -67,6 +67,7 @@ export type AuthContextType = {
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
   answers: Answers[];
+  getAnswers: (userId: string) => Promise<Answers[] | undefined>;
   setAnswers: (answers: Answers[]) => void;
   response: string | null;
   setResponse: (response: string | null) => void;
@@ -177,9 +178,6 @@ export type FilelikeObject = {
   type: string;
 };
 
-
-
-
 export interface DiaryMediaUpload {
   type: string;
   url: string;
@@ -252,13 +250,14 @@ export type CompContProps = {
 }
 
 export interface QuestionProps {
-  id: string;
-  sender_id: string;
-  reciver_id: string;
-  msg_text: string;
-  reciver_name: string;
-  contact_name: string;
-  sender_name: string
+  id: string | null;
+  sender_id: string | null;
+  reciver_id: string | null;
+  msg_text: string | null;
+  reciver_name: string | null;
+  contact_name: string | null;
+  sender_name: string | null;
+  answerd?: boolean | null;
 }
 
 export type ProcedureProps = {
@@ -295,4 +294,5 @@ export type DiagnosisProps = {
   drawing?: string | null;
   video?: string | null;
   description: string | null;
+  department?: string | null;
 }

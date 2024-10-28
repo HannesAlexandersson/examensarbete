@@ -9,10 +9,7 @@ import { Typography, Button } from '@/components';
 export default function AccountScreen() {
   const { user, signOut, userAge, userAvatar } = useAuth();
   
-  const handleQuestions = () => {
-    alert('Välj en vårdkontakt för att ställa en fråga');
-    router.push('/departments');
-  }
+  
 
   const handleEditAccount = () => {
     router.push('/edit');
@@ -56,7 +53,7 @@ export default function AccountScreen() {
             <Typography variant='black' size='lg' weight='400' className='text-center' >Min dagbok</Typography>
           </Button>
           
-          <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={handleQuestions}>
+          <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => router.push('/question-collection')}>
             <MaterialCommunityIcons name="chat-question" size={24} color="black" />
             <Typography variant='black' size='lg' weight='400' className='text-center' >Mina frågor</Typography>
           </Button>

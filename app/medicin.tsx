@@ -77,75 +77,7 @@ export default function Medicin() {
       console.error(error);
     }
   }  
- 
-  /* const handleDelete = async (medicin: OwnAddedMedicinProps | null) => {    
-    
-    //delete the medicin from the supabase table
-    const {data, error} = await supabase
-      .from('Own_added_medicins')
-      .delete()
-      .eq('id', medicin?.id);
-
-      if(error) {
-        console.error(error);
-        return;
-      }
-
-      //remove the medicin from the local state     
-      setOwnMedicins(ownMedicins.filter((m) => m.id !== medicin?.id));
-      
-      //remove the medicin from the global userobject
-      if (user) {      
-        user.own_medicins = user.own_medicins?.filter((m) => m.id !== medicin?.id);
-           
-      }
-    alert('Medicin borttagen!');
-    //clear the states
-    setSelectedMedicin(null);
-    setNewMedicin({
-      namn: '',
-      medicin_namn: '',
-      ordination: '',
-      utskrivare: '',
-      avdelning: '',
-      fritext: '',
-    });
-  }
-
-  const handleDeleteX = async (medicin: MedicinProps | null) => {
-
-    //delete the medicin from the supabase table
-    const {data, error} = await supabase
-      .from('Medicins')
-      .delete()
-      .eq('id', medicin?.id);
-
-      if(error) {
-        console.error(error);
-        return;
-      }
-
-      //remove the medicin from the local state     
-      setMedicins(medicins.filter((m) => m.id !== medicin?.id));
-      
-      //remove the medicin from the global userobject
-      if (user) {      
-        user.medicins = user.medicins?.filter((m) => m.id !== medicin?.id);
-           
-      }
-    alert('Medicin borttagen!');
-    //clear the states
-    setSelectedMedicinX(null);
-    setNewMedicin({
-      namn: '',
-      medicin_namn: '',
-      ordination: '',
-      utskrivare: '',
-      avdelning: '',
-      fritext: '',
-    });
-  } */
-
+  
   const handleDelete = async (medicin: MedicinProps |  OwnAddedMedicinProps | null) => {
     if (!medicin) {
       Alert.alert("Ingen medicin vald!", "Välj en medicin att ta bort.");

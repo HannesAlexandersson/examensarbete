@@ -182,8 +182,10 @@ const fetchDiagnosis = async (id: string) => {
         return {
           id: diagnosis.id,
           name: diagnosis.name,
-          description: diagnosis.description,          
-          image: mediaUrls.img || null,
+          description: diagnosis.description,
+          department: diagnosis.treating_department_name,
+          department_id: diagnosis.treating_department_id,
+          image: mediaUrls.image || null,
           video: mediaUrls.video || null,
           drawing: mediaUrls.drawing || null,
         };
@@ -240,7 +242,7 @@ const fetchUserEntries = async (limitEntries: boolean = true, id: string | null)
     .from('diary_posts')
     .select('*')
     .eq('user_id', id)
-    .order('post_date', { ascending: false });//post_date or created_at
+    .order('created_at', { ascending: false });//post_date or created_at
       
       
     if (limitEntries) {
@@ -591,6 +593,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 //the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

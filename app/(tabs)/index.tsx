@@ -3,11 +3,9 @@ import { Text, View, Image, TouchableOpacity, Alert, BackHandler, Modal } from '
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/providers/AuthProvider';
 import { router } from 'expo-router';
-import { Answers, EventProps } from '@/utils/types';
+import { Answers } from '@/utils/types';
 import { Button, Typography } from '@/components';
 import FullViewModal from '@/components/FullViewModal';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { truncateText } from '@/utils/utils';
@@ -105,7 +103,7 @@ export default function HomeScreen() {
         {answers && answers?.length > 0 ? (
           <>
         {answers.map((answer) => (
-          <View key={answer.id} className='bg-white flex-row justify-between w-full py-1 border-b border-t border-black'>
+          <View key={answer.id} className='bg-white flex-row justify-between w-full py-1 my-1 border-b border-t border-black'>
             <View className='items-end justify-center w-[20%]'>
               <MaterialCommunityIcons name="chat-question" size={40} color="black" />
             </View>                

@@ -3,7 +3,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button, MediaPicker, DrawingPicker } from '@/components';
 import { View, ScrollView, Modal, TextInput, TouchableOpacity, Image } from 'react-native';
 import { supabase } from '@/utils/supabase';
-import { DiagnosisProps, FilelikeObject, MediaUpload } from '@/utils/types';
+import { DepartmentProps, DiagnosisProps, FilelikeObject, MediaUpload } from '@/utils/types';
 import { da } from '@faker-js/faker/.';
 
 export default function Diagnosis() {
@@ -115,7 +115,7 @@ export default function Diagnosis() {
       //if there were any media uploads, get the uri's
       const uploadedMedia = {
         drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
-        img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+        image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
         video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
       };
 
@@ -127,8 +127,10 @@ export default function Diagnosis() {
       const diagnosisEntry = {
         name: newDiagnosis.name,
         description: newDiagnosis.description,
+        treating_department_name: newDiagnosis.department,
+        treating_department_id: user?.departments?.find((dept) => dept.name === newDiagnosis.department)?.id,
         user_id: user?.id,
-        img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+        image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
         video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
         drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
       }
@@ -145,13 +147,13 @@ export default function Diagnosis() {
       } else {
         if (data && data.length > 0) {
           
-        //add the new diagnosis to the list of diagnoses
-        /*  setDiagnoses((prevDiagnoses) => (prevDiagnoses ? [...prevDiagnoses, newDiagnosis] : [newDiagnosis])); */
+        //add the new diagnosis to the list of diagnoses        
         setDiagnoses([...diagnosis, {
           id: data[0].id,
           name: data[0].name,
           description: data[0].description,
-          image: uploadedMedia.img_url,
+          department: data[0].treating_department_name,
+          image: uploadedMedia.image_url,
           video: uploadedMedia.video_url,
           drawing: uploadedMedia.drawing_url,
         }]);
@@ -161,24 +163,32 @@ export default function Diagnosis() {
           id: data[0].id,
           name: data[0].name,
           description: data[0].description,
-          image: uploadedMedia.img_url,
+          department: data[0].treating_department_name,
+          image: uploadedMedia.image_url,
           video: uploadedMedia.video_url,
           drawing: uploadedMedia.drawing_url,
         }]
-       /*  if(!user.diagnoses){
-          user.diagnoses = [];
-        } */
-        /* user?.diagnoses.push(newDiagnosis);
-
-        setUser({ ...user }); */
+       
       }
     }
   }
-  setNewDiagnoses({ name: '', description: '', id: '' });
+  //clear the states
+  setSelectedImage(null);
+  setSelectedVideo(null);
+  setDrawing(null);
+  setNewDiagnoses({ 
+    name: '',
+    description: '', 
+    id: '' ,    
+    });
   } catch (error) {
     console.error('Error adding diagnosis:', error);
   }
-   
+
+  //update the user object with the new diagnosis
+  if(user){
+    setUser({ ...user });
+  }
     setModalVisible(false);
   };
 
@@ -236,7 +246,31 @@ export default function Diagnosis() {
 
     setIsFullviewModalVisible(false);
   };
-  
+
+  const [departmentSuggestions, setDepartmentSuggestions] = React.useState<string[]>([]);
+const [showSuggestions, setShowSuggestions] = React.useState(false);
+
+// Filter departments as the user types
+const handleDepartmentChange = (text: string) => {
+  setNewDiagnoses({ ...newDiagnosis, department: text });
+
+  if (user?.departments) {
+    const filteredDepartments = user.departments
+      .map(dept => dept.name) // Map to department names
+      .filter((name): name is string => Boolean(name)) // Filter out null/undefined
+      .filter(name => name.toLowerCase().includes(text.toLowerCase())); // Filter by input
+
+    setDepartmentSuggestions(filteredDepartments);
+    setShowSuggestions(true);
+  }
+};
+
+// Select a department from the suggestions
+const handleSuggestionSelect = (suggestion: string) => {
+  setNewDiagnoses({ ...newDiagnosis, department: suggestion });
+  setShowSuggestions(false); 
+};
+
   return(
     <ScrollView className='bg-vgrBlue'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -275,6 +309,28 @@ export default function Diagnosis() {
                 onBlur={handleBlur} //reset focus state when user is done using the input field
                 selection={isActive ? undefined : { start: 0 }}
               />
+              <TextInput
+                placeholder="Vilken avdelning behandlar dig?"
+                value={newDiagnosis?.department || ''}
+                multiline={true}
+                onChangeText={handleDepartmentChange} 
+                className="border border-gray-400 mt-4 p-2"
+              />
+
+              {/* Display department suggestions */}
+              {showSuggestions && departmentSuggestions?.length > 0 && (
+                <ScrollView className="border border-gray-400 mt-2 max-h-44 bg-white overflow-auto rounded-lg">
+                  {departmentSuggestions?.map((suggestion, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => handleSuggestionSelect(suggestion)}
+                      className="p-2 border-b border-gray-200"
+                    >
+                      <Typography variant="black" size="sm">{suggestion}</Typography>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
                <View className="flex flex-row justify-between mt-4">
                 <MediaPicker setSelectedImage={setSelectedImage} setSelectedVideo={setSelectedVideo} />
                 <DrawingPicker
@@ -348,6 +404,8 @@ export default function Diagnosis() {
                 </View>
               )}
              </View>
+              <Typography variant='blue' size='md' weight='400' className='mt-3' >Behandlas av:</Typography>
+              <Typography variant='blue' size='md' weight='400' className='italic'> {selectedDiagnosis?.department}</Typography>
               <View>
                 <Button
                   variant='blue'
