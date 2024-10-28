@@ -103,7 +103,7 @@ export default function HomeScreen() {
         {answers && answers?.length > 0 ? (
           <>
         {answers.map((answer) => (
-          <View key={answer.id} className='bg-white flex-row justify-between w-full py-1 border-b border-t border-black'>
+          <View key={answer.id} className='bg-white flex-row justify-between w-full py-1 my-1 border-b border-t border-black'>
             <View className='items-end justify-center w-[20%]'>
               <MaterialCommunityIcons name="chat-question" size={40} color="black" />
             </View>                

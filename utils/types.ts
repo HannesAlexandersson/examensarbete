@@ -67,6 +67,7 @@ export type AuthContextType = {
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
   answers: Answers[];
+  getAnswers: (userId: string) => Promise<Answers[] | undefined>;
   setAnswers: (answers: Answers[]) => void;
   response: string | null;
   setResponse: (response: string | null) => void;
