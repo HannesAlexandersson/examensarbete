@@ -172,7 +172,15 @@ export default function Diagnosis() {
       }
     }
   }
-  setNewDiagnoses({ name: '', description: '', id: '' });
+  //clear the states
+  setSelectedImage(null);
+  setSelectedVideo(null);
+  setDrawing(null);
+  setNewDiagnoses({ 
+    name: '',
+    description: '', 
+    id: '' ,    
+    });
   } catch (error) {
     console.error('Error adding diagnosis:', error);
   }
