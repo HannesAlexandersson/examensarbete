@@ -3,11 +3,9 @@ import { Text, View, Image, TouchableOpacity, Alert, BackHandler, Modal } from '
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/providers/AuthProvider';
 import { router } from 'expo-router';
-import { Answers, EventProps } from '@/utils/types';
+import { Answers } from '@/utils/types';
 import { Button, Typography } from '@/components';
 import FullViewModal from '@/components/FullViewModal';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { truncateText } from '@/utils/utils';

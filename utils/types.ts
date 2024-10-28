@@ -252,13 +252,14 @@ export type CompContProps = {
 }
 
 export interface QuestionProps {
-  id: string;
-  sender_id: string;
-  reciver_id: string;
-  msg_text: string;
-  reciver_name: string;
-  contact_name: string;
-  sender_name: string
+  id: string | null;
+  sender_id: string | null;
+  reciver_id: string | null;
+  msg_text: string | null;
+  reciver_name: string | null;
+  contact_name: string | null;
+  sender_name: string | null;
+  answerd?: boolean | null;
 }
 
 export type ProcedureProps = {
