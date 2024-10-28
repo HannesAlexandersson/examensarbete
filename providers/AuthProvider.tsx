@@ -240,7 +240,7 @@ const fetchUserEntries = async (limitEntries: boolean = true, id: string | null)
     .from('diary_posts')
     .select('*')
     .eq('user_id', id)
-    .order('created_at', { ascending: false });//post_date or created_at
+    .order('post_date', { ascending: false });//post_date or created_at
       
       
     if (limitEntries) {
