@@ -165,9 +165,9 @@ export default function DiaryScreen() {
   // Save the entry to local diary state
   setDiary(prevDiary => [...(prevDiary || []), newEntry]);
 
-  // Update global user diary entries  
+  // Update global state  
   if (user) {
-    // If diary_entries is not defined, initialize it as an empty array
+    
     if (!user.diary_entries) {
       user.diary_entries = [];
     }
