@@ -182,8 +182,10 @@ const fetchDiagnosis = async (id: string) => {
         return {
           id: diagnosis.id,
           name: diagnosis.name,
-          description: diagnosis.description,          
-          image: mediaUrls.img || null,
+          description: diagnosis.description,
+          department: diagnosis.treating_department_name,
+          department_id: diagnosis.treating_department_id,
+          image: mediaUrls.image || null,
           video: mediaUrls.video || null,
           drawing: mediaUrls.drawing || null,
         };

@@ -178,9 +178,6 @@ export type FilelikeObject = {
   type: string;
 };
 
-
-
-
 export interface DiaryMediaUpload {
   type: string;
   url: string;
@@ -297,4 +294,5 @@ export type DiagnosisProps = {
   drawing?: string | null;
   video?: string | null;
   description: string | null;
+  department?: string | null;
 }
