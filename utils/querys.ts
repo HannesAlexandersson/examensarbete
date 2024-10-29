@@ -13,3 +13,14 @@ export const getVersionDescriptions = client.fetch(`
   paragraph,
   position,
 }`);
+
+export const getAccountVersion = (userSelectedVersion: string) => client.fetch(
+  `*[_type == "account" && version == $userSelectedVersion] | order(position asc){
+    version,
+    welcomeText,
+    questionButtonText,
+    diaryButtonText,
+    questionText
+  }`,
+  { userSelectedVersion }
+);
