@@ -17,13 +17,9 @@ export default function EditProfile() {
   const [email, setEmail] = useState(user?.email || '');
   const [dateOfBirth, setDateOfBirth] = useState<Date>(user?.date_of_birth || new Date('2010-12-24'));
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
-  const [userDescription, setUserDescription] = useState(user?.description || '');
- 
-
-  //state for DatePicker
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  //state for ImagePicker
+  const [userDescription, setUserDescription] = useState(user?.description || ''); 
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);  
   const [image, setImage] = useState<string | null>(null);
 
   //handle date change from DatePicker
