@@ -95,6 +95,14 @@ export type VersionDescriptions = {
   position: number;
 };
 
+export type AccountVersion = {
+  version?: string;
+  welcomeText?: string;
+  questionButtonText?: string;
+  diaryButtonText?: string;
+  questionText?: string;
+}
+
 export type RoundCheckmarkProps = {
   label: string;
   isSelected: boolean;
