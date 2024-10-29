@@ -220,8 +220,8 @@ export default function Medicin() {
                 <TouchableOpacity key={index} onPress={() => handleSelectMedicinUnified(medicin)}>
                 <View className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `flex-col items-center justify-between w-full px-4 py-2 my-2 rounded bg-black border  border-purple-700` :`flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`}>
                   <Typography variant='black' size='lg' weight='700' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `text-white`:`text-black`}>{medicin.name}</Typography>
-                  <Typography variant='black' size='md' weight='400' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `text-white italic items-start`: `italic items-start text-black`}>{medicin.ordination}</Typography>
                   <View className='flex-col items-start justify-between w-full mt-4'>
+                    <Typography variant='black' size='md' weight='400' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `text-white italic items-start mb-2`: `italic items-start text-black mb-2`}>{medicin.ordination}</Typography>
                     <Typography variant='black' size='md' weight='500' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? ` text-white`: ` text-black`}>{medicin.utskrivare_name}</Typography>
                     <Typography variant='black' size='md' weight='400' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? ` text-white`: ` text-black`}>{medicin.ordinationName}</Typography>
                   </View>
