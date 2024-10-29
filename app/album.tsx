@@ -4,12 +4,9 @@ import { ScrollView, View, Image, TouchableOpacity, FlatList } from "react-nativ
 import { router } from 'expo-router';
 import { Button, Typography, VideoThumbnail } from '@/components';
 import { supabase } from '@/utils/supabase';
+import { mediaDataProps } from '@/utils/types';
 
-type mediaDataProps = {
-  images: string[];  
-  drawings: string[];
-  videos: string[];
-}
+
 
 export default function Album() {
   const { 
@@ -23,7 +20,7 @@ export default function Album() {
     videos: [],
     drawings: []
  });
-
+ 
   React.useEffect(() => {
     // Create a new AbortController instance for each fetch request to handle memory leaks
     const controller = new AbortController();
