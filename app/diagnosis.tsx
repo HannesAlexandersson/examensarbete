@@ -2,9 +2,9 @@ import React from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button, MediaPicker, DrawingPicker } from '@/components';
 import { View, ScrollView, Modal, TextInput, TouchableOpacity, Image } from 'react-native';
-import { supabase } from '@/utils/supabase';
+import { supabase, supabaseUrl } from '@/utils/supabase';
 import { DepartmentProps, DiagnosisProps, FilelikeObject, MediaUpload } from '@/utils/types';
-import { da } from '@faker-js/faker/.';
+
 
 export default function Diagnosis() {
   const { user, setUser } = useAuth();
@@ -35,6 +35,8 @@ export default function Diagnosis() {
   const handleAddDiagnosis = async() => {
     try{
       const mediaUploads: MediaUpload[] = [];
+      const fullUrls: MediaUpload[] = [];
+
       //only try to upload the media if there is any
       if (drawing) {          
         const drawingData = new FormData();     
@@ -59,8 +61,10 @@ export default function Diagnosis() {
         if (drawingError) {
           console.error("Error uploading drawing:", drawingError);
         } else {
+          const drawingUrl = `${supabaseUrl}/storage/v1/object/public/diagnosisMedia/${drawingBucketData?.path}`;
           //insert the url to the mediaUploads array
           mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
+          fullUrls.push({ type: 'drawing', url: drawingUrl });
         }
       }
 
@@ -84,7 +88,9 @@ export default function Diagnosis() {
         if (imageError) {
           console.error("Error uploading image:", imageError);
         } else {
+          const imageUrl = `${supabaseUrl}/storage/v1/object/public/diagnosisMedia/${imageBucketData?.path}`;
           mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+          fullUrls.push({ type: 'image', url: imageUrl });
         }
       }
       
@@ -108,7 +114,9 @@ export default function Diagnosis() {
         if (videoError) {
           console.error("Error uploading video:", videoError);
         } else {
+          const videoUrl = `${supabaseUrl}/storage/v1/object/public/diagnosisMedia/${videoBucketData?.path}`;
           mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+          fullUrls.push({ type: 'video', url: videoUrl });
         }
       }
 
@@ -153,9 +161,9 @@ export default function Diagnosis() {
           name: data[0].name,
           description: data[0].description,
           department: data[0].treating_department_name,
-          image: uploadedMedia.image_url,
-          video: uploadedMedia.video_url,
-          drawing: uploadedMedia.drawing_url,
+          image: fullUrls.find(m => m.type === 'image')?.url || null,
+          video: fullUrls.find((m) => m.type === 'video')?.url || null,
+          drawing: fullUrls.find((m) => m.type === 'drawing')?.url || null,
         }]);
       //add the new diagnosis to the user object
       if(user){
@@ -164,9 +172,9 @@ export default function Diagnosis() {
           name: data[0].name,
           description: data[0].description,
           department: data[0].treating_department_name,
-          image: uploadedMedia.image_url,
-          video: uploadedMedia.video_url,
-          drawing: uploadedMedia.drawing_url,
+          image: mediaUploads.find((m) => m.type === 'image')?.url || null,
+          video: mediaUploads.find((m) => m.type === 'video')?.url || null,
+          drawing: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
         }]
        
       }
