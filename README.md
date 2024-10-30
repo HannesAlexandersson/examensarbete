@@ -1,6 +1,11 @@
 ### Examensarbete Yrgo wu23 
 
-##Syfte
+- To run the app download expo go on an appstore of your choice.
+- Open the app in a terminal and run `npx expo start -c`.
+- Follow the instructions in the terminal to run the app in Expo Go.
+  > You will also need the secret enviromental keys for supabase, Prisma and Sanity in order for the app to work properly. You can send me an msg and ask for them.
+
+## Syfte
 The purpuse of the examination project is to learn new techstacks and work with something we havent touched during the education. In my case this means React Native. 
 Even though I've used React and different librarys using React like Next Ive never built an app before so I thought it would be fun and a nice experience to try and create a app with React Native. 
 
