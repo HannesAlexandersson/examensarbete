@@ -95,6 +95,12 @@ export type VersionDescriptions = {
   position: number;
 };
 
+export type mediaDataProps = {
+  images: string[];  
+  drawings: string[];
+  videos: string[];
+}
+
 export type AccountVersion = {
   version?: string;
   welcomeText?: string;
