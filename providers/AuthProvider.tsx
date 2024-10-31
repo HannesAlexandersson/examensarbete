@@ -336,6 +336,24 @@ const getContactIds = async (userId: string) => {
   );
 };
 
+//check if the current user have added any media to the departments they connected to
+const getUserMediaForDepartments = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('User_Departments_Media')
+    .select('media_id, department_id, Media(image_uri, video_uri, drawing_uri)')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching user media:', error);
+    return [];
+  }
+
+  return data.map((entry) => ({
+    department_id: entry.department_id,
+    media: entry.Media,
+  }));
+};
+
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({

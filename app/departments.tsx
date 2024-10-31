@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo} from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
-import { Typography, Button } from '@/components';
-import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { Typography, Button, MediaPicker, DrawingPicker, VideoThumbnail } from '@/components';
+import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert, Text } from 'react-native';
 import { supabase } from '@/utils/supabase';
-import { DepartmentProps, StaffProps, ContactsProps } from '@/utils/types';
+import { DepartmentProps, StaffProps, ContactsProps, FilelikeObject, MediaUpload } from '@/utils/types';
 
 
 export default function Departments() {
@@ -233,6 +233,168 @@ export default function Departments() {
     });
   }; 
 
+  const [mediaModalVisible, setMediaModalVisible] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
+  const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
+  const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
+  const handleAddMedia = () => {
+    setMediaModalVisible(true);
+  };
+  const handleSaveMedia = async () => {
+    const mediaUploads: MediaUpload[] = [];
+
+    //only try to upload the media if there is any
+    if (drawing) {          
+      const drawingData = new FormData();     
+      drawingData.append('file', {
+      uri: drawing.uri,
+      type: drawing.type,
+      name: drawing.name,
+      } as any);
+
+      //generate a unique filename
+      const drawingFileName = `drawing-${Date.now()}.${drawing.name.split('.').pop()}`;
+
+      //save to bucket
+      const { data: drawingBucketData, error: drawingError } = await supabase
+      .storage
+      .from('drawings')
+      .upload(drawingFileName, drawingData, {
+        cacheControl: '3600000000',
+        upsert: false,
+      });
+
+      if (drawingError) {
+        console.error("Error uploading drawing:", drawingError);
+      } else {
+        //insert the url to the mediaUploads array
+        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
+      }
+    }
+
+    if (selectedImage) {
+      const imageData = new FormData();
+      const imageFileName = selectedImage?.split('/').pop() || 'default-image-name.png';
+      imageData.append('file', {
+        uri: selectedImage,
+        type: `image/${imageFileName?.split('.').pop()}`,
+        name: imageFileName,
+      } as any);
+  
+      const { data: imageBucketData, error: imageError } = await supabase
+        .storage
+        .from('pictures')
+        .upload(imageFileName, imageData, {
+          cacheControl: '3600000000',
+          upsert: false,
+        });
+  
+      if (imageError) {
+        console.error("Error uploading image:", imageError);
+      } else {
+        mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+      }
+    }
+  
+    if (selectedVideo) {
+      const videoData = new FormData();
+      const videoFileName = selectedVideo?.split('/').pop() || 'default-video-name.mp4';
+      videoData.append('file', {
+        uri: selectedVideo,
+        type: `video/${videoFileName?.split('.').pop()}`,
+        name: videoFileName,
+      } as any);
+  
+      const { data: videoBucketData, error: videoError } = await supabase
+        .storage
+        .from('videos')
+        .upload(videoFileName, videoData, {
+          cacheControl: '3600000000',
+          upsert: false,
+        });
+  
+      if (videoError) {
+        console.error("Error uploading video:", videoError);
+      } else {
+        mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+      }
+    }
+
+    //if there were any media uploads, get the uri's
+    const uploadedMedia = {
+      drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
+    };
+
+    const mediaEntry = {         
+      image_uri: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      video_uri: mediaUploads.find((m) => m.type === 'video')?.url || null,
+      drawing_uri: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+    }
+
+    const { data, error } = await supabase
+    .from('Media')
+    .insert([mediaEntry])
+    .select();
+
+    if (error) {
+      console.error('Error saving procedure:', error);
+    } else {
+      if (data && data[0] && data[0].id) {
+        
+        //insert into the junction table User_Departments_Media
+        const media_id = data[0].id;
+
+        const { error } = await supabase
+        .from('User_Departments_Media')
+        .insert({
+          user_id: user?.id,
+          department_id: selectedContact?._C_department_id,
+          media_id: media_id,
+        });
+
+        if(error) {
+          console.error('Error saving media to media table:', error);
+        }
+      } else {
+        console.error('Error saving media to bucket:', error);
+      }
+      //update the local selected department with the new media      
+      setContacts((prevContacts) =>
+        prevContacts?.map((contact) =>
+          contact._C_department_id === selectedContact?._C_department_id
+            ? {
+                ...contact,
+                drawing_url: uploadedMedia.drawing_url || contact.drawing_url,
+                image_url: uploadedMedia.img_url || contact.image_url,
+                video_url: uploadedMedia.video_url || contact.video_url,
+              }
+            : contact
+        ) ?? prevContacts
+      );
+    
+       
+
+    //clear the states and close the modal
+    setDrawing(null);
+    setDrawingPreview(null);
+    setSelectedImage(null);
+    setSelectedVideo(null);
+    setMediaModalVisible(false);       
+  }
+}
+
+
+const handleAbortMedia = () => {
+  setDrawing(null);
+  setSelectedImage(null);
+  setSelectedVideo(null);
+  setMediaModalVisible(false);
+};
+ 
   return(
     <ScrollView className='bg-vgrBlue'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -396,6 +558,15 @@ export default function Departments() {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
+
+              <Button 
+                variant='blue'
+                size='md'
+                className="mt-4 rounded"
+                onPress={handleAddMedia}
+              >
+                <Typography variant='white' size='md' weight='400' className="text-center">Lägg till bild/video</Typography>
+              </Button>
               
               <Button
                 variant='blue'
@@ -428,6 +599,101 @@ export default function Departments() {
             </ScrollView>
           </Modal>
         )}
+
+        {/* Media modal */}
+        <Modal
+          visible={mediaModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setMediaModalVisible(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-vgrBlue bg-opacity-50">
+            <View className="bg-white p-6 w-4/5 rounded-lg">
+              <Typography variant="black" size="h3" weight="700">
+                Lägg till bild/video
+              </Typography>
+              {/* Show selected image/video or drawing canvas */}
+              <View className='flex-col items-center justify-center mt-4'>
+              {selectedImage && (
+                <View className='relative mt-4'>
+                  <Image source={{ uri: selectedImage }} style={{ width: 100, height: 100 }} />
+                  <TouchableOpacity
+                    className='absolute top-0 right-0 p-1 bg-black' 
+                    style={{ position: 'absolute', top: 0, right: 0, padding: 5 }}
+                    onPress={() => setSelectedImage(null)}
+                  >
+                    <Typography variant='white' weight='700' size='sm'>X</Typography>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {selectedVideo && (
+                <View className='relative mt-4'>
+                  <VideoThumbnail videoUri={selectedVideo} />
+                  <TouchableOpacity
+                    className='absolute top-0 right-0 p-1 bg-black' 
+                    style={{ position: 'absolute', top: 0, right: 0, padding: 5 }}
+                    onPress={() => setSelectedVideo(null)}
+                  >
+                    <Typography variant='white' weight='700' size='sm'>X</Typography>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              {drawingPreview && (
+                <View className='relative mt-2'>                  
+                  <Image 
+                    source={{ uri: drawingPreview }} 
+                    style={{ width: 100, height: 100, resizeMode: 'cover',
+                    borderWidth: 1, 
+                    borderColor: 'black' }} 
+                  />
+                  <TouchableOpacity
+                    className='absolute top-0 right-0 p-1 bg-black' 
+                    style={{ position: 'absolute', top: 0, right: 0, padding: 5 }}
+                    onPress={() => {setDrawingPreview(null), setDrawing(null)}}
+                  >
+                    <Typography variant='white' weight='700' size='sm'>X</Typography>
+                  </TouchableOpacity>
+                </View>
+                )}
+              </View>
+
+              <View className="flex flex-row justify-between mt-4">
+                <MediaPicker setSelectedImage={setSelectedImage} setSelectedVideo={setSelectedVideo} />
+                <DrawingPicker
+                  setDrawing={setDrawing}
+                  setDrawingPreview={setDrawingPreview}
+                  isDrawingMode={isDrawingMode}
+                  setIsDrawingMode={setIsDrawingMode}
+                />
+              </View>
+              <Button
+                variant="blue"
+                size="md"
+                className="w-full mt-4"
+                onPress={handleSaveMedia}
+              >                
+                <Typography variant="white" size="lg" weight="400" className="text-center">
+                  Lägg till
+                </Typography>               
+              </Button>
+
+              <Button
+                variant="blue"
+                size="md"
+                className="w-full mt-4"
+                onPress={handleAbortMedia}
+              >
+                <Typography variant="white" size="lg" weight="400" className="text-center">
+                  Avbryt
+                </Typography>
+              </Button>
+
+              
+            </View>          
+          </View>
+        </Modal>
 
       </View>
     </ScrollView>

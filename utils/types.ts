@@ -248,6 +248,9 @@ export type ContactsProps = {
   contactperson: string | null;
   phonenumber: string | null;
   address: string | null;
+  drawing_url?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
 };
 
 export type ContactIds = {
