@@ -3,12 +3,12 @@ import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button, MediaPicker, DrawingPicker, VideoThumbnail } from '@/components';
 import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert, Text } from 'react-native';
-import { supabase } from '@/utils/supabase';
-import { DepartmentProps, StaffProps, ContactsProps, FilelikeObject, MediaUpload } from '@/utils/types';
+import { supabase, supabaseUrl } from '@/utils/supabase';
+import { DepartmentProps, StaffProps, ContactsProps, FilelikeObject, MediaUpload, DepartmentMedia } from '@/utils/types';
 
 
 export default function Departments() {
-  const { user, contactIds, setContactIds, getContactIds } = useAuth();  
+  const { user, setUser, contactIds, setContactIds, getContactIds } = useAuth();  
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newContact, setNewContact] = useState<ContactsProps>({
     name: '',
@@ -46,6 +46,8 @@ export default function Departments() {
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
   
+
+  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMedia[]>([]);
   
   useEffect(() => {
     if (user?.departments && user?.staff) {
@@ -53,17 +55,74 @@ export default function Departments() {
       setStaff(user.staff);
     }
     
-  }, []);  
-console.log(contactIds)
+  }, []);
+
+  useEffect(() => {
+  const fetchMedia = async () => {
+    if (user?.id) {
+      const media = await getUserMediaForDepartments(user?.id);
+      setDepartmentMedia(media);
+    }
+  };
+  fetchMedia();
+}, [user?.id]);
+
+//check if the current user have added any media to the departments they connected to
+const getUserMediaForDepartments = async (userId: string) => {  
+
+  const { data: mediaEntries, error: mediaError } = await supabase
+    .from('User_Departments_mediaJunction')
+    .select('media_id, department_id')
+    .eq('user_id', userId);   
+
+  if (mediaError) {
+    console.error('Error fetching user media:', mediaError);
+    return [];
+  } 
+
+  const mediaIds = mediaEntries.map(entry => entry.media_id);
+  //get the actual media urls from the media table
+  const { data: mediaData, error: mediaDetailsError } = await supabase
+    .from('Media')
+    .select('id, image_uri, video_uri, drawing_uri, media_description')
+    .in('id', mediaIds);
+
+  if (mediaDetailsError) {
+    console.error('Error fetching media details:', mediaDetailsError);
+    return [];
+  } 
+  const mediaWithUrls = mediaEntries.map(entry => {
+    const media = mediaData.find(m => m.id === entry.media_id);
+    const bucketUrl = `${supabaseUrl}/storage/v1/object/public`;
+    return {
+      department_id: entry.department_id,
+      media: {
+        image_url: media?.image_uri ? `${bucketUrl}/pictures/${media.image_uri}` : null,
+        video_url: media?.video_uri ? `${bucketUrl}/videos/${media.video_uri}` : null,
+        drawing_url: media?.drawing_uri ? `${bucketUrl}/drawings/${media.drawing_uri}` : null,
+        description: media?.media_description || null
+      },
+    };
+  });
+
+  return mediaWithUrls;
+};
+
+
+
   //we want to filter out the departments that the user has contact with
   const userDepartments = useMemo(() => {
     if(!departments || !staff || !contactIds) return [];
+
+    
 
     if (departments?.length > 0 && staff.length > 0 && contactIds?.length > 0) {
       return departments?.map(department => {
           const contact = contactIds.find(contact => contact.department_id === department.id);
           const contactPerson = staff.find(person => person.id === contact?.staff_id);
-  
+          // Find media for this department
+          const departmentMediaData = departmentMedia.find(m => m.department_id === department.id);
+          
           if (contact) {
             return {
               _C_department_id: department.id, 
@@ -71,7 +130,8 @@ console.log(contactIds)
               name: department.name || null,
               contactperson: contactPerson?.staff_name || 'No contact person',
               phonenumber: department.phonenumber?.toString() || null,
-              address: department.address || null
+              address: department.address || null,
+              media: departmentMediaData?.media || { image_url: null, video_url: null, drawing_url: null }
             };
           }
           return null;
@@ -79,7 +139,7 @@ console.log(contactIds)
         .filter(department => department !== null);
     }
     return [];
-  }, [departments, staff, contactIds]);
+  }, [departments, staff, contactIds, departmentMedia]);
   
   useEffect(() => {
     setContacts(userDepartments as ContactsProps[]);
@@ -245,6 +305,7 @@ console.log(contactIds)
     setMediaModalVisible(true);
   };
 
+  const [mediaDescription, setMediaDescription] = useState<{ description: string }>({ description: '' });
   const handleSaveMedia = async () => {
     const mediaUploads: MediaUpload[] = [];
 
@@ -336,6 +397,7 @@ console.log(contactIds)
       image_uri: mediaUploads.find((m) => m.type === 'image')?.url || null,
       video_uri: mediaUploads.find((m) => m.type === 'video')?.url || null,
       drawing_uri: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      media_description: mediaDescription.description,
     }
 
     const { data, error } = await supabase
@@ -352,7 +414,7 @@ console.log(contactIds)
         const media_id = data[0].id;
 
         const { error } = await supabase
-        .from('User_Departments_Media')
+        .from('User_Departments_mediaJunction')
         .insert({
           user_id: user?.id,
           department_id: selectedContact?._C_department_id,
@@ -366,19 +428,40 @@ console.log(contactIds)
         console.error('Error saving media to bucket:', error);
       }
       //update the local selected department with the new media      
-      setContacts((prevContacts) =>
-        prevContacts?.map((contact) =>
-          contact._C_department_id === selectedContact?._C_department_id
-            ? {
-                ...contact,
-                drawing_url: uploadedMedia.drawing_url || contact.drawing_url,
-                image_url: uploadedMedia.img_url || contact.image_url,
-                video_url: uploadedMedia.video_url || contact.video_url,
-              }
-            : contact
-        ) ?? prevContacts
-      );
-    
+      const updatedDepartments = departments?.map(department => {
+        if (department.id === selectedContact?._C_department_id) {
+          return {
+            ...department,
+            mediaUrls: {
+              image_url: uploadedMedia.img_url || department.mediaUrls?.image_url || null,
+              video_url: uploadedMedia.video_url || department.mediaUrls?.video_url || null,
+              drawing_url: uploadedMedia.drawing_url || department.mediaUrls?.drawing_url || null,
+            },
+          };
+        }
+        return department;
+      });
+      
+      if (updatedDepartments) {
+        setDepartments(updatedDepartments);
+      }
+
+      //update the department property of the global user object with the new media
+      if (user?.departments) {
+        user.departments = user.departments?.map(department => {
+          if (department.id === selectedContact?._C_department_id) {
+            return {
+              ...department,
+              mediaUrls: uploadedMedia,
+            };
+          }
+          return department;
+        }) || [];
+      
+        setUser({ ...user });
+      }
+
+    console.log('Media saved successfully');
        
 
     //clear the states and close the modal
@@ -396,8 +479,8 @@ const handleAbortMedia = () => {
   setSelectedImage(null);
   setSelectedVideo(null);
   setMediaModalVisible(false);
-};
- 
+}; 
+
   return(
     <ScrollView className='bg-vgrBlue'>
       <View className='flex-1 items-center justify-center pt-12 px-4'>
@@ -561,22 +644,42 @@ const handleAbortMedia = () => {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
-              <View className='flex-row items-center justify-center mt-4'>
-                {user?.departments?.map(department => (
-                  <View key={department.id} className='flex-col items-center justify-center mt-4'>
-                    {department.mediaUrls?.image_uri && (
-                      <Image source={{ uri: department.mediaUrls.image_uri }} style={{ width: 100, height: 100 }} />
-                    )}
+              <View className='flex-row items-center justify-center my-4'>
 
-                    {department.mediaUrls?.video_uri && (
-                      <VideoThumbnail videoUri={department.mediaUrls.video_uri} />
-                    )}
+              {selectedContact.media?.image_url && (
+              <View className='flex-col '>
+               <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>               
+                <Image 
+                  source={{ uri: selectedContact.media.image_url }} 
+                  style={{ width: 90, height: 90 }} 
+                />
+              </View>
+              )}
 
-                    {department.mediaUrls?.drawing_uri && (
-                      <Image source={{ uri: department.mediaUrls.drawing_uri }} style={{ width: 100, height: 100 }} />
-                    )}
-                  </View>
-                ))}
+              {selectedContact.media?.video_url && (
+              <View className='flex-col '>
+                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>      
+                <VideoThumbnail 
+                  videoUri={selectedContact.media.video_url} 
+                />
+              </View>
+              )}
+
+              {selectedContact.media?.drawing_url && (
+              <View className='flex-col '>
+                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>      
+                <Image 
+                  source={{ uri: selectedContact.media.drawing_url }} 
+                  style={{ width: 90, height: 90 }} 
+                />
+              </View>
+              )}
               </View>
               <Button 
                 variant='blue'
@@ -687,6 +790,13 @@ const handleAbortMedia = () => {
                   setIsDrawingMode={setIsDrawingMode}
                 />
               </View>
+              <TextInput
+                placeholder="Beskrivning, tex vem/vad bilden föreställer"
+                className="border border-gray-400 mt-4 p-2"
+                multiline={true}
+                value={mediaDescription.description}
+                onChangeText={(text) => setMediaDescription({ description: text })}
+              />
               <Button
                 variant="blue"
                 size="md"

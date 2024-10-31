@@ -102,9 +102,10 @@ export type mediaDataProps = {
 }
 
 export type MediaEntry = {
-  image_uri: string | null;
-  video_uri: string | null;
-  drawing_uri: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+  drawing_url?: string | null;
+  description?: string | null;
 };
 
 export type UserMediaForDepartment = {
@@ -260,10 +261,17 @@ export type ContactsProps = {
   contactperson: string | null;
   phonenumber: string | null;
   address: string | null;
-  drawing_url?: string | null;
-  image_url?: string | null;
-  video_url?: string | null;
+  media?: MediaEntry;  
 };
+
+export interface DepartmentMedia {
+  department_id: string;
+  media: {
+    image_url: string | null;
+    video_url: string | null;
+    drawing_url: string | null;
+  }
+}
 
 export type ContactIds = {
   department_id?: string | null;
