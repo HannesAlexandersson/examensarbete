@@ -46,8 +46,9 @@ export default function Departments() {
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
   
-
+  const [mediaDescription, setMediaDescription] = useState<{ description: string }>({ description: '' });
   const [departmentMedia, setDepartmentMedia] = useState<DepartmentMedia[]>([]);
+  
   
   useEffect(() => {
     if (user?.departments && user?.staff) {
@@ -305,7 +306,7 @@ const getUserMediaForDepartments = async (userId: string) => {
     setMediaModalVisible(true);
   };
 
-  const [mediaDescription, setMediaDescription] = useState<{ description: string }>({ description: '' });
+  
   const handleSaveMedia = async () => {
     const mediaUploads: MediaUpload[] = [];
 
@@ -427,50 +428,36 @@ const getUserMediaForDepartments = async (userId: string) => {
       } else {
         console.error('Error saving media to bucket:', error);
       }
-      //update the local selected department with the new media      
-      const updatedDepartments = departments?.map(department => {
-        if (department.id === selectedContact?._C_department_id) {
-          return {
-            ...department,
-            mediaUrls: {
-              image_url: uploadedMedia.img_url || department.mediaUrls?.image_url || null,
-              video_url: uploadedMedia.video_url || department.mediaUrls?.video_url || null,
-              drawing_url: uploadedMedia.drawing_url || department.mediaUrls?.drawing_url || null,
-            },
-          };
-        }
-        return department;
-      });
       
-      if (updatedDepartments) {
-        setDepartments(updatedDepartments);
-      }
-
-      //update the department property of the global user object with the new media
-      if (user?.departments) {
-        user.departments = user.departments?.map(department => {
-          if (department.id === selectedContact?._C_department_id) {
-            return {
-              ...department,
-              mediaUrls: uploadedMedia,
-            };
-          }
-          return department;
-        }) || [];
-      
-        setUser({ ...user });
-      }
-
-    console.log('Media saved successfully');
-       
-
-    //clear the states and close the modal
-    setDrawing(null);
-    setDrawingPreview(null);
-    setSelectedImage(null);
-    setSelectedVideo(null);
-    setMediaModalVisible(false);       
+    
   }
+        
+
+  console.log('Media saved successfully');
+     
+
+  //clear the states and close the modal
+  setDrawing(null);
+  setDrawingPreview(null);
+  setSelectedImage(null);
+  setSelectedVideo(null);
+  setMediaDescription({ description: '' });
+  setMediaModalVisible(false);
+  
+  if (user?.id) {
+    const media = await getUserMediaForDepartments(user.id);
+    setDepartmentMedia(media);
+
+    // If we have selectedContact, update it with the new media
+    if (selectedContact) {
+      const newMedia = media.find(m => m.department_id === selectedContact._C_department_id);
+      setSelectedContact({
+        ...selectedContact,
+        media: newMedia?.media || { image_url: null, video_url: null, drawing_url: null, description: null }
+      });
+    }
+  }
+  
 }
 
 
@@ -644,10 +631,10 @@ const handleAbortMedia = () => {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
-              <View className='flex-row items-center justify-center my-4'>
+              <View className='flex-col items-center justify-center my-4'>
 
               {selectedContact.media?.image_url && (
-              <View className='flex-col '>
+              <View className='flex-col items-center w-2/3 '>
                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
                   {selectedContact.media.description}
                 </Typography>               
@@ -659,7 +646,7 @@ const handleAbortMedia = () => {
               )}
 
               {selectedContact.media?.video_url && (
-              <View className='flex-col '>
+              <View className='flex-col  justify-center'>
                 <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
                   {selectedContact.media.description}
                 </Typography>      
@@ -670,7 +657,7 @@ const handleAbortMedia = () => {
               )}
 
               {selectedContact.media?.drawing_url && (
-              <View className='flex-col '>
+              <View className='flex-col justify-center'>
                 <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
                   {selectedContact.media.description}
                 </Typography>      
