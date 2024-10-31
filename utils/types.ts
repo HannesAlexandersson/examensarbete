@@ -101,6 +101,17 @@ export type mediaDataProps = {
   videos: string[];
 }
 
+export type MediaEntry = {
+  image_uri: string | null;
+  video_uri: string | null;
+  drawing_uri: string | null;
+};
+
+export type UserMediaForDepartment = {
+  department_id: string | null;
+  media: MediaEntry;
+};
+
 export type AccountVersion = {
   version?: string;
   welcomeText?: string;
@@ -231,7 +242,8 @@ export type DepartmentProps = {
   id: string | null;
   name: string | null;
   address: string | null;
-  phonenumber: string | null;  
+  phonenumber: string | null;
+  mediaUrls?: MediaEntry | null;
 };
 
 export type StaffProps = {

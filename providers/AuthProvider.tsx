@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { supabase } from '@/utils/supabase';
+import { supabase, supabaseUrl } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, DiagnosisProps } from '@/utils/types';
+import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
+import Departments from '@/app/departments';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -48,6 +49,28 @@ const getUser = async (id: string) => {
 
   //get the departments and associated staff
   const { departments, staff } = await fetchDepartmentsAndStaff();
+
+  //get the users media files for the departments they are connected to
+  const userMediaForDepartments = await getUserMediaForDepartments(id);
+  const userDepartments = user?.departments || [];
+  // creating a mapping of user department id's for easy lookup
+  const userDepartmentIds = new Set(userDepartments.map(dept => dept.id));
+  // adding the media files to the user departments
+  userMediaForDepartments.forEach(media => {
+    if (userDepartmentIds.has(media.department_id)) {
+      // get the corresponding department
+      const department = userDepartments.find(dept => dept.id === media.department_id);      
+      // attach media URLs from the correct bucket      
+      if (department) {
+        const bucketUrl = `${supabaseUrl}/storage/v1/object/public`;
+        department.mediaUrls = {
+          image_uri: media.media.image_url ? `${bucketUrl}/pictures/${media.media.image_url}` : null,
+          video_uri: media.media.video_url ? `${bucketUrl}/videos/${media.media.video_url}` : null,
+          drawing_uri: media.media.drawing_url ? `${bucketUrl}/drawings/${media.media.drawing_url}` : null,
+        };
+      }
+    }
+  });
 
   //get the users diagoisis
   const diagnosis = await fetchDiagnosis(id);
@@ -103,6 +126,44 @@ const getUser = async (id: string) => {
   }
 };
 
+//check if the current user have added any media to the departments they connected to
+const getUserMediaForDepartments = async (userId: string) => {  
+
+  const { data: mediaEntries, error: mediaError } = await supabase
+    .from('User_Departments_mediaJunction')
+    .select('media_id, department_id')
+    .eq('user_id', userId);   
+
+  if (mediaError) {
+    console.error('Error fetching user media:', mediaError);
+    return [];
+  } 
+
+  const mediaIds = mediaEntries.map(entry => entry.media_id);
+  //get the actual media urls from the media table
+  const { data: mediaData, error: mediaDetailsError } = await supabase
+    .from('Media')
+    .select('id, image_uri, video_uri, drawing_uri')
+    .in('id', mediaIds);
+
+  if (mediaDetailsError) {
+    console.error('Error fetching media details:', mediaDetailsError);
+    return [];
+  } 
+  const mediaWithUrls = mediaEntries.map(entry => {
+    const media = mediaData.find(m => m.id === entry.media_id);
+    return {
+      department_id: entry.department_id,
+      media: {
+        image_url: media?.image_uri ? `bucket-url/images/${media.image_uri}` : null,
+        video_url: media?.video_uri ? `bucket-url/videos/${media.video_uri}` : null,
+        drawing_url: media?.drawing_uri ? `bucket-url/drawings/${media.drawing_uri}` : null,
+      },
+    };
+  });
+
+  return mediaWithUrls;
+};
 
 const getAnswers = async (id: string) => {
   const { data, error } = await supabase
@@ -335,25 +396,6 @@ const getContactIds = async (userId: string) => {
     }))
   );
 };
-
-//check if the current user have added any media to the departments they connected to
-const getUserMediaForDepartments = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('User_Departments_Media')
-    .select('media_id, department_id, Media(image_uri, video_uri, drawing_uri)')
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Error fetching user media:', error);
-    return [];
-  }
-
-  return data.map((entry) => ({
-    department_id: entry.department_id,
-    media: entry.Media,
-  }));
-};
-
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({

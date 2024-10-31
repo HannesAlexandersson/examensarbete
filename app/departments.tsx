@@ -39,6 +39,12 @@ export default function Departments() {
   const [staffSearchTerm, setStaffSearchTerm] = useState<string | null>('');  
   const [isActive, setIsActive] = useState(false);
   const [isFullviewModalVisible, setIsFullviewModalVisible] = useState<boolean>(false);
+  const [mediaModalVisible, setMediaModalVisible] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
+  const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
+  const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
+  const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
   
   
   useEffect(() => {
@@ -46,8 +52,9 @@ export default function Departments() {
       setDepartments(user.departments);
       setStaff(user.staff);
     }
+    
   }, []);  
-
+console.log(contactIds)
   //we want to filter out the departments that the user has contact with
   const userDepartments = useMemo(() => {
     if(!departments || !staff || !contactIds) return [];
@@ -233,15 +240,11 @@ export default function Departments() {
     });
   }; 
 
-  const [mediaModalVisible, setMediaModalVisible] = useState<boolean>(false);
-  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
-  const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
-  const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
-  const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
+  
   const handleAddMedia = () => {
     setMediaModalVisible(true);
   };
+
   const handleSaveMedia = async () => {
     const mediaUploads: MediaUpload[] = [];
 
@@ -558,7 +561,23 @@ const handleAbortMedia = () => {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
+              <View className='flex-row items-center justify-center mt-4'>
+                {user?.departments?.map(department => (
+                  <View key={department.id} className='flex-col items-center justify-center mt-4'>
+                    {department.mediaUrls?.image_uri && (
+                      <Image source={{ uri: department.mediaUrls.image_uri }} style={{ width: 100, height: 100 }} />
+                    )}
 
+                    {department.mediaUrls?.video_uri && (
+                      <VideoThumbnail videoUri={department.mediaUrls.video_uri} />
+                    )}
+
+                    {department.mediaUrls?.drawing_uri && (
+                      <Image source={{ uri: department.mediaUrls.drawing_uri }} style={{ width: 100, height: 100 }} />
+                    )}
+                  </View>
+                ))}
+              </View>
               <Button 
                 variant='blue'
                 size='md'
