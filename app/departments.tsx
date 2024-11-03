@@ -631,43 +631,7 @@ const handleAbortMedia = () => {
               <Typography variant='black' weight='400' size='md' className="mb-2">
                 Address: {selectedContact.address}
               </Typography>
-              <View className='flex-col items-center justify-center my-4'>
-
-              {selectedContact.media?.image_url && (
-              <View className='flex-col items-center w-2/3 '>
-               <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
-                  {selectedContact.media.description}
-                </Typography>               
-                <Image 
-                  source={{ uri: selectedContact.media.image_url }} 
-                  style={{ width: 90, height: 90 }} 
-                />
-              </View>
-              )}
-
-              {selectedContact.media?.video_url && (
-              <View className='flex-col  justify-center'>
-                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
-                  {selectedContact.media.description}
-                </Typography>      
-                <VideoThumbnail 
-                  videoUri={selectedContact.media.video_url} 
-                />
-              </View>
-              )}
-
-              {selectedContact.media?.drawing_url && (
-              <View className='flex-col justify-center'>
-                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
-                  {selectedContact.media.description}
-                </Typography>      
-                <Image 
-                  source={{ uri: selectedContact.media.drawing_url }} 
-                  style={{ width: 90, height: 90 }} 
-                />
-              </View>
-              )}
-              </View>
+              
               <Button 
                 variant='blue'
                 size='md'
@@ -704,6 +668,48 @@ const handleAbortMedia = () => {
               >
                 <Typography variant='white' weight='400' size='md' className="text-center">Stäng</Typography>
               </Button>
+              <View className='flex-col items-center justify-center my-4'>
+                {selectedContact.media  && (
+                  <Typography variant="black" weight='700' size='md' className="mb-2">
+                    Mina bilder från avdelningen:
+                  </Typography>
+                )}
+
+              {selectedContact.media?.image_url && (
+              <View className='flex-col items-center w-2/3 '>
+               <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>               
+                <Image 
+                  source={{ uri: selectedContact.media.image_url }} 
+                  style={{ width: 90, height: 90 }} 
+                />
+              </View>
+              )}
+
+              {selectedContact.media?.video_url && (
+              <View className='flex-col  justify-center'>
+                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>      
+                <VideoThumbnail 
+                  videoUri={selectedContact.media.video_url} 
+                />
+              </View>
+              )}
+
+              {selectedContact.media?.drawing_url && (
+              <View className='flex-col justify-center'>
+                <Typography variant="blue" weight='400' size='md' className="my-2 underline italic">
+                  {selectedContact.media.description}
+                </Typography>      
+                <Image 
+                  source={{ uri: selectedContact.media.drawing_url }} 
+                  style={{ width: 90, height: 90 }} 
+                />
+              </View>
+              )}
+              </View>
             </View>
             </ScrollView>
           </Modal>
