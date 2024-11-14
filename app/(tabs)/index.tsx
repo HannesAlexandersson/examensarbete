@@ -14,17 +14,11 @@ import { useUserStore } from '@/stores/authStore';
 
 
 export default function HomeScreen() {
-  const { user, userAvatar, answers, setAnswers } = useAuth();
-  /* const { getUser, getAvatar, isUserLoaded } = useUserStore(); */
-  const { first_name, last_name, email,  getUser, getAvatar, isUserLoaded } = useUserStore();
-/* console.log('first', first_name); */
-useEffect(() => {
-  // Fetch the user and avatar only once, if not already loaded
-  if (!isUserLoaded) {
-    getUser();
-    getAvatar();
-  }
-}, [isUserLoaded, getUser, getAvatar]);
+  const { user, answers, setAnswers } = useAuth();
+  const { userAvatar } = useUserStore();
+
+
+
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Answers | null>(null);

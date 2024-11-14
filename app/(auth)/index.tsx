@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Image, KeyboardAvoidingView } from 'react-native';
+import { View, TextInput, Image } from 'react-native';
 import { Link } from 'expo-router'
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button } from '@/components';
@@ -9,8 +9,11 @@ import { Typography, Button } from '@/components';
 export default function () {  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const { signIn } = useAuth();
+
+  const handleLogin = async () => {
+    await signIn(email, password);      
+  };
 
   return (
     <View className="flex-1 items-center justify-between bg-vgrBlue" >
@@ -37,7 +40,7 @@ export default function () {
           value={password}
           onChangeText={setPassword}
         />
-        <Button variant="white" size="md" className='rounded' onPress={() => signIn(email, password)} >
+        <Button variant="white" size="md" className='rounded' onPress={handleLogin}>
           <Typography variant='black' size='md' weight='700' className='text-lg' >Logga in</Typography>
         </Button>       
 

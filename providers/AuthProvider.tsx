@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
-
+import { useUserStore } from '@/stores/authStore';
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -26,6 +26,8 @@ const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 const [answers, setAnswers] = React.useState<Answers[]>([]);
 const [ response, setResponse ] = React.useState<string | null>(null);
+
+const { getUserData, getAvatar } = useUserStore();
 
 
 const getUser = async (id: string) => {
@@ -92,11 +94,11 @@ const getUser = async (id: string) => {
         return;
       }
       
-      //read the blob data
+     
       const reader = new FileReader();
       reader.onloadend = () => {        
         if (typeof reader.result === 'string') {
-          setUserAvatar(reader.result); //set the user avatar to the avatar state
+          setUserAvatar(reader.result); 
         } else {
           console.error('Unexpected result type:', typeof reader.result);
         }
@@ -339,6 +341,7 @@ const getContactIds = async (userId: string) => {
   );
 };
 
+
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: email,
@@ -347,7 +350,7 @@ const signIn = async (email: string, password: string) => {
   
   if (error) return console.error(error)
   getUser(data.user.id);
-  
+  getUserData(data.user.id); 
 };
 
 const signUp = async (firstname: string, lastname: string, email: string, password: string) => {
