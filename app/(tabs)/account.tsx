@@ -6,11 +6,13 @@ import { router } from 'expo-router';
 import { Typography, Button, DrawingPicker } from '@/components';
 import { FilelikeObject } from "@/utils/types";
 import { supabase } from '@/utils/supabase';
+import { useUserStore } from '@/stores/authStore';
 
 
 export default function AccountScreen() {
-  const { user, signOut, userAge, userAvatar } = useAuth();
-  
+  const { user, signOut } = useAuth();
+  const { userAvatar, userAge } = useUserStore();
+  console.log(userAge)
   const [paintModal, setPaintModal] = React.useState(false);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
@@ -20,8 +22,7 @@ export default function AccountScreen() {
     router.push('/edit');
   }
 
-  const handleSavePainting = async() => {
-    /* const mediaUploads: MediaUpload[] = []; */
+  const handleSavePainting = async() => {    
     let drawingUrl = '';
 
     //only try to upload the media if there is any

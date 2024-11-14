@@ -15,3 +15,10 @@ export const fetchUserAvatarFromAvatarBucket = async (avatarUrl: string) => {
 
   return data as Blob;
 };
+
+export const calculateAge = (dateOfBirth: Date) => { 
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    return age;
+};

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
 import { useUserStore } from '@/stores/authStore';
 
+
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = () => {
@@ -18,7 +19,7 @@ export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
 //the user object is created here and used all over the app with the context
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
-const [userAge, setUserAge] = React.useState<number | null>(null);
+/* const [userAge, setUserAge] = React.useState<number | null>(null); */
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
@@ -27,7 +28,7 @@ const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 const [answers, setAnswers] = React.useState<Answers[]>([]);
 const [ response, setResponse ] = React.useState<string | null>(null);
 
-const { getUserData, getAvatar } = useUserStore();
+const { getUserData, getAvatar, getAge } = useUserStore();
 
 
 const getUser = async (id: string) => {
@@ -84,6 +85,8 @@ const getUser = async (id: string) => {
     router.push('/onboarding');  
   } else {
     //fetch avatar if avatar_url exists
+    getAvatar(data.avatar_url);
+    /* LAST WORKING CODE 
     if (data.avatar_url) {
       const { data: avatarData, error: avatarError } = await supabase.storage
         .from('avatars')
@@ -104,7 +107,7 @@ const getUser = async (id: string) => {
         }
       };
       reader.readAsDataURL(avatarData); 
-    }
+    } */
 
   setUser(updatedUser);    
   router.push('/(tabs)');
@@ -512,10 +515,7 @@ const moveAvatarToPictures = async (oldAvatarUrl: string) => {
 
 useEffect(() => {
   if (user?.date_of_birth) {
-  const today = new Date();
-  const birthDate = new Date(user?.date_of_birth);
-  const age = today.getFullYear() - birthDate.getFullYear();
-  setUserAge(age);
+   getAge(user.date_of_birth);
   }
 }, [user?.date_of_birth]);
 
@@ -596,6 +596,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

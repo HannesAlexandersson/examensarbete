@@ -2,7 +2,8 @@ import { create } from 'zustand';
 
 import { 
   fetchUserDataFromProfilesTable, 
-  fetchUserAvatarFromAvatarBucket 
+  fetchUserAvatarFromAvatarBucket,
+  calculateAge 
 } from '@/lib/apiHelper';
 
 
@@ -18,8 +19,10 @@ interface UserStore {
   date_of_birth?: Date | null;
   selected_version: number | null;
   userAvatar: string | null;
+  userAge: number | null;
   getUserData: (id: string) => Promise<void>;
   getAvatar: (url: string) => Promise<void>;
+  getAge: (dateOfBirth: Date) => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({  
@@ -35,7 +38,7 @@ export const useUserStore = create<UserStore>((set) => ({
   description: '',
   date_of_birth: null,
   selected_version: null,
-  
+  userAge: null,
 
   getUserData: async (id: string) => {      
     console.log('hello')
@@ -70,6 +73,9 @@ export const useUserStore = create<UserStore>((set) => ({
    
   },
 
+  getAge: (dateOfBirth: Date) => { 
+    set({ userAge: calculateAge(dateOfBirth) });
+  }
 
 }));
 
