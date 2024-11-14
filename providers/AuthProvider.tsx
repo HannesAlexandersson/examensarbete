@@ -22,9 +22,9 @@ const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 /* const [userAge, setUserAge] = React.useState<number | null>(null); */
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
-const [selectedOption, setSelectedOption] = React.useState<number>(3);
+/* const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
-const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
+const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false); */
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 /* const [answers, setAnswers] = React.useState<Answers[]>([]); */
 const [ response, setResponse ] = React.useState<string | null>(null);
@@ -521,10 +521,10 @@ useEffect(() => {
   }
 }, [user?.date_of_birth]);
 
-const userMediaFiles = ({ file }: {file: string}) => {  
+/* const userMediaFiles = ({ file }: {file: string}) => {  
     setSelectedMediaFile(file);
     return file;  
-}
+} */
 
 const saveDiaryEntry = async (diaryEntry: any) => {
   const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);
@@ -598,6 +598,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

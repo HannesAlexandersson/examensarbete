@@ -54,6 +54,13 @@ export interface AnswerStore {
   fetchAnswers: (id: string) => Promise<void>;
 }
 
+export interface MediaStore {
+  selectedMediaFile: string | null;
+  getPhotoForAvatar?: boolean;
+  setSelectedMediaFile: (file: string | null) => void;
+  setGetPhotoForAvatar: (value: boolean) => void;
+}
+
 export interface UserStore {
   id: string | null;
   first_name: string;
@@ -85,7 +92,7 @@ export type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  selectedOption: number;
+  /* selectedOption: number; */
   /* userAge: number | null; */
   contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
@@ -95,14 +102,14 @@ export type AuthContextType = {
   setAnswers: (answers: Answers[]) => void; */
   response: string | null;
   setResponse: (response: string | null) => void;
-  userAvatar: string | null;
-  setSelectedOption: (option: number) => void;
-  userMediaFiles: ({ file }: { file: string; }) => string | null
+  /* userAvatar: string | null; */
+  /* setSelectedOption: (option: number) => void; */
+  /* userMediaFiles: ({ file }: { file: string; }) => string | null
   selectedMediaFile: string | null;
   setSelectedMediaFile: (file: string | null) => void;
-  getPhotoForAvatar?: boolean;
+  getPhotoForAvatar?: boolean; */
+  /* setGetPhotoForAvatar: (value: boolean) => void; */
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
-  setGetPhotoForAvatar: (value: boolean) => void;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
   fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;  
 };

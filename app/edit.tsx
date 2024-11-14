@@ -6,13 +6,29 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Typography } from '@/components';
 import { useUserStore } from '@/stores/authStore';
+import { useMediaStore } from '@/stores/mediaStore';
 
 
 
 
 export default function EditProfile() {
   //global states
-  const { user, editUser, setGetPhotoForAvatar, getPhotoForAvatar, selectedMediaFile, setSelectedMediaFile } = useAuth();
+  const { 
+    user, 
+    editUser, 
+    /* setGetPhotoForAvatar, 
+    getPhotoForAvatar, 
+    selectedMediaFile, 
+    setSelectedMediaFile  */
+  } = useAuth();
+
+  const {
+    selectedMediaFile,
+    setSelectedMediaFile,
+    getPhotoForAvatar,
+    setGetPhotoForAvatar,
+  } = useMediaStore();
+
   const { 
     userAvatar, 
     first_name, 
@@ -50,7 +66,10 @@ export default function EditProfile() {
     setSelectedOption(selected_option || 3);
   }, [first_name, last_name, user_email, date_of_birth, avatar_url, description, selected_option]);
 
-  //
+ 
+  /* const increasePopulation = useStore((state) => state.increasePopulation)
+  return <button onClick={increasePopulation}>one up</button> */
+
   useEffect(() => {
     if (getPhotoForAvatar) {      
       if (selectedMediaFile){

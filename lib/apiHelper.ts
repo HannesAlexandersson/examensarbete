@@ -35,4 +35,3 @@ export const getAnswers = async (id: string) => {
   
   return data as Answers[]; 
 };
-
