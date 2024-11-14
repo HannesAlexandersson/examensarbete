@@ -47,7 +47,7 @@ export const useUserFetch = () => {
       const updatedUser: User = {
         ...userData,
         medicins: enrichedMedicins,
-        own_medicins: [], // Populate this if needed
+        own_medicins: [], 
         diary_entries: userData.diary_entries || [],
         events: userData.events || [],
       };

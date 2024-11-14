@@ -10,10 +10,21 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { truncateText } from '@/utils/utils';
 import { getAccountVersion } from '@/utils/querys';
+import { useUserStore } from '@/stores/authStore';
 
 
 export default function HomeScreen() {
   const { user, userAvatar, answers, setAnswers } = useAuth();
+  /* const { getUser, getAvatar, isUserLoaded } = useUserStore(); */
+  const { first_name, last_name, email,  getUser, getAvatar, isUserLoaded } = useUserStore();
+/* console.log('first', first_name); */
+useEffect(() => {
+  // Fetch the user and avatar only once, if not already loaded
+  if (!isUserLoaded) {
+    getUser();
+    getAvatar();
+  }
+}, [isUserLoaded, getUser, getAvatar]);
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Answers | null>(null);
@@ -26,6 +37,7 @@ export default function HomeScreen() {
     setSelectedEvent(event);
     setModalVisible(true);
   };
+
 
   //get the version from the cms 
   useEffect(() => {

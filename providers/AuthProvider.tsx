@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { supabase, supabaseUrl } from '@/utils/supabase';
+import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
-import Departments from '@/app/departments';
+
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -123,15 +123,13 @@ const getAnswers = async (id: string) => {
   setAnswers(data as Answers[] || []);
 };
 
-const getProcedures = async (id: string) => {
-  //define the query
+const getProcedures = async (id: string) => {  
   const query = supabase
   .from('Procedures')
   .select('*')
   .eq('user_id', id);
   
-  try{
-    //fetch the data
+  try{    
     const { data: procedureEntrys, error: procedureErrors } = await query;
 
     if(procedureErrors) {
@@ -164,8 +162,7 @@ const getProcedures = async (id: string) => {
   }
 };
 
-const fetchDiagnosis = async (id: string) => {
-  //define the query
+const fetchDiagnosis = async (id: string) => {  
   const query = supabase
     .from('Diagnosis')
     .select('*')
@@ -248,11 +245,11 @@ const fetchUserEntries = async (limitEntries: boolean = true, id: string | null)
     .from('diary_posts')
     .select('*')
     .eq('user_id', id)
-    .order('created_at', { ascending: false });//post_date or created_at
+    .order('created_at', { ascending: false });
       
       
     if (limitEntries) {
-      query = query.limit(3); // Change the number as needed
+      query = query.limit(3); // Limit the initial number of entries to 3
     }
 
     const { data: diaryEntries, error: diaryError } = await query;
@@ -303,7 +300,7 @@ const getMediaFiles = async (entry: any, bucket: string) => {
   if (entry.image_url) {
     const { data: imageUrl } = supabase.storage
       .from(bucket)
-      .getPublicUrl(entry.image_url);  // Use the actual field from the database
+      .getPublicUrl(entry.image_url); 
     if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
   }
 
@@ -311,7 +308,7 @@ const getMediaFiles = async (entry: any, bucket: string) => {
   if (entry.video_url) {
     const { data: videoUrl } = supabase.storage
       .from(bucket)
-      .getPublicUrl(entry.video_url);  // Use the actual field from the database
+      .getPublicUrl(entry.video_url);  
     if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
   }
 
@@ -319,7 +316,7 @@ const getMediaFiles = async (entry: any, bucket: string) => {
   if (entry.drawing_url) {
     const { data: drawingUrl } = supabase.storage
       .from(bucket)
-      .getPublicUrl(entry.drawing_url);  // Use the actual field from the database
+      .getPublicUrl(entry.drawing_url);
     if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
   }
 
@@ -357,15 +354,14 @@ const signUp = async (firstname: string, lastname: string, email: string, passwo
   //trimming the input fields to remove any white spaces to avoid issues with supabases not accepting the emails
   const trimmedEmail = email.trim();
   const trimmedFirstname = firstname.trim();
-  const trimmedLastname = lastname.trim();
+  const trimmedLastname = lastname.trim();  
   
-  //sign up with email and password, creates a user in the supabase default auth user table
   const { data, error } = await supabase.auth.signUp({      
     email: trimmedEmail,
     password: password,
   });
   if (error) return console.error(error);
-  //then create a profile in the profiles table with the same id as the user in the auth table
+  
   const { data: profileData, error: profileError } = await supabase
   .from('profiles')
   .insert(
@@ -471,8 +467,7 @@ const editUser = async (
   }
 
   //only update the database if there are changes
-  if (Object.keys(updates).length > 0) {
-    // Update the user profile in the database
+  if (Object.keys(updates).length > 0) {   
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -501,9 +496,9 @@ const moveAvatarToPictures = async (oldAvatarUrl: string) => {
 
   // Move the old avatar to the "pictures" bucket
   const { data: moveData, error: moveError } = await supabase.storage
-  .from('avatars') // Source bucket
+  .from('avatars') 
   .move(oldAvatarUrl, `${oldAvatarUrl}`, {
-    destinationBucket: 'pictures' // Specify the destination bucket
+    destinationBucket: 'pictures' 
   });
 
   if (moveError) {
@@ -597,7 +592,7 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 };
 
 
-//the context provider gives us acces to the user object through out the app
+
 return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }
