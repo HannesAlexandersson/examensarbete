@@ -134,26 +134,9 @@ export default function EditProfile() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async() => {
     //update the user in the database
-    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption);
-
-    //update the user in the global state
-    const updates = {
-      id: id,
-      first_name: firstName,
-      last_name: lastName,
-      user_email: email,
-      date_of_birth: dateOfBirth,
-      avatar_url: avatarUrl,
-      description: userDescription,
-      selected_option: selectedOption,
-    };    
-    updateUser(updates);
-
-    //refetch the avatar in case it has changed
-    getAvatar(avatarUrl);
-
+    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption); 
     alert('Din profil är uppdaterad');
     router.back();
   };  

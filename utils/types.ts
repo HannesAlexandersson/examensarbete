@@ -78,6 +78,7 @@ export interface UserStore {
   getAvatar: (url: string) => Promise<void>;
   getAge: (dateOfBirth: Date) => void;
   updateUser: (updates: Partial<UserStore>) => void;
+  moveAvatarToPictures: (oldAvatarUrl: string) => Promise<void>; 
 };
 
 export interface FullViewModalProps {

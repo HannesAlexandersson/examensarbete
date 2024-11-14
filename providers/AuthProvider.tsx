@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router';
 import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
 import { useUserStore } from '@/stores/authStore';
 import { useAnswerStore } from '@/stores/answerStore';
+import { useMediaStore } from '@/stores/mediaStore';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getFullUrl } from '@/lib/apiHelper';
 
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
@@ -29,8 +32,23 @@ const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 /* const [answers, setAnswers] = React.useState<Answers[]>([]); */
 const [ response, setResponse ] = React.useState<string | null>(null);
 
-const { getUserData, getAvatar, getAge } = useUserStore();
+const { 
+  first_name,
+  last_name,
+  user_email,
+  date_of_birth,
+  description,
+  selected_option, 
+  avatar_url,
+  getUserData,
+  getAvatar, 
+  getAge, 
+  moveAvatarToPictures,
+  updateUser,
+ } = useUserStore();
+
 const { fetchAnswers } = useAnswerStore();
+const { selectedMediaFile } = useMediaStore();
 
 
 const getUser = async (id: string) => {
@@ -87,7 +105,7 @@ const getUser = async (id: string) => {
     router.push('/onboarding');  
   } else {
     //fetch avatar if avatar_url exists
-    getAvatar(data.avatar_url);
+    await getAvatar(data.avatar_url);
     /* LAST WORKING CODE 
     if (data.avatar_url) {
       const { data: avatarData, error: avatarError } = await supabase.storage
@@ -382,9 +400,15 @@ const signUp = async (firstname: string, lastname: string, email: string, passwo
     },
   );
   if (profileError) return console.error(profileError);
-  setUser(profileData);
+
+  //set the user object in the context and redirect to the homepage
+  setUser(profileData);  
   router.back()
-  router.push('/(tabs)');  
+  router.push('/(tabs)');
+  //finally set the global user state
+  if (data?.user){
+    getUser(data?.user?.id);
+  }
 };
 
 const signOut = async () => {
@@ -421,22 +445,20 @@ const editUser = async (
 ) => {
   //if there is no changes made to a property then dont update that property in the db
   const updates: any = {};
-  if (firstname !== user?.first_name) updates.first_name = firstname;
-  if (lastname !== user?.last_name) updates.last_name = lastname;
-  if (email !== user?.email) updates.email = email;
-  if (dateOfBirth !== user?.date_of_birth) updates.date_of_birth = dateOfBirth;
-  if (userDescription !== user?.description) updates.description = userDescription;
-  if (selectedOption !== user?.selected_version) updates.selected_version = selectedOption;
-  if (avatarUrl !== user?.avatar_url) updates.avatar_url = avatarUrl;
+  if (firstname !== first_name) updates.first_name = firstname;
+  if (lastname !== last_name) updates.last_name = lastname;
+  if (email !== user_email) updates.email = email;
+  if (dateOfBirth !== date_of_birth) updates.date_of_birth = dateOfBirth;
+  if (userDescription !== description) updates.description = userDescription;
+  if (selectedOption !== selected_option) updates.selected_version = selectedOption;
+  if (avatarUrl !== avatar_url) updates.avatar_url = avatarUrl;
 
-  //only upload avatar if the avatar URL has changed
-  if (avatarUrl && avatarUrl !== user?.avatar_url) {
-    // Move old avatar to the 'oictures' bucket instead of avatar buckets. 
-    if (user?.avatar_url) {
-     
-      await moveAvatarToPictures(user.avatar_url);
+  //compare the new url to the globally stored avatar url
+  if (avatarUrl && avatarUrl !== avatar_url) {
+    // if there is a new url move old avatar to the 'pictures' bucket instead of avatar buckets. 
+    if (avatar_url) {     
+      await moveAvatarToPictures(avatar_url);
     }
-
   
     //save the photo
     const saveAvatar = async () => {
@@ -455,7 +477,7 @@ const editUser = async (
           cacheControl: '3600000000',
           upsert: false,
         });
-
+        
       if (error) {
         console.error(error);
         return null;
@@ -471,6 +493,8 @@ const editUser = async (
       avatarUrl = uploadedFileName as string; 
       updates.avatar_url = avatarUrl;
       console.log('uploadedImagePath:', avatarUrl);
+
+      await getAvatar(avatarUrl);
     }    
   }
 
@@ -485,46 +509,14 @@ const editUser = async (
       console.error('Profile update error:', error);
       return;
     }
-
-    await getUser(id);
+    //update the user in the global state
+    updateUser(updates);
     console.log('User updated');
   } else {
     console.log('No changes detected, skipping update.');
   }
 };
 
-// Function to move avatar to the "pictures" bucket
-const moveAvatarToPictures = async (oldAvatarUrl: string) => {
-  
-
-  if (!oldAvatarUrl) {
-    console.error('Old avatar path is undefined or empty.');
-    return; // Handle the error case appropriately
-  }  
-
-  // Move the old avatar to the "pictures" bucket
-  const { data: moveData, error: moveError } = await supabase.storage
-  .from('avatars') 
-  .move(oldAvatarUrl, `${oldAvatarUrl}`, {
-    destinationBucket: 'pictures' 
-  });
-
-  if (moveError) {
-    console.error('Failed to copy avatar:', moveError);
-    return;
-  }  
-};
-
-useEffect(() => {
-  if (user?.date_of_birth) {
-   getAge(user.date_of_birth);
-  }
-}, [user?.date_of_birth]);
-
-/* const userMediaFiles = ({ file }: {file: string}) => {  
-    setSelectedMediaFile(file);
-    return file;  
-} */
 
 const saveDiaryEntry = async (diaryEntry: any) => {
   const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);

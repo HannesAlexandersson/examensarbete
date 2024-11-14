@@ -3,7 +3,8 @@ import { UserStore } from '@/utils/types';
 import { 
   fetchUserDataFromProfilesTable, 
   fetchUserAvatarFromAvatarBucket,
-  calculateAge 
+  calculateAge,
+  moveAvatarToPictures 
 } from '@/lib/apiHelper';
 
 export const useUserStore = create<UserStore>((set) => ({  
@@ -23,8 +24,8 @@ export const useUserStore = create<UserStore>((set) => ({
 
   updateUser: (updates) => set((state) => ({ ...state, ...updates })),
 
-  getUserData: async (id: string) => {      
-    console.log('hello')
+  getUserData: async (id: string) => {
+    
     if (!id) return;
 
     const data = await fetchUserDataFromProfilesTable(id);    
@@ -41,7 +42,8 @@ export const useUserStore = create<UserStore>((set) => ({
       date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
       selected_version: data.selected_version,
     });   
-  }, 
+  },
+  
 
   getAvatar: async (url: string) => {    
     
@@ -58,9 +60,12 @@ export const useUserStore = create<UserStore>((set) => ({
 
   getAge: (dateOfBirth: Date) => { 
     set({ userAge: calculateAge(dateOfBirth) });
+  },
+
+  moveAvatarToPictures: async (oldAvatarUrl: string) => {
+    await moveAvatarToPictures(oldAvatarUrl);
   }
 
-  
 
 }));
 

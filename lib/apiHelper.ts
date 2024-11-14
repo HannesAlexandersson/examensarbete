@@ -16,6 +16,35 @@ export const fetchUserAvatarFromAvatarBucket = async (avatarUrl: string) => {
   return data as Blob;
 };
 
+export const getFullUrl = async(path: string) => {
+
+  const { data } = await supabase.storage
+  .from('avatars')
+  .getPublicUrl(path);
+  
+
+  return data;
+}
+
+export const moveAvatarToPictures = async (oldAvatarUrl: string) => {  
+
+  if (!oldAvatarUrl) {
+    console.error('Old avatar path is undefined or empty.');
+    return; 
+  } 
+  
+  const { data: moveData, error: moveError } = await supabase.storage
+  .from('avatars') 
+  .move(oldAvatarUrl, `${oldAvatarUrl}`, {
+    destinationBucket: 'pictures' 
+  });
+
+  if (moveError) {
+    console.error('Failed to copy avatar:', moveError);
+    return;
+  }  
+};
+
 export const calculateAge = (dateOfBirth: Date) => { 
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
