@@ -12,12 +12,19 @@ import { useUserStore } from '@/stores/authStore';
 export default function AccountScreen() {
   //global states
   const { user, signOut } = useAuth();
-  const { userAvatar, userAge, first_name, description } = useUserStore();
+  const { userAvatar, userAge, first_name, description, selected_option } = useUserStore();
   //local states
   const [paintModal, setPaintModal] = React.useState(false);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
+
+  //lifecycle
+  React.useEffect(() => {
+    console.log('version changed to: ', selected_option);
+  }, [selected_option]);
+
+
   //handlers
   const handleEditAccount = () => {
     router.push('/edit');
@@ -88,6 +95,7 @@ export default function AccountScreen() {
     setDrawing(null);
     setDrawingPreview(null);
   }
+  
   return (
   <ScrollView>
     <View className="flex-1 items-center justify-start gap-4 bg-white">
@@ -136,7 +144,7 @@ export default function AccountScreen() {
           <MaterialCommunityIcons name="image-album" size={24} color="black" />
           <Typography variant='black' size='lg' weight='400' className='text-center' >Mina album</Typography>
         </Button>
-        {user?.selected_version === 1 || user?.selected_version === 2 && (
+        {selected_option === 1 || selected_option === 2 && (
           <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => setPaintModal(true)}>
             <FontAwesome name="paint-brush" size={24} color="black" />
             <Typography variant='black' size='lg' weight='400' className='text-center' >Måla</Typography>

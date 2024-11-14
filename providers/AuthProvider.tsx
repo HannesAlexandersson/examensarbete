@@ -104,49 +104,14 @@ const getUser = async (id: string) => {
     //redirect to the special onboarding route thats only getting renderd once the first time the user logs in
     router.push('/onboarding');  
   } else {
+    
     //fetch avatar if avatar_url exists
-    await getAvatar(data.avatar_url);
-    /* LAST WORKING CODE 
-    if (data.avatar_url) {
-      const { data: avatarData, error: avatarError } = await supabase.storage
-        .from('avatars')
-        .download(data.avatar_url);
+    await getAvatar(data.avatar_url);    
 
-      if (avatarError) {
-        console.error('Error downloading avatar:', avatarError);
-        return;
-      }
-      
-     
-      const reader = new FileReader();
-      reader.onloadend = () => {        
-        if (typeof reader.result === 'string') {
-          setUserAvatar(reader.result); 
-        } else {
-          console.error('Unexpected result type:', typeof reader.result);
-        }
-      };
-      reader.readAsDataURL(avatarData); 
-    } */
-
-  setUser(updatedUser);    
-  router.push('/(tabs)');
+    setUser(updatedUser);    
+    router.push('/(tabs)');
   }
 };
-
-
-/* const getAnswers = async (id: string) => {
-  const { data, error } = await supabase
-  .from('Answers')
-  .select('*')
-  .eq('profile_id', id);
-  if (error) {
-    console.error('Error fetching answers:', error);
-    return [];
-  }
-  
-  setAnswers(data as Answers[] || []);
-}; */
 
 const getProcedures = async (id: string) => {  
   const query = supabase

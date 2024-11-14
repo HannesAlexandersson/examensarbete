@@ -15,11 +15,7 @@ export default function EditProfile() {
   //global states
   const { 
     user, 
-    editUser, 
-    /* setGetPhotoForAvatar, 
-    getPhotoForAvatar, 
-    selectedMediaFile, 
-    setSelectedMediaFile  */
+    editUser    
   } = useAuth();
 
   const {
@@ -38,8 +34,7 @@ export default function EditProfile() {
     avatar_url, 
     description,
     selected_option,
-    updateUser,
-    getAvatar,
+    updateUser,    
    } = useUserStore();
 
   //local states
@@ -66,9 +61,6 @@ export default function EditProfile() {
     setSelectedOption(selected_option || 3);
   }, [first_name, last_name, user_email, date_of_birth, avatar_url, description, selected_option]);
 
- 
-  /* const increasePopulation = useStore((state) => state.increasePopulation)
-  return <button onClick={increasePopulation}>one up</button> */
 
   useEffect(() => {
     if (getPhotoForAvatar) {      
@@ -172,7 +164,7 @@ export default function EditProfile() {
       description: userDescription,
       selected_option: v,
     };
-    editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption);
+    /* editUser(id, firstName, lastName, email, dateOfBirth, avatarUrl, userDescription, selectedOption); */
     updateUser({ selected_option: v });
     router.back();
   };
@@ -184,7 +176,7 @@ export default function EditProfile() {
         <Typography variant='white' weight='700' size='h2' className="underline mb-4">Byt version</Typography>
         <View className='flex flex-row gap-2 justify-center items-center mb-4 w-full'>
 
-        {user?.selected_version === 1 ? (
+        {selected_option === 1 ? (
         <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 1')}>
           <Typography variant='white'>Version 1</Typography>
         </Button>
@@ -194,7 +186,7 @@ export default function EditProfile() {
         </Button>
         )}
 
-        {user?.selected_version === 2 ? (
+        {selected_option === 2 ? (
         <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 2')}>
           <Typography variant='white'>Version 2</Typography>
         </Button>
@@ -204,7 +196,7 @@ export default function EditProfile() {
         </Button>
         )}
 
-        {user?.selected_version === 3 ? (
+        {selected_option === 3 ? (
         <Button variant='blue' size='md' className='border border-white' onPress={() => alert('Du använder redan version 3')}>
           <Typography variant='white'>Version 3</Typography>
         </Button>
