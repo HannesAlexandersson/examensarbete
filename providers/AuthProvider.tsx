@@ -3,6 +3,7 @@ import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
 import { useUserStore } from '@/stores/authStore';
+import { useAnswerStore } from '@/stores/answerStore';
 
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
@@ -25,10 +26,11 @@ const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
-const [answers, setAnswers] = React.useState<Answers[]>([]);
+/* const [answers, setAnswers] = React.useState<Answers[]>([]); */
 const [ response, setResponse ] = React.useState<string | null>(null);
 
 const { getUserData, getAvatar, getAge } = useUserStore();
+const { fetchAnswers } = useAnswerStore();
 
 
 const getUser = async (id: string) => {
@@ -60,7 +62,7 @@ const getUser = async (id: string) => {
   const procedures = await getProcedures(id);
 
   //call the get answers function to set the users answers
-  await getAnswers(id);
+  await fetchAnswers(id);
   
 
   const updatedUser: User = {
@@ -115,7 +117,7 @@ const getUser = async (id: string) => {
 };
 
 
-const getAnswers = async (id: string) => {
+/* const getAnswers = async (id: string) => {
   const { data, error } = await supabase
   .from('Answers')
   .select('*')
@@ -126,7 +128,7 @@ const getAnswers = async (id: string) => {
   }
   
   setAnswers(data as Answers[] || []);
-};
+}; */
 
 const getProcedures = async (id: string) => {  
   const query = supabase
@@ -596,6 +598,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

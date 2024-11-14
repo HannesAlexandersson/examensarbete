@@ -10,14 +10,15 @@ import { useUserStore } from '@/stores/authStore';
 
 
 export default function AccountScreen() {
+  //global states
   const { user, signOut } = useAuth();
-  const { userAvatar, userAge } = useUserStore();
-  console.log(userAge)
+  const { userAvatar, userAge, first_name, description } = useUserStore();
+  //local states
   const [paintModal, setPaintModal] = React.useState(false);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
-
+  //handlers
   const handleEditAccount = () => {
     router.push('/edit');
   }
@@ -76,7 +77,6 @@ export default function AccountScreen() {
       } finally {
         setDrawing(null);
         setDrawingPreview(null);
-
       }
 
     }
@@ -93,8 +93,8 @@ export default function AccountScreen() {
     <View className="flex-1 items-center justify-start gap-4 bg-white">
       <View className='flex flex-row justify-between items-center w-full px-5 pt-8 pb-3 bg-slate-100'>
         <View className='w-1/2 flex flex-col items-start justify-center pl-4'>
-          <Typography variant='black' weight='400' size='xl' className='mb-4'>{user?.first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
-          <Typography variant='black' weight='400' size='md' className=''>{user?.description}</Typography>
+          <Typography variant='black' weight='400' size='xl' className='mb-4'>{first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
+          <Typography variant='black' weight='400' size='md' className=''>{description}</Typography>
         
         </View>
         <View className='w-1/2 flex flex-col gap-2 items-center justify-center'>

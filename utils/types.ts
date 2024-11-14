@@ -49,6 +49,30 @@ export type Answers = {
   created_at: string;
 };
 
+export interface AnswerStore {
+  answers: Answers[];
+  fetchAnswers: (id: string) => Promise<void>;
+}
+
+export interface UserStore {
+  id: string | null;
+  first_name: string;
+  last_name: string;
+  user_email: string;
+  first_time: boolean;
+  selected_option: number | null;  
+  avatar_url?: string;  
+  description?: string;
+  date_of_birth?: Date | null;
+  selected_version: number | null;
+  userAvatar: string | null;
+  userAge: number | null;
+  getUserData: (id: string) => Promise<void>;
+  getAvatar: (url: string) => Promise<void>;
+  getAge: (dateOfBirth: Date) => void;
+  updateUser: (updates: Partial<UserStore>) => void;
+};
+
 export interface FullViewModalProps {
   isVisible: boolean;
   onClose: () => void;
@@ -62,13 +86,13 @@ export type AuthContextType = {
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   selectedOption: number;
-  userAge: number | null;
+  /* userAge: number | null; */
   contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
   getContactIds: (userId: string) => Promise<never[] | undefined>;
-  answers: Answers[];
+  /* answers: Answers[];
   getAnswers: (userId: string) => Promise<Answers[] | undefined>;
-  setAnswers: (answers: Answers[]) => void;
+  setAnswers: (answers: Answers[]) => void; */
   response: string | null;
   setResponse: (response: string | null) => void;
   userAvatar: string | null;

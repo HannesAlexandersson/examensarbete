@@ -11,22 +11,25 @@ import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { truncateText } from '@/utils/utils';
 import { getAccountVersion } from '@/utils/querys';
 import { useUserStore } from '@/stores/authStore';
+import { useAnswerStore } from '@/stores/answerStore';
 
 
 export default function HomeScreen() {
-  const { user, answers, setAnswers } = useAuth();
-  const { userAvatar } = useUserStore();
+  //hooks & stores & providers
+  const { user } = useAuth();
+  const { userAvatar, first_name } = useUserStore();
+  const { answers } = useAnswerStore();
 
 
 
-
+  //modal states
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  //local states
   const [selectedEvent, setSelectedEvent] = useState<Answers | null>(null);
-
   const [version, setVersion] = useState<AccountVersion[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
+  //handlers
   const openModal = (event: Answers) => {
     setSelectedEvent(event);
     setModalVisible(true);
@@ -126,9 +129,9 @@ export default function HomeScreen() {
     <View className="flex-1 items-center justify-start gap-4 bg-slate-100">
       <View className='flex flex-row justify-between items-end w-full px-5 pt-12'>
         {version ?   (
-          <Typography variant='black' weight='400' size='lg' className="font-normal text-[22px]" >{version?.[0]?.welcomeText} {user?.first_name}!</Typography>
+          <Typography variant='black' weight='400' size='lg' className="font-normal text-[22px]" >{version?.[0]?.welcomeText} {first_name}!</Typography>
         ) : (
-          <Typography variant='black' weight='400' size='lg' className="font-normal text-[22px]" >Välkommen {user?.first_name}!</Typography>
+          <Typography variant='black' weight='400' size='lg' className="font-normal text-[22px]" >Välkommen {first_name}!</Typography>
         )}
         {userAvatar && (
         <View className='flex items-center justify-center'>

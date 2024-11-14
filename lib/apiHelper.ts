@@ -1,5 +1,5 @@
-import { B } from '@faker-js/faker/dist/airline-C5Qwd7_q';
 import { supabase } from '../utils/supabase';
+import { Answers } from '@/utils/types';
 
 export const fetchUserDataFromProfilesTable = async (userId: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -22,3 +22,17 @@ export const calculateAge = (dateOfBirth: Date) => {
     const age = today.getFullYear() - birthDate.getFullYear();
     return age;
 };
+
+export const getAnswers = async (id: string) => {
+  const { data, error } = await supabase
+  .from('Answers')
+  .select('*')
+  .eq('profile_id', id);
+  if (error) {
+    console.error('Error fetching answers:', error);
+    return [];
+  }
+  
+  return data as Answers[]; 
+};
+

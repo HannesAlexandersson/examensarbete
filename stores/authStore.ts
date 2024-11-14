@@ -1,29 +1,10 @@
 import { create } from 'zustand';
-
+import { UserStore } from '@/utils/types';
 import { 
   fetchUserDataFromProfilesTable, 
   fetchUserAvatarFromAvatarBucket,
   calculateAge 
 } from '@/lib/apiHelper';
-
-
-interface UserStore {
-  id: string | null;
-  first_name: string;
-  last_name: string;
-  email: string;
-  first_time: boolean;
-  selected_option: string | null;  
-  avatar_url?: string | null;  
-  description?: string;
-  date_of_birth?: Date | null;
-  selected_version: number | null;
-  userAvatar: string | null;
-  userAge: number | null;
-  getUserData: (id: string) => Promise<void>;
-  getAvatar: (url: string) => Promise<void>;
-  getAge: (dateOfBirth: Date) => void;
-};
 
 export const useUserStore = create<UserStore>((set) => ({  
 
@@ -31,14 +12,16 @@ export const useUserStore = create<UserStore>((set) => ({
   userAvatar: null,
   first_name: '',
   last_name: '',
-  email: '',
+  user_email: '',
   first_time: false,
-  selected_option: '',
+  selected_option: 3,
   avatar_url: '',
   description: '',
   date_of_birth: null,
   selected_version: null,
   userAge: null,
+
+  updateUser: (updates) => set((state) => ({ ...state, ...updates })),
 
   getUserData: async (id: string) => {      
     console.log('hello')
@@ -50,7 +33,7 @@ export const useUserStore = create<UserStore>((set) => ({
       id: data.id,
       first_name: data.first_name,
       last_name: data.last_name,
-      email: data.email,
+      user_email: data.email,
       first_time: data.first_time,
       selected_option: data.selected_option,
       avatar_url: data.avatar_url,
@@ -76,6 +59,8 @@ export const useUserStore = create<UserStore>((set) => ({
   getAge: (dateOfBirth: Date) => { 
     set({ userAge: calculateAge(dateOfBirth) });
   }
+
+  
 
 }));
 
