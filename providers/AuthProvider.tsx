@@ -38,7 +38,7 @@ const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false); */
 const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 /* const [answers, setAnswers] = React.useState<Answers[]>([]); */
-const [ response, setResponse ] = React.useState<string | null>(null);
+/* const [ response, setResponse ] = React.useState<string | null>(null); */
 
 const { 
   first_name,
@@ -57,7 +57,7 @@ const {
 
 const { fetchAnswers } = useAnswerStore();
 const { selectedMediaFile } = useMediaStore();
-const { diary_entries, setDiaryEntries } = useDiaryStore();
+const { setDiaryEntries } = useDiaryStore();
 
 
 const getUser = async (id: string) => {
@@ -67,7 +67,7 @@ const getUser = async (id: string) => {
 
   
   if (data?.date_of_birth) {
-    data.date_of_birth = new Date(data.date_of_birth);
+    getAge(data.date_of_birth);    
   }
 
   // Call fetchMedicins to get medicines
@@ -565,6 +565,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

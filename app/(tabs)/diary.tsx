@@ -31,17 +31,6 @@ export default function DiaryScreen() {
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  //state to remount the component
-  const [remountKey, setRemountKey] = useState(0);
-
-  //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
-  React.useEffect(() => {
-    setIsDrawingMode(false);
-    setIsModalVisible(false);    
-    
-    console.log('hej');
-  }, [remountKey]);
-
   
   
   // Function to handle form submission
@@ -81,14 +70,13 @@ export default function DiaryScreen() {
       if (drawingError) {
         console.error("Error uploading drawing:", drawingError);
       } else {
-        //insert the url to the mediaUploads array
-       /*  mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path }); */
+        //get the url & uri to the mediaUploads array       
        const { data: publicUrlData } = supabase
       .storage
       .from('diary_media')
       .getPublicUrl(drawingBucketData?.path);
 
-      mediaUploads.push({ type: 'video', url: publicUrlData.publicUrl, uri: drawingBucketData?.path });
+      mediaUploads.push({ type: 'drawing', url: publicUrlData.publicUrl, uri: drawingBucketData?.path });
       }
     }
 
@@ -112,7 +100,7 @@ export default function DiaryScreen() {
     if (imageError) {
       console.error("Error uploading image:", imageError);
     } else {
-      /* mediaUploads.push({ type: 'image', url: imageBucketData?.path }); */
+      //get the url & uri to the mediaUploads array 
       const { data: publicUrlData } = supabase
       .storage
       .from('diary_media')
@@ -142,7 +130,7 @@ export default function DiaryScreen() {
     if (videoError) {
       console.error("Error uploading video:", videoError);
     } else {
-      /* mediaUploads.push({ type: 'video', url: videoBucketData?.path }); */
+      //get the url & uri to the mediaUploads array 
       const { data: publicUrlData } = supabase
       .storage
       .from('diary_media')
@@ -192,9 +180,8 @@ export default function DiaryScreen() {
       }
     )
     .select();
-  if(EventError) console.error('Error saving event', EventError);
 
-  console.log('event added:', Eventdata);
+  if(EventError) console.error('Error saving event', EventError);  
 
   const newEntry: DiaryEntry = {
     titel: postTitel,
@@ -204,7 +191,7 @@ export default function DiaryScreen() {
     drawing: uploadedMedia.drawing_url,
     date: selectedDate,
   };  
-  console.log('newEntry:', newEntry);
+  
   //update the diary entries in the global state
   setDiaryEntries([newEntry, ...(diary_entries || [])]);  
 
@@ -217,9 +204,8 @@ export default function DiaryScreen() {
   setDrawingPreview(null);
   setSelectedDate(new Date());
   
-  
-  setRemountKey((prevKey) => prevKey + 1); 
-  // Close modal
+
+  // close the modal
   setIsModalVisible(false);
 };
 
@@ -232,7 +218,7 @@ const fetchFewerEntries = async () => {
 
 // Display only the first three entries, or all entries if loadedAll is true
 const displayedEntries = loadedAll ? diary_entries : diary_entries?.slice(0, 3);
-console.log('displayedEntries:', displayedEntries);
+
   return (
     <ScrollView>
       <SafeAreaView className="flex-1 items-center justify-start ">        

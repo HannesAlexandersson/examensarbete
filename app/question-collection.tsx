@@ -6,6 +6,7 @@ import { QuestionProps, Answers } from '@/utils/types';
 import { ScrollView, View } from 'react-native';
 import { Typography, Button } from '@/components';
 import FullViewModal from '@/components/FullViewModal';
+import { useUserStore, useAnswerStore } from '@/stores';
 
 export default function QuestionCollection() {
   const { user, answers } = useAuth();

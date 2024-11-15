@@ -101,8 +101,8 @@ export type AuthContextType = {
   /* answers: Answers[];
   getAnswers: (userId: string) => Promise<Answers[] | undefined>;
   setAnswers: (answers: Answers[]) => void; */
-  response: string | null;
-  setResponse: (response: string | null) => void;
+  /* response: string | null;
+  setResponse: (response: string | null) => void; */
   /* userAvatar: string | null; */
   /* setSelectedOption: (option: number) => void; */
   /* userMediaFiles: ({ file }: { file: string; }) => string | null

@@ -10,8 +10,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { truncateText } from '@/utils/utils';
 import { getAccountVersion } from '@/utils/querys';
-import { useUserStore } from '@/stores/authStore';
-import { useAnswerStore } from '@/stores/answerStore';
+import { useUserStore, useAnswerStore } from '@/stores';
+
 
 
 export default function HomeScreen() {
