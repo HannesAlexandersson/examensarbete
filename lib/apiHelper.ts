@@ -1,5 +1,5 @@
 import { supabase } from '../utils/supabase';
-import { Answers, DiaryEntry } from '@/utils/types';
+import { Answers, DiaryEntry, QuestionProps } from '@/utils/types';
 
 export const fetchUserDataFromProfilesTable = async (userId: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -158,3 +158,37 @@ export const getMediaFiles = async (entry: any, bucket: string) => {
 }
 
 
+export const fetchQuestions = async (id: string) => {
+  if(!id) return;
+
+  const { data, error } = await supabase
+    .from('Questions')
+    .select('*')
+    .eq('sender_id', id);
+
+  if(error) {
+    console.error('error', error);
+  }
+
+  if(!data) return;
+
+  if(data.length === 0) {
+    console.log('No data');
+    return;
+  }
+  const fetchedQuestions = data.map((question: QuestionProps) => {
+    return {
+      id: question.id,
+      msg_text: question.msg_text,
+      reciver_name: question.reciver_name,
+      contact_name: question.contact_name,
+      sender_name: question.sender_name,
+      answerd: question.answerd,
+      sender_id: question.sender_id,
+      reciver_id: question.reciver_id,
+    } 
+  });    
+
+  
+  return fetchedQuestions;
+}

@@ -565,6 +565,6 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
 
 
 
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
 
 }

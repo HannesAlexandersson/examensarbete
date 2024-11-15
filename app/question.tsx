@@ -4,14 +4,14 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { Typography, Button } from '@/components';
 import { View, SafeAreaView, TextInput, KeyboardAvoidingView } from 'react-native';
-import { useUserStore, useAnswerStore, useResponseStore } from '@/stores';
+import { useUserStore, useAnswerStore, useQuestionStore } from '@/stores';
 
 
 export default function Questions() {
   //global states  
   const { id, first_name, last_name } = useUserStore();
   const { fetchAnswers } = useAnswerStore();
-  const { setResponse } = useResponseStore();
+  const { setResponse } = useQuestionStore();
   //local states
   const { department, department_id, contactperson } = useLocalSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);

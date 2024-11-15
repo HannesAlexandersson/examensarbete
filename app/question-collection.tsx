@@ -1,57 +1,28 @@
 import React from 'react';
 import { router } from 'expo-router';
-import { useAuth } from '@/providers/AuthProvider';
-import { supabase } from '@/utils/supabase';
-import { QuestionProps, Answers } from '@/utils/types';
+import { Answers } from '@/utils/types';
 import { ScrollView, View } from 'react-native';
 import { Typography, Button } from '@/components';
 import FullViewModal from '@/components/FullViewModal';
-import { useUserStore, useAnswerStore } from '@/stores';
+import { useUserStore, useAnswerStore, useQuestionStore } from '@/stores';
 
 export default function QuestionCollection() {
-  const { user, answers } = useAuth();
-  const [questions, setQuestions] = React.useState<QuestionProps[] | null>([]);
+  //global states  
+  const { id } = useUserStore();
+  const { fetchAnswers, answers } = useAnswerStore();
+  const { getQuestions, questions } = useQuestionStore();
+  
+  //local states  
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = React.useState<Answers | null>(null); 
 
   React.useEffect(() => {
-    fetchQuestions();
+    if(id){
+      getQuestions(id);
+      fetchAnswers(id);
+    }
   }, []);
-
-  const fetchQuestions = async () => {
-    if(!user) return;
-
-    const { data, error } = await supabase
-      .from('Questions')
-      .select('*')
-      .eq('sender_id', user.id);
-
-    if(error) {
-      console.error('error', error);
-    }
-
-    if(!data) return;
-
-    if(data.length === 0) {
-      console.log('No data');
-      return;
-    }
-    const fetchedQuestions = data.map((question: QuestionProps) => {
-      return {
-        id: question.id,
-        msg_text: question.msg_text,
-        reciver_name: question.reciver_name,
-        contact_name: question.contact_name,
-        sender_name: question.sender_name,
-        answerd: question.answerd,
-        sender_id: question.sender_id,
-        reciver_id: question.reciver_id,
-      } 
-    });    
-
-    //set local state
-    setQuestions(fetchedQuestions);
-  }
+  
 
   const handleFullviewAnswer = (questionId: string) => {
     const answer = answers.find((ans) => ans.question_id === questionId);

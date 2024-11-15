@@ -61,6 +61,13 @@ export interface MediaStore {
   setGetPhotoForAvatar: (value: boolean) => void;
 }
 
+export interface QuestionStore {
+  response: string | null;  
+  questions: QuestionProps[] | null;
+  getQuestions: (id: string) => void;
+  setResponse: (response: string | null) => void;
+}
+
 export interface UserStore {
   id: string | null;
   first_name: string;
@@ -112,7 +119,7 @@ export type AuthContextType = {
   /* setGetPhotoForAvatar: (value: boolean) => void; */
   fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
-  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;  
+  /* fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>; */  
 };
 
 export type OnboardingText = {
