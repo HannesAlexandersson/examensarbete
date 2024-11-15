@@ -192,3 +192,170 @@ export const fetchQuestions = async (id: string) => {
   
   return fetchedQuestions;
 }
+
+export const fetchuserDrawings = async (id: string, controller: any) => {
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: drawingRecords, error: drawingError } = await supabase
+      .from('Drawings') 
+      .select('*')
+      .eq('user_id', id)
+      .abortSignal(controller.signal); 
+
+    if (drawingError) {
+      console.error('Error fetching drawings from the database:', drawingError);
+      return;
+    }
+
+    if (!drawingRecords || drawingRecords.length === 0) {
+      console.log('No drawings found for this user.');
+      return;
+    }
+    
+    const drawingUrls = await Promise.all(
+      drawingRecords.map(async (drawing) => {
+        const { drawing_uri } = drawing;
+        
+        const { data: fileUrl } = supabase
+          .storage
+          .from('drawings')  
+          .getPublicUrl(drawing_uri);  
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; 
+      })
+    );
+
+    const validUrls = drawingUrls.filter(Boolean) as string[]; 
+    
+    return validUrls;
+
+  } catch (error: any) {
+    if(error.name === 'AbortError') {
+      console.log('Fetch aborted:', error);
+
+    }else{
+      console.error('Error fetching user drawings:', error);
+    }
+  } 
+}
+
+export const fetchUserImages = async (id: string, controller: any) => {
+  //first check if user is logged in
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: imageRecords, error: imageError } = await supabase
+      .from('Images') 
+      .select('*')
+      .eq('user_id', id)
+      .abortSignal(controller.signal);
+
+    if (imageError) {
+      console.error('Error fetching images from the database:', imageError);
+      return;
+    }
+
+    if (!imageRecords || imageRecords.length === 0) {
+      console.log('No images found for this user.');
+      return;
+    }
+    
+    const mediaUrls = await Promise.all(
+      imageRecords.map(async (image) => {
+        const { image_uri } = image;
+
+        // Fetch the public URL from the pictures bucket using image_uri from 'profiles'
+        const { data: fileUrl } = supabase
+          .storage
+          .from('pictures')  
+          .getPublicUrl(image_uri); 
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; //return with the valid public URL
+      })
+    );
+
+    const validUrls = mediaUrls.filter(Boolean) as string[]; //filter out non valids
+    
+
+   return validUrls;
+
+  } catch (error: any) {
+    if(error.name === 'AbortError') {
+      console.log('Fetch aborted:', error);
+    }else{
+    console.error('Error fetching user images:', error);
+  } 
+}
+};
+
+export const fetchUserVideos = async (id: string, controller: any) => {    
+  if (!id) {
+    console.error('User ID is missing');
+    return;
+  }
+
+  try {      
+    const { data: videoRecords, error: videoError } = await supabase
+      .from('videos') 
+      .select('*')
+      .eq('user_id', id)
+      .abortSignal(controller.signal);
+
+    if (videoError) {
+      console.error('Error fetching videos from the database:', videoError);
+      return;
+    }
+
+    if (!videoRecords || videoRecords.length === 0) {
+      console.log('No videos found for this user.');
+      return;
+    }
+    
+    const videoUrls = await Promise.all(
+      videoRecords.map(async (video) => {
+        const { video_uri } = video;
+        
+        const { data: fileUrl } = supabase
+          .storage
+          .from('videos')  
+          .getPublicUrl(video_uri);  
+
+          if (!fileUrl.publicUrl) {
+            console.error('Failed to fetch public URL');
+            return;
+          }          
+
+        return fileUrl.publicUrl; 
+      })
+    );
+
+    const validUrls = videoUrls.filter(Boolean) as string[]; 
+    
+
+   return validUrls;
+
+  } catch (error: any) {
+    if(error.name === 'AbortError') {
+      console.log('Fetch aborted:', error);
+    }else{
+      console.error('Error fetching user videos:', error);
+    }
+  }
+}; 
