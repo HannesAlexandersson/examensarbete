@@ -1,12 +1,20 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, UserMediaForDepartment, DiagnosisProps, MediaEntry } from '@/utils/types';
-import { useUserStore } from '@/stores/authStore';
-import { useAnswerStore } from '@/stores/answerStore';
-import { useMediaStore } from '@/stores/mediaStore';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-import { getFullUrl } from '@/lib/apiHelper';
+import { 
+  User, 
+  AuthContextType, 
+  MedicinProps, 
+  ProcedureProps, 
+  ContactIds, 
+  DiaryEntry, 
+  Answers, 
+  UserMediaForDepartment, 
+  DiagnosisProps, 
+  MediaEntry 
+} from '@/utils/types';
+import { fetchUserEntries } from '@/lib/apiHelper';
+import { useMediaStore, useAnswerStore, useUserStore, useDiaryStore } from '@/stores';
 
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
@@ -49,6 +57,7 @@ const {
 
 const { fetchAnswers } = useAnswerStore();
 const { selectedMediaFile } = useMediaStore();
+const { diary_entries, setDiaryEntries } = useDiaryStore();
 
 
 const getUser = async (id: string) => {
@@ -67,8 +76,9 @@ const getUser = async (id: string) => {
   // Enrich medicines with staff and department details
   const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
 
-  //call the fetch diaryposts function to get the users diary entries
+  //call the fetch diaryposts function to get the users diary entries and set the global state
   const diaryEntries = await fetchUserEntries(false, id);
+  setDiaryEntries(diaryEntries || []);
 
   //get the departments and associated staff
   const { departments, staff } = await fetchDepartmentsAndStaff();  
@@ -104,7 +114,7 @@ const getUser = async (id: string) => {
     //redirect to the special onboarding route thats only getting renderd once the first time the user logs in
     router.push('/onboarding');  
   } else {
-    
+
     //fetch avatar if avatar_url exists
     await getAvatar(data.avatar_url);    
 
@@ -222,7 +232,7 @@ const fetchDepartmentsAndStaff = async () => {
   }
 };
 
-const fetchUserEntries = async (limitEntries: boolean = true, id: string | null) => {
+/* const fetchUserEntries = async (limitEntries: boolean = true, id: string | null) => {
   //first check if user is logged in
   if (!id) {
     console.error('User ID is missing');
@@ -277,7 +287,7 @@ const fetchUserEntries = async (limitEntries: boolean = true, id: string | null)
     console.error('Error fetching user diary entries:', error);
     return [];
   }
-};
+}; */
 
 const getMediaFiles = async (entry: any, bucket: string) => {
   const mediaUrls: any = {

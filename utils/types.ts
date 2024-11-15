@@ -239,6 +239,7 @@ export type FilelikeObject = {
 export interface DiaryMediaUpload {
   type: string;
   url: string;
+  uri?: string;
 }
 
 export type OwnAddedMedicinProps = {
