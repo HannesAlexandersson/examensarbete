@@ -55,11 +55,17 @@ export interface AnswerStore {
 }
 
 export interface MediaStore {
-  selectedMediaFile: string | null;
   getPhotoForAvatar?: boolean;
+  selectedMedia: string | null;
+  selectedMediaFile: string | null;
+  setSelectedMedia: (file: string | null) => void;
   setSelectedMediaFile: (file: string | null) => void;
+  userMediaFiles: ({ file }: { file: string }) => string | null;
+  mediaData: mediaDataProps;
+  setMediaData: (newData: mediaDataProps) => void;
+  handleSelect: (fileUrl: string) => void;
   setGetPhotoForAvatar: (value: boolean) => void;
-}
+} 
 
 export interface QuestionStore {
   response: string | null;  

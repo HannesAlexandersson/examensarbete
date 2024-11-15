@@ -13,7 +13,7 @@ import {
   DiagnosisProps, 
   MediaEntry 
 } from '@/utils/types';
-import { fetchUserEntries } from '@/lib/apiHelper';
+import { fetchUserEntries, getMediaFiles } from '@/lib/apiHelper';
 import { useMediaStore, useAnswerStore, useUserStore, useDiaryStore } from '@/stores';
 
 
@@ -289,7 +289,7 @@ const fetchDepartmentsAndStaff = async () => {
   }
 }; */
 
-const getMediaFiles = async (entry: any, bucket: string) => {
+/* const getMediaFiles = async (entry: any, bucket: string) => {
   const mediaUrls: any = {
     image: null,
     video: null,
@@ -321,7 +321,7 @@ const getMediaFiles = async (entry: any, bucket: string) => {
   }
 
   return mediaUrls;
-}
+} */
 
 //get the users contacts from departments
 const getContactIds = async (userId: string) => {

@@ -5,21 +5,29 @@ import { router } from 'expo-router';
 import { Button, Typography, VideoThumbnail } from '@/components';
 import { supabase } from '@/utils/supabase';
 import { mediaDataProps } from '@/utils/types';
+import { useMediaStore, useUserStore } from '@/stores';
 
 
 
 export default function Album() {
+  const { user } = useAuth();
   const { 
-    user, 
-    userMediaFiles,     
-  } = useAuth();
+    userMediaFiles, 
+    selectedMedia, 
+    setSelectedMedia,
+    mediaData,
+    setMediaData,
+    handleSelect,
+    setGetPhotoForAvatar
+   } = useMediaStore();
+  const { id } = useUserStore();
 
-  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);  
-  const [mediaData, setMediaData] = React.useState<mediaDataProps>({
+  /* const [selectedMedia, setSelectedMedia] = useState<string | null>(null); */  
+  /* const [mediaData, setMediaData] = React.useState<mediaDataProps>({
     images: [],
     videos: [],
     drawings: []
- });
+ }); */
  
   React.useEffect(() => {
     // Create a new AbortController instance for each fetch request to handle memory leaks
@@ -28,7 +36,7 @@ export default function Album() {
 
     
     fetchAllMedia(user.id as string, controller);
-   //cleanup on unmount
+    //cleanup on unmount
     return () => {
       setMediaData({ images: [], drawings: [], videos: [] });
     };
@@ -211,16 +219,17 @@ export default function Album() {
   const handleSelectMedia = (mediaUrl: string | null) => {    
     if (mediaUrl) { // Check if mediaUrl is not null
       console.log('Selected media:', mediaUrl);
-      userMediaFiles({ file: mediaUrl }); // Call the context/state management function      
-      router.back(); 
+      userMediaFiles({ file: mediaUrl }); // Call the storefunction
+      
+      router.back(); //return the user to the previous screen
     } else {
-      console.log('No media selected');
+      alert('Du har inte valt någon fil!');
     }
   };  
 
-  const handleSelect = (fileUrl: string) => {
+  /* const handleSelect = (fileUrl: string) => {
     setSelectedMedia((prevSelected) => (prevSelected === fileUrl ? null : fileUrl));
-  };
+  }; */
 
   const fetchAllMedia = async (userId: string, controller: any) => {
     const [images, drawings, videos] = await Promise.all([

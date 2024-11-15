@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow'
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView   } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
@@ -17,13 +18,14 @@ export default function EditProfile() {
     user, 
     editUser    
   } = useAuth();
+  
+  const { setSelectedMediaFile, setGetPhotoForAvatar } = useMediaStore();
 
-  const {
-    selectedMediaFile,
-    setSelectedMediaFile,
-    getPhotoForAvatar,
-    setGetPhotoForAvatar,
-  } = useMediaStore();
+  //useShallow middleware allows for greater rerendering control
+  const { getPhotoForAvatar, selectedMediaFile, } = useMediaStore(useShallow((state) => ({
+    getPhotoForAvatar: state.getPhotoForAvatar,
+    selectedMediaFile: state.selectedMediaFile,
+  })));
 
   const { 
     userAvatar, 
@@ -62,16 +64,14 @@ export default function EditProfile() {
   }, [first_name, last_name, user_email, date_of_birth, avatar_url, description, selected_option]);
 
 
-  useEffect(() => {
-    if (getPhotoForAvatar) {      
-      if (selectedMediaFile){
+  //if the user has selected an image from the album, set the avatarUrl and imagepreview states
+  useEffect(() => {    
+    if (getPhotoForAvatar && selectedMediaFile) {
         setAvatarUrl(selectedMediaFile);
-      }
-      setImage(selectedMediaFile);
+        setImage(selectedMediaFile);
     }
-  }, [selectedMediaFile, getPhotoForAvatar]);
+  }, [getPhotoForAvatar, selectedMediaFile]);
   
-
   //handle date change from DatePicker
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
@@ -134,8 +134,9 @@ export default function EditProfile() {
   };  
   
   const handleToAlbum = () => {
-    setGetPhotoForAvatar(true);
-    router.push('/album?source=edit');
+    //set the state so we can know where the image is coming from
+    setGetPhotoForAvatar(true);    
+    router.push('/album?source=edit');    
   };
 
   
