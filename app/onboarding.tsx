@@ -7,17 +7,22 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { getOnboardingText, getVersionDescriptions } from '@/utils/querys';
 import { OnboardingText, CheckmarkOptions, VersionDescriptions } from '@/utils/types';
 import { Button, Typography, RoundCheckmark } from '@/components';
+import { useUserStore } from '@/stores';
 
 
 export default function OnboardingScreen() {
-  const { user, selectedOption, setSelectedOption } = useAuth();
+  //GLOBAL STATES
+  const { user } = useAuth();
+  const { selected_option, updateUser } = useUserStore();
   const router = useRouter();  
-  
+  //LOCAL STATES
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingText[]>([]);
   const [versionDescriptions, setVersionDescriptions] = useState<VersionDescriptions[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  //HANDLERS
 
   //Fetch the textdata from the CMS
   useEffect(() => {
@@ -49,7 +54,7 @@ export default function OnboardingScreen() {
     return <Typography variant='blue' weight='700' size='h1'>Error fetching data: {error.message}</Typography>;
   }
  
-  //handle the "in component" navigation
+  //handle the "in component only" navigation
   const handleNext = () => {
     if (currentStep === 2) {
       setCurrentStep(currentStep - 1);
@@ -70,17 +75,18 @@ export default function OnboardingScreen() {
   ];
 
   const handleSelectOption = (option: number) => {
-    setSelectedOption(option);
+    //update the global state
+    updateUser({ selected_option: option });    
   };
 
   const handleForward = async() => {   
-    if (selectedOption === null) {
+    if (selected_option === null) {
       alert('Välj en version för att fortsätta');
       return;
     } 
     //update the user profile with the selected version and set first_time to false
     const { data, error } = await supabase.from('profiles')
-    .update({ first_time: false, selected_version: selectedOption })
+    .update({ first_time: false, selected_version: selected_option })
     .eq('id', user?.id);
 
     if (error) return console.error(error);
@@ -111,7 +117,7 @@ export default function OnboardingScreen() {
             <RoundCheckmark
               key={option.id}
               label={option.label}
-              isSelected={selectedOption === option.id}
+              isSelected={selected_option === option.id}
               onPress={() => handleSelectOption(option.id)}
             />
           ))}

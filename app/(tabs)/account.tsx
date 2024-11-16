@@ -6,22 +6,31 @@ import { router } from 'expo-router';
 import { Typography, Button, DrawingPicker } from '@/components';
 import { FilelikeObject } from "@/utils/types";
 import { supabase } from '@/utils/supabase';
+import { useUserStore } from '@/stores/authStore';
 
 
 export default function AccountScreen() {
-  const { user, signOut, userAge, userAvatar } = useAuth();
-  
+  //global states
+  const { user, signOut } = useAuth();
+  const { userAvatar, userAge, first_name, description, selected_option } = useUserStore();
+  //local states
   const [paintModal, setPaintModal] = React.useState(false);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
 
+  //lifecycle
+  React.useEffect(() => {
+    console.log('version changed to: ', selected_option);
+  }, [selected_option]);
+
+
+  //handlers
   const handleEditAccount = () => {
     router.push('/edit');
   }
 
-  const handleSavePainting = async() => {
-    /* const mediaUploads: MediaUpload[] = []; */
+  const handleSavePainting = async() => {    
     let drawingUrl = '';
 
     //only try to upload the media if there is any
@@ -75,7 +84,6 @@ export default function AccountScreen() {
       } finally {
         setDrawing(null);
         setDrawingPreview(null);
-
       }
 
     }
@@ -87,13 +95,14 @@ export default function AccountScreen() {
     setDrawing(null);
     setDrawingPreview(null);
   }
+  
   return (
   <ScrollView>
     <View className="flex-1 items-center justify-start gap-4 bg-white">
       <View className='flex flex-row justify-between items-center w-full px-5 pt-8 pb-3 bg-slate-100'>
         <View className='w-1/2 flex flex-col items-start justify-center pl-4'>
-          <Typography variant='black' weight='400' size='xl' className='mb-4'>{user?.first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
-          <Typography variant='black' weight='400' size='md' className=''>{user?.description}</Typography>
+          <Typography variant='black' weight='400' size='xl' className='mb-4'>{first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
+          <Typography variant='black' weight='400' size='md' className=''>{description}</Typography>
         
         </View>
         <View className='w-1/2 flex flex-col gap-2 items-center justify-center'>
@@ -135,7 +144,7 @@ export default function AccountScreen() {
           <MaterialCommunityIcons name="image-album" size={24} color="black" />
           <Typography variant='black' size='lg' weight='400' className='text-center' >Mina album</Typography>
         </Button>
-        {user?.selected_version === 1 || user?.selected_version === 2 && (
+        {selected_option === 1 || selected_option === 2 && (
           <Button variant='outlined' size='md' className='border-gray-400 w-full items-center' onPress={() => setPaintModal(true)}>
             <FontAwesome name="paint-brush" size={24} color="black" />
             <Typography variant='black' size='lg' weight='400' className='text-center' >Måla</Typography>

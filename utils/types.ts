@@ -13,15 +13,15 @@ export type User = {
   description?: string;
   date_of_birth?: Date | null;
   selected_version: number | null;
-  own_medicins?: OwnAddedMedicinProps[] | null;
-  medicins?: MedicinProps[] | null;
-  diary_entries?: DiaryEntry[] | null;
+  /* own_medicins?: OwnAddedMedicinProps[] | null;
+  medicins?: MedicinProps[] | null; */
+  /* diary_entries?: DiaryEntry[] | null; */
   events?: EventSource[] | null;
-  diagnoses?: DiagnosisProps[] | null;
-  answers?: string[] | null;
-  departments?: DepartmentProps[] | null;
-  staff?: StaffProps[] | null;
-  procedures?: ProcedureProps[] | null;
+  /* diagnoses?: DiagnosisProps[] | null; */
+  /* answers?: string[] | null; */
+  /* departments?: DepartmentProps[] | null;
+  staff?: StaffProps[] | null; */
+  /* procedures?: ProcedureProps[] | null; */
 };
 
 export type EventSource = {
@@ -49,6 +49,83 @@ export type Answers = {
   created_at: string;
 };
 
+export interface AnswerStore {
+  answers: Answers[];
+  fetchAnswers: (id: string) => Promise<void>;
+}
+
+export interface DepartmentStore {
+  departments: DepartmentProps[] | null;
+  staff: StaffProps[] | null;
+  contactIds: ContactIds[];
+  setDepartments: (departments: DepartmentProps[]) => void;
+  setStaff: (staff: StaffProps[]) => void;
+  setContactIds: (contactIds: ContactIds[]) => void;
+  fetchContactIds: (userId: string) => Promise<void>;
+  getDepartmentsandStaff: () => Promise<void>; 
+}
+
+export interface ProcedureStore {
+  procedures: ProcedureProps[];
+  setProcedures: (procedures: ProcedureProps[]) => void;
+  getUserProcedures: (id: string) => Promise<void>;
+};
+
+export interface DiagnosisStore {
+  diagnosis: DiagnosisProps[];
+  fetchDiagnosis: (id: string) => Promise<void>;
+  setDiagnosis: (diagnosis: DiagnosisProps[]) => void;
+};
+
+export interface MediaStore {
+  getPhotoForAvatar?: boolean;
+  selectedMedia: string | null;
+  selectedMediaFile: string | null;
+  setSelectedMedia: (file: string | null) => void;
+  setSelectedMediaFile: (file: string | null) => void;
+  userMediaFiles: ({ file }: { file: string }) => string | null;
+  mediaData: mediaDataProps;
+  setMediaData: (newData: mediaDataProps) => void;
+  handleSelect: (fileUrl: string) => void;
+  setGetPhotoForAvatar: (value: boolean) => void;
+} 
+
+export interface MedicineStore {
+  user_medicins: MedicinProps[]; 
+  user_own_medicins: OwnAddedMedicinProps[];  
+  fetchMedicins: (userId: string) => Promise<void>;
+  enrichMedicins: () => Promise<void>;
+  setUserOwnMedicins: (ownMedicins: OwnAddedMedicinProps[]) => void;
+  setUserMedicins: (medicins: MedicinProps[]) => void;
+};
+
+export interface QuestionStore {
+  response: string | null;  
+  questions: QuestionProps[] | null;
+  getQuestions: (id: string) => void;
+  setResponse: (response: string | null) => void;
+}
+
+export interface UserStore {
+  id: string | null;
+  first_name: string;
+  last_name: string;
+  user_email: string;
+  first_time: boolean;
+  selected_option: number | null;  
+  avatar_url?: string;  
+  description?: string;
+  date_of_birth?: Date | null;
+  selected_version: number | null;
+  userAvatar: string | null;
+  userAge: number | null;
+  getUserData: (id: string) => Promise<void>;
+  getAvatar: (url: string) => Promise<void>;
+  getAge: (dateOfBirth: Date) => void;
+  updateUser: (updates: Partial<UserStore>) => void;
+  moveAvatarToPictures: (oldAvatarUrl: string) => Promise<void>; 
+};
+
 export interface FullViewModalProps {
   isVisible: boolean;
   onClose: () => void;
@@ -61,26 +138,26 @@ export type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  selectedOption: number;
-  userAge: number | null;
-  contactIds?: ContactIds[] | null;
+  /* selectedOption: number; */
+  /* userAge: number | null; */
+  /* contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
-  getContactIds: (userId: string) => Promise<never[] | undefined>;
-  answers: Answers[];
+  getContactIds: (userId: string) => Promise<never[] | undefined>; */
+  /* answers: Answers[];
   getAnswers: (userId: string) => Promise<Answers[] | undefined>;
-  setAnswers: (answers: Answers[]) => void;
-  response: string | null;
-  setResponse: (response: string | null) => void;
-  userAvatar: string | null;
-  setSelectedOption: (option: number) => void;
-  userMediaFiles: ({ file }: { file: string; }) => string | null
+  setAnswers: (answers: Answers[]) => void; */
+  /* response: string | null;
+  setResponse: (response: string | null) => void; */
+  /* userAvatar: string | null; */
+  /* setSelectedOption: (option: number) => void; */
+  /* userMediaFiles: ({ file }: { file: string; }) => string | null
   selectedMediaFile: string | null;
   setSelectedMediaFile: (file: string | null) => void;
-  getPhotoForAvatar?: boolean;
-  fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>;
-  setGetPhotoForAvatar: (value: boolean) => void;
+  getPhotoForAvatar?: boolean; */
+  /* setGetPhotoForAvatar: (value: boolean) => void; */
+  /* fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>; */
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
-  fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>;  
+  /* fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>; */  
 };
 
 export type OnboardingText = {
@@ -100,6 +177,18 @@ export type mediaDataProps = {
   drawings: string[];
   videos: string[];
 }
+
+export type MediaEntry = {
+  image_url?: string | null;
+  video_url?: string | null;
+  drawing_url?: string | null;
+  description?: string | null;
+};
+
+export type UserMediaForDepartment = {
+  department_id: string | null;
+  media: MediaEntry;
+};
 
 export type AccountVersion = {
   version?: string;
@@ -195,6 +284,7 @@ export type FilelikeObject = {
 export interface DiaryMediaUpload {
   type: string;
   url: string;
+  uri?: string;
 }
 
 export type OwnAddedMedicinProps = {
@@ -231,7 +321,8 @@ export type DepartmentProps = {
   id: string | null;
   name: string | null;
   address: string | null;
-  phonenumber: string | null;  
+  phonenumber: string | null;
+  mediaUrls?: MediaEntry | null;
 };
 
 export type StaffProps = {
@@ -248,7 +339,17 @@ export type ContactsProps = {
   contactperson: string | null;
   phonenumber: string | null;
   address: string | null;
+  media?: MediaEntry;  
 };
+
+export interface DepartmentMedia {
+  department_id: string;
+  media: {
+    image_url: string | null;
+    video_url: string | null;
+    drawing_url: string | null;
+  }
+}
 
 export type ContactIds = {
   department_id?: string | null;
@@ -299,6 +400,7 @@ export interface DrawingPickerProps {
 export type MediaUpload = {
   type: string;
   url: string;
+  uri?: string;
 }
 
 export type DiagnosisProps = {

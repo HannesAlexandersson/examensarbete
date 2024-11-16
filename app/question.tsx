@@ -1,16 +1,19 @@
 import React from 'react';
-import axios from 'axios';
 import OpenAI from "openai";
 import { router, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { Typography, Button } from '@/components';
 import { View, SafeAreaView, TextInput, KeyboardAvoidingView } from 'react-native';
+import { useUserStore, useAnswerStore, useQuestionStore } from '@/stores';
 
 
 export default function Questions() {
-  const { user, setResponse, response, getAnswers } = useAuth();
-  const { department, department_id, contactperson, staff_id } = useLocalSearchParams();
+  //global states  
+  const { id, first_name, last_name } = useUserStore();
+  const { fetchAnswers } = useAnswerStore();
+  const { setResponse } = useQuestionStore();
+  //local states
+  const { department, department_id, contactperson } = useLocalSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [ msgTxt, setMsgTxt ] = React.useState('');
   const [message, setMessage] = React.useState({
@@ -18,15 +21,15 @@ export default function Questions() {
     department: department,
     contactperson: contactperson,
     txt: msgTxt,
-    senderName: user?.first_name + ' ' + user?.last_name,
-    senderId: user?.id
+    senderName: first_name + ' ' + last_name,
+    senderId: id
   });
-
+  //environment variables
   const openai = new OpenAI({
     apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
-});
+  });
 
-  //save message to supabase
+  //handlers
   const handleSendMessage = async () => {
     if (!msgTxt.trim()) {
       alert('Du måste skriva ett meddelande för att skicka!');
@@ -35,10 +38,10 @@ export default function Questions() {
 
     setIsLoading(true);
 
-    //update the state before saving
+  //update the state before saving
   const updatedMessage = {
     ...message,
-    txt: msgTxt // ensure message.txt is updated with the latest input value
+    txt: msgTxt 
   };
 
   const { data: QuestionData, error: QuestionError } = await supabase
@@ -82,7 +85,7 @@ export default function Questions() {
         .from('Answers')
         .insert(
           {
-            profile_id: user?.id,
+            profile_id: id,
             question_id: questionId,
             answer_txt: responseTxt
           }
@@ -97,7 +100,7 @@ export default function Questions() {
       .from('Events')
       .insert(
         {
-          profile_id: user?.id,
+          profile_id: id,
           event_id: answerId,
           event_type: 'Answer',
           event_name: 'Answer from' + updatedMessage.contactperson,
@@ -110,13 +113,16 @@ export default function Questions() {
       .from('Questions')
       .update({ answerd: true })
       .eq('id', questionId)
-      .eq('sender_id', user?.id);
+      .eq('sender_id', id);
 
       if(UpdateError) console.error('Error updating question:', UpdateError);
     }
   }
-  //set the global state with the new data
-  getAnswers(user?.id || '');
+  //set the global state with the new data  
+  if(id)  {
+    await fetchAnswers(id);
+  }
+
   router.back();
 };
 
@@ -151,7 +157,7 @@ const handleAbort = () => {
   });
   router.back();
 };
-//EXPO_OPENAI_API_KEY
+
   return(
     <SafeAreaView className='bg-vgrBlue flex-1 '>
       <View className='items-center justify-center flex-col px-4 pt-12'>

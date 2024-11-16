@@ -5,29 +5,28 @@ import { useAuth } from "@/providers/AuthProvider";
 import { ScrollView, TouchableOpacity, View, TouchableWithoutFeedback, Modal, TextInput, Text, Image } from "react-native";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ProcedureProps, FilelikeObject, MediaUpload } from "@/utils/types";
+import { useProcedureStore } from "@/stores";
+import { th } from "@faker-js/faker/.";
 
 export default function ProceduresScreen() {
+  //global states
   const { user } = useAuth();
+  const { procedures, setProcedures } = useProcedureStore();
+
+  //local states  
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
-  const [ addNewModal, setAddNewModal ] = React.useState<boolean>(false);
+  const [addNewModal, setAddNewModal ] = React.useState<boolean>(false);
   const [toolTipVisible, setToolTipVisible] = React.useState<boolean>(false);
   const [procedureTitle, setProcedureTitle ] = React.useState<string>('');
   const [procedureTxt, setProcedureTxt ] = React.useState<string>('');
-  const [procedures, setProcedures] = React.useState<ProcedureProps[]>([]);
   const [selectedProcedure, setSelectedProcedure] = React.useState<ProcedureProps | null>(null);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
-
-  //set the sates on mount
-  React.useEffect(() => {
-    if (user?.procedures) {
-      setProcedures(user.procedures);
-    }
-  }, []);
-
+  
+  //handlers
   const handleCloseTooltip = () => {
     setToolTipVisible(false);
   };
@@ -48,98 +47,120 @@ export default function ProceduresScreen() {
     }
 
     const mediaUploads: MediaUpload[] = [];
+    try{
 
-    //only try to upload the media if there is any
-    if (drawing) {          
-      const drawingData = new FormData();     
-      drawingData.append('file', {
-      uri: drawing.uri,
-      type: drawing.type,
-      name: drawing.name,
-      } as any);
+      //only try to upload the media if there is any
+      if (drawing) {          
+        const drawingData = new FormData();     
+        drawingData.append('file', {
+        uri: drawing.uri,
+        type: drawing.type,
+        name: drawing.name,
+        } as any);
 
-      //generate a unique filename
-      const drawingFileName = `drawing-${Date.now()}.${drawing.name.split('.').pop()}`;
+        //generate a unique filename
+        const drawingFileName = `drawing-${Date.now()}.${drawing.name.split('.').pop()}`;
 
-      //save to bucket
-      const { data: drawingBucketData, error: drawingError } = await supabase
-      .storage
-      .from('procedureMedia')
-      .upload(drawingFileName, drawingData, {
-        cacheControl: '3600000000',
-        upsert: false,
-      });
-
-      if (drawingError) {
-        console.error("Error uploading drawing:", drawingError);
-      } else {
-        //insert the url to the mediaUploads array
-        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
-      }
-    }
-
-    if (selectedImage) {
-      const imageData = new FormData();
-      const imageFileName = selectedImage?.split('/').pop() || 'default-image-name.png';
-      imageData.append('file', {
-        uri: selectedImage,
-        type: `image/${imageFileName?.split('.').pop()}`,
-        name: imageFileName,
-      } as any);
-  
-      const { data: imageBucketData, error: imageError } = await supabase
+        //save to bucket
+        const { data: drawingBucketData, error: drawingError } = await supabase
         .storage
         .from('procedureMedia')
-        .upload(imageFileName, imageData, {
+        .upload(drawingFileName, drawingData, {
           cacheControl: '3600000000',
           upsert: false,
         });
-  
-      if (imageError) {
-        console.error("Error uploading image:", imageError);
-      } else {
-        mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+
+        if (drawingError) {          
+          console.error('Error uploading drawing:', drawingError);
+          throw new Error('Error uploading drawing');
+        } else {
+          const { data: publicUrlData } = supabase
+          .storage
+          .from('procedureMedia')
+          .getPublicUrl(drawingBucketData?.path);
+          //insert the url to the mediaUploads array
+          mediaUploads.push({ type: 'drawing', url: publicUrlData.publicUrl, uri: drawingBucketData?.path });
+        }
       }
-    }
-  
-    if (selectedVideo) {
-      const videoData = new FormData();
-      const videoFileName = selectedVideo?.split('/').pop() || 'default-video-name.mp4';
-      videoData.append('file', {
-        uri: selectedVideo,
-        type: `video/${videoFileName?.split('.').pop()}`,
-        name: videoFileName,
-      } as any);
-  
-      const { data: videoBucketData, error: videoError } = await supabase
-        .storage
-        .from('procedureMedia')
-        .upload(videoFileName, videoData, {
-          cacheControl: '3600000000',
-          upsert: false,
-        });
-  
-      if (videoError) {
-        console.error("Error uploading video:", videoError);
-      } else {
-        mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+
+      if (selectedImage) {
+        const imageData = new FormData();
+        const imageFileName = selectedImage?.split('/').pop() || 'default-image-name.png';
+        imageData.append('file', {
+          uri: selectedImage,
+          type: `image/${imageFileName?.split('.').pop()}`,
+          name: imageFileName,
+        } as any);
+    
+        const { data: imageBucketData, error: imageError } = await supabase
+          .storage
+          .from('procedureMedia')
+          .upload(imageFileName, imageData, {
+            cacheControl: '3600000000',
+            upsert: false,
+          });
+    
+        if (imageError) {
+          console.error("Error uploading image:", imageError);
+          throw new Error("Error uploading image");
+        } else {
+          const { data: publicUrlData } = supabase
+          .storage
+          .from('procedureMedia')
+          .getPublicUrl(imageBucketData?.path);
+          //insert the url to the mediaUploads array        
+          mediaUploads.push({ type: 'image', url: publicUrlData.publicUrl, uri: imageBucketData?.path });
+        }
       }
+    
+      if (selectedVideo) {
+        const videoData = new FormData();
+        const videoFileName = selectedVideo?.split('/').pop() || 'default-video-name.mp4';
+        videoData.append('file', {
+          uri: selectedVideo,
+          type: `video/${videoFileName?.split('.').pop()}`,
+          name: videoFileName,
+        } as any);
+    
+        const { data: videoBucketData, error: videoError } = await supabase
+          .storage
+          .from('procedureMedia')
+          .upload(videoFileName, videoData, {
+            cacheControl: '3600000000',
+            upsert: false,
+          });
+    
+        if (videoError) {          
+          console.error("Error uploading video:", videoError);
+          throw new Error("Error uploading video");
+        } else {
+          const { data: publicUrlData } = supabase
+          .storage
+          .from('procedureMedia')
+          .getPublicUrl(videoBucketData?.path);
+          //insert the url to the mediaUploads array         
+          mediaUploads.push({ type: 'video', url: publicUrlData.publicUrl, uri: videoBucketData?.path });
+        }
+      
     }
 
     //if there were any media uploads, get the uri's
     const uploadedMedia = {
       drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      drawing_uri: mediaUploads.find((m) => m.type === 'drawing')?.uri || null,
       img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      img_uri: mediaUploads.find((m) => m.type === 'image')?.uri || null,
       video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
+      video_uri: mediaUploads.find((m) => m.type === 'video')?.uri || null,
     };
 
     const procedureEntry = {
       user_id: user?.id,
       procedure_title: procedureTitle,
       procedure_text: procedureTxt,
-      img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
-      video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
-      drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      image_url: uploadedMedia.img_uri, 
+      video_url: uploadedMedia.video_uri, 
+      drawing_url: uploadedMedia.drawing_uri,
     }
 
     const { data, error } = await supabase
@@ -147,13 +168,14 @@ export default function ProceduresScreen() {
     .insert([procedureEntry])
     .select();
 
-    if (error) {
+    if (error) {      
       console.error('Error saving procedure:', error);
+     throw new Error('Error saving procedure');
     } else {
       if (data && data.length > 0) {
         
         const newProcedure = data[0];
-        //update the local state with the new procedure
+        //update the state with the new procedure
         setProcedures([...procedures, { 
           id: newProcedure.id, 
           procedure_title: procedureTitle, 
@@ -162,20 +184,7 @@ export default function ProceduresScreen() {
           procedure_img: uploadedMedia.img_url,
           procedure_video: uploadedMedia.video_url,
           procedure_drawing: uploadedMedia.drawing_url 
-        }]);
-
-        //update the global userobject with the new procedure
-        if (user) {
-        user.procedures = [...procedures, { 
-          id: newProcedure.id, 
-          procedure_title: procedureTitle, 
-          procedure_text: procedureTxt, 
-          user_id: user?.id,
-          procedure_img: uploadedMedia.img_url,
-          procedure_video: uploadedMedia.video_url,
-          procedure_drawing: uploadedMedia.drawing_url 
-        }];
-      }
+        }]);        
 
         setProcedureTxt('');
         setProcedureTitle('');
@@ -184,7 +193,12 @@ export default function ProceduresScreen() {
         setSelectedImage(null);
         setSelectedVideo(null);
         setAddNewModal(false);
+        alert('Proceduren är nu sparad!');
       }
+    }
+  } catch (error) {
+    console.error('Error saving procedure:', error);
+    alert('Något gick fel när vi skulle spara din procedur, försök igen senare!');
   }
 }
 
@@ -202,19 +216,16 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
     console.error('Error deleting procedure:', error);
     alert('Något gick fel, försök igen senare!');
   } else {
-    //update the local state
+    //update the state with the procedure removed
     setProcedures(procedures.filter(procedure => procedure.id !== procedur.id));
-    //update the global user object
-    if (user) {
-      user.procedures = procedures.filter(procedure => procedure.id !== procedur.id);
-    }
+    
     alert('Procedur borttagen!');
     setModalVisible(false);
   }
 }
 
   return(
-    <ScrollView className="bg-vgrBlue">
+  <ScrollView className="bg-vgrBlue">
     <View className='flex-1 items-center justify-center pt-12 px-4'>
         <View className='flex-col items-center justify-center py-4'>
           <Typography variant='white' size='h1' weight='700' >

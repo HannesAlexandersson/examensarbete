@@ -1,7 +1,30 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
-import { User, AuthContextType, MedicinProps, ProcedureProps, ContactIds, DiaryEntry, Answers, DiagnosisProps } from '@/utils/types';
+import { 
+  User, 
+  AuthContextType, 
+  MedicinProps, 
+  ProcedureProps, 
+  ContactIds, 
+  DiaryEntry, 
+  Answers, 
+  UserMediaForDepartment, 
+  DiagnosisProps, 
+  MediaEntry 
+} from '@/utils/types';
+import { fetchUserEntries, getMediaFiles } from '@/lib/apiHelper';
+import { 
+  useMediaStore, 
+  useAnswerStore, 
+  useUserStore, 
+  useDiaryStore,
+  useMedicineStore,
+  useDepartmentsStore,
+  useDiagnosisStore,
+  useProcedureStore
+ } from '@/stores';
+
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
@@ -14,328 +37,117 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
-//the user object is created here and used all over the app with the context
+
+//states used as global states in the app
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
-const [userAge, setUserAge] = React.useState<number | null>(null);
+/* const [userAge, setUserAge] = React.useState<number | null>(null); */
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
-const [selectedOption, setSelectedOption] = React.useState<number>(3);
+/* const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
-const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false);
-const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
-const [answers, setAnswers] = React.useState<Answers[]>([]);
-const [ response, setResponse ] = React.useState<string | null>(null);
+const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false); */
+/* const [contactIds, setContactIds] = React.useState<ContactIds[]>([]); */
+/* const [answers, setAnswers] = React.useState<Answers[]>([]); */
+/* const [ response, setResponse ] = React.useState<string | null>(null); */
 
+//global states from the zustand stores
+const { 
+  first_name,
+  last_name,
+  user_email,
+  date_of_birth,
+  description,
+  selected_option, 
+  avatar_url,
+  getUserData,
+  getAvatar, 
+  getAge, 
+  moveAvatarToPictures,
+  updateUser,
+ } = useUserStore();
 
+const { fetchAnswers } = useAnswerStore();
+const { selectedMediaFile } = useMediaStore();
+const { setDiaryEntries } = useDiaryStore();
+const { fetchMedicins, enrichMedicins } = useMedicineStore();
+const { fetchContactIds, getDepartmentsandStaff } = useDepartmentsStore((state) => state);
+const { fetchDiagnosis } = useDiagnosisStore();
+const { getUserProcedures } = useProcedureStore();
+
+//keep user logged in with supabase on/off state feature
+React.useEffect(() => {
+  const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
+    //if there is no active user session return to sign in page
+    if (!session) return router.push('/(auth)'); 
+    //else call the getUser function with the session id
+    getUser(session?.user.id);    
+  });
+  //clean up function  that terminates the subscription I.E the user session
+  return () => {
+    authData?.subscription.unsubscribe();
+  };
+}, []);
+
+//context functions
 const getUser = async (id: string) => {
-  // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
+  //get all the user data from the profiles table
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
-  
+  //get the users age from the date of birth
   if (data?.date_of_birth) {
-    data.date_of_birth = new Date(data.date_of_birth);
+    getAge(data.date_of_birth);    
   }
 
-  // Call fetchMedicins to get medicines
-  const medicins = await fetchMedicins(id);
+  // set the global state with the users medicin and enrich them with staff and department details
+  await fetchMedicins(id); 
+  await enrichMedicins();  
 
-  // Enrich medicines with staff and department details
-  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
-
-  //call the fetch diaryposts function to get the users diary entries
+  //call the fetch diaryposts function to get the users diary entries and set the global state
   const diaryEntries = await fetchUserEntries(false, id);
+  setDiaryEntries(diaryEntries || []);
 
-  //get the departments and associated staff
-  const { departments, staff } = await fetchDepartmentsAndStaff();
+  //set the global states with the departments and staff
+  await getDepartmentsandStaff();  
 
-  //get the users diagoisis
-  const diagnosis = await fetchDiagnosis(id);
+  //get the ids of the users contacts to be able to filter the departments and staff arrays
+  await fetchContactIds(id);  
 
-  //get user procedures
-  const procedures = await getProcedures(id);
+  //set the global state with the users diagnosis
+  await fetchDiagnosis(id);
+
+  //get user procedures and set the global state
+  await getUserProcedures(id);  
 
   //call the get answers function to set the users answers
-  await getAnswers(id);
-  
+  await fetchAnswers(id);  
 
   const updatedUser: User = {
     ...data,
-    own_medicins: medicins?.own_medicins || [],
-    medicins: enrichedMedicins,
-    diary_entries: diaryEntries || [], 
-    departments: departments || [],
-    staff: staff || [],
-    diagnoses: diagnosis || [],
-    procedures: procedures || [],
-  };
-  await getContactIds(id);
+    /* own_medicins: medicins?.own_medicins || [],
+    medicins: enrichedMedicins, */
+    /* diary_entries: diaryEntries || [], */ 
+    /* departments: departments || [],
+    staff: staff || [], */
+    /* diagnoses: diagnosis || [], */
+    /* procedures: procedures || [], */
+  }; 
+
+  //set the user to the updated user
   setUser(updatedUser);
+
   if (data?.first_time) { 
-    //redirect to the special onboarding route thats only getting renderd once
+    //redirect to the special onboarding route thats only getting renderd once the first time the user logs in
     router.push('/onboarding');  
   } else {
+
     //fetch avatar if avatar_url exists
-    if (data.avatar_url) {
-      const { data: avatarData, error: avatarError } = await supabase.storage
-        .from('avatars')
-        .download(data.avatar_url);
+    await getAvatar(data.avatar_url);    
 
-      if (avatarError) {
-        console.error('Error downloading avatar:', avatarError);
-        return;
-      }
-      
-      //read the blob data
-      const reader = new FileReader();
-      reader.onloadend = () => {        
-        if (typeof reader.result === 'string') {
-          setUserAvatar(reader.result); //set the user avatar to the avatar state
-        } else {
-          console.error('Unexpected result type:', typeof reader.result);
-        }
-      };
-      reader.readAsDataURL(avatarData); 
-    }
-
-  setUser(updatedUser);    
-  router.push('/(tabs)');
+    setUser(updatedUser);    
+    router.push('/(tabs)');
   }
 };
-
-
-const getAnswers = async (id: string) => {
-  const { data, error } = await supabase
-  .from('Answers')
-  .select('*')
-  .eq('profile_id', id);
-  if (error) {
-    console.error('Error fetching answers:', error);
-    return [];
-  }
-  
-  setAnswers(data as Answers[] || []);
-};
-
-const getProcedures = async (id: string) => {
-  //define the query
-  const query = supabase
-  .from('Procedures')
-  .select('*')
-  .eq('user_id', id);
-  
-  try{
-    //fetch the data
-    const { data: procedureEntrys, error: procedureErrors } = await query;
-
-    if(procedureErrors) {
-      console.error(procedureErrors);
-      return [];
-    }
-
-    //map the database fields to the entry structure
-    const formattedProcedures: ProcedureProps[] = await Promise.all(
-      procedureEntrys?.map(async(procedure: any) => {
-        const mediaUrls = await getMediaFiles(procedure, 'procedureMedia');
-        
-        return {
-          id: procedure.id,
-          procedure_title: procedure.procedure_title,
-          procedure_text: procedure.procedure_text,
-          user_id: procedure.user_id,
-          procedure_img: mediaUrls.img || null,
-          procedure_video: mediaUrls.video || null,
-          procedure_drawing: mediaUrls.drawing || null,
-        };
-      })
-    );
-
-    
-    return formattedProcedures;
-  } catch (error) {
-    console.error('Error fetching procedures:', error);
-    return [];
-  }
-};
-
-const fetchDiagnosis = async (id: string) => {
-  //define the query
-  const query = supabase
-    .from('Diagnosis')
-    .select('*')
-    .eq('user_id', id);
-
-  try{
-    const { data: diagnosisData, error: diagnosisError } = await query
-    
-
-    if (diagnosisError) {
-      console.error(diagnosisError);
-      return [];
-    }
-
-    //map the database fields to the entry structure
-    const formattedDiagnoses: DiagnosisProps[] = await Promise.all(
-      diagnosisData?.map(async (diagnosis: any) => {
-        const mediaUrls = await getMediaFiles(diagnosis, 'diagnosisMedia');
-
-        return {
-          id: diagnosis.id,
-          name: diagnosis.name,
-          description: diagnosis.description,
-          department: diagnosis.treating_department_name,
-          department_id: diagnosis.treating_department_id,
-          image: mediaUrls.image || null,
-          video: mediaUrls.video || null,
-          drawing: mediaUrls.drawing || null,
-        };
-      })
-    ); 
-
-    return formattedDiagnoses;
-
-  } catch (error) {
-    console.error('Error in fetchDiagnosis:', error);
-    return [];
-  }
-};
-
-const fetchDepartmentsAndStaff = async () => {
-  try {
-    const { data: departmentData, error: departmentError } = await supabase
-    .from('Departments')
-    .select('*');
-    const { data: staffData, error: staffError } = await supabase
-    .from('Staff')
-    .select('*');
-
-    if (departmentError) {
-      console.error('Error fetching departments:', departmentError);
-      return { departments: [], staff: [] };
-    }
-
-    if (staffError) {
-      console.error('Error fetching staff:', staffError);
-      return { departments: departmentData || [], staff: [] };
-    }
-
-    return {
-      departments: departmentData || [],
-      staff: staffData || [],
-    };
-  } catch (error) {
-    console.error('Error fetching departments and staff:', error);
-    return { departments: [], staff: [] };
-  }
-};
-
-const fetchUserEntries = async (limitEntries: boolean = true, id: string | null) => {
-  //first check if user is logged in
-  if (!id) {
-    console.error('User ID is missing');
-    return;
-  }
-  
-  try{      
-    
-    let query = supabase
-    .from('diary_posts')
-    .select('*')
-    .eq('user_id', id)
-    .order('created_at', { ascending: false });//post_date or created_at
-      
-      
-    if (limitEntries) {
-      query = query.limit(3); // Change the number as needed
-    }
-
-    const { data: diaryEntries, error: diaryError } = await query;
-
-    if (diaryError) {
-      console.error('Error fetching diary posts:', diaryError);
-      return;
-    }
-
-    if (!diaryEntries || diaryEntries.length === 0) {
-      console.log('No diary posts found for this user.');
-      return;
-    }
-
-    //map the database fields to the entry structure
-    const formattedEntries: DiaryEntry[] = await Promise.all(
-      diaryEntries.map(async (entry: any) => {
-        
-        const mediaUrls = await getMediaFiles(entry, 'diary_media');
-
-        return {
-          titel: entry.post_title,   
-          text: entry.post_text,   
-          image: mediaUrls.image || null,  
-          video: mediaUrls.video || null, 
-          drawing: mediaUrls.drawing || null, 
-          date: new Date(entry.post_date)  
-        };
-      })
-    );
-  
-    
-    return formattedEntries;
-  } catch (error) {
-    console.error('Error fetching user diary entries:', error);
-    return [];
-  }
-};
-
-const getMediaFiles = async (entry: any, bucket: string) => {
-  const mediaUrls: any = {
-    image: null,
-    video: null,
-    drawing: null,
-  };
-
-  // Fetch image URL if exists
-  if (entry.image_url) {
-    const { data: imageUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.image_url);  // Use the actual field from the database
-    if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
-  }
-
-  // Fetch video URL if exists
-  if (entry.video_url) {
-    const { data: videoUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.video_url);  // Use the actual field from the database
-    if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
-  }
-
-  // Fetch drawing URL if exists
-  if (entry.drawing_url) {
-    const { data: drawingUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.drawing_url);  // Use the actual field from the database
-    if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
-  }
-
-  return mediaUrls;
-}
-
-//get the users contacts from departments
-const getContactIds = async (userId: string) => {
-  const { data, error } = await supabase.from('ProfilesDepartments').select('*').eq('profile_id', userId);
-  if (error) {
-    console.error('Error fetching contacts:', error);
-    return [];
-  }
-  
-  setContactIds(
-    data.map((contact) => ({
-      department_id: contact.department_id,
-      staff_id: contact.staff_id
-    }))
-  );
-};
-
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -345,22 +157,21 @@ const signIn = async (email: string, password: string) => {
   
   if (error) return console.error(error)
   getUser(data.user.id);
-  
+  getUserData(data.user.id); 
 };
 
 const signUp = async (firstname: string, lastname: string, email: string, password: string) => {
   //trimming the input fields to remove any white spaces to avoid issues with supabases not accepting the emails
   const trimmedEmail = email.trim();
   const trimmedFirstname = firstname.trim();
-  const trimmedLastname = lastname.trim();
+  const trimmedLastname = lastname.trim();  
   
-  //sign up with email and password, creates a user in the supabase default auth user table
   const { data, error } = await supabase.auth.signUp({      
     email: trimmedEmail,
     password: password,
   });
   if (error) return console.error(error);
-  //then create a profile in the profiles table with the same id as the user in the auth table
+  
   const { data: profileData, error: profileError } = await supabase
   .from('profiles')
   .insert(
@@ -373,9 +184,15 @@ const signUp = async (firstname: string, lastname: string, email: string, passwo
     },
   );
   if (profileError) return console.error(profileError);
-  setUser(profileData);
+
+  //set the user object in the context and redirect to the homepage
+  setUser(profileData);  
   router.back()
-  router.push('/(tabs)');  
+  router.push('/(tabs)');
+  //finally set the global user state
+  if (data?.user){
+    getUser(data?.user?.id);
+  }
 };
 
 const signOut = async () => {
@@ -385,20 +202,6 @@ const signOut = async () => {
   setUserAvatar(null);
   router.push('/(auth)')
 };
-
-//keep user logged in with supabase on/off state feature
-React.useEffect(() => {
-  const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
-    //if there is no active user session return to sign in page
-    if (!session) return router.push('/(auth)'); 
-    //else call the getUser function who already has the user id and redirects to homepage
-    getUser(session?.user.id);    
-  });
-  //clean up function  that terminates the subscription I.E the user session
-  return () => {
-    authData?.subscription.unsubscribe();
-  };
-}, []);
 
 const editUser = async (
   id: string, 
@@ -412,22 +215,20 @@ const editUser = async (
 ) => {
   //if there is no changes made to a property then dont update that property in the db
   const updates: any = {};
-  if (firstname !== user?.first_name) updates.first_name = firstname;
-  if (lastname !== user?.last_name) updates.last_name = lastname;
-  if (email !== user?.email) updates.email = email;
-  if (dateOfBirth !== user?.date_of_birth) updates.date_of_birth = dateOfBirth;
-  if (userDescription !== user?.description) updates.description = userDescription;
-  if (selectedOption !== user?.selected_version) updates.selected_version = selectedOption;
-  if (avatarUrl !== user?.avatar_url) updates.avatar_url = avatarUrl;
+  if (firstname !== first_name) updates.first_name = firstname;
+  if (lastname !== last_name) updates.last_name = lastname;
+  if (email !== user_email) updates.email = email;
+  if (dateOfBirth !== date_of_birth) updates.date_of_birth = dateOfBirth;
+  if (userDescription !== description) updates.description = userDescription;
+  if (selectedOption !== selected_option) updates.selected_version = selectedOption;
+  if (avatarUrl !== avatar_url) updates.avatar_url = avatarUrl;
 
-  //only upload avatar if the avatar URL has changed
-  if (avatarUrl && avatarUrl !== user?.avatar_url) {
-    // Move old avatar to the 'oictures' bucket instead of avatar buckets. 
-    if (user?.avatar_url) {
-     
-      await moveAvatarToPictures(user.avatar_url);
+  //compare the new url to the globally stored avatar url
+  if (avatarUrl && avatarUrl !== avatar_url) {
+    // if there is a new url move old avatar to the 'pictures' bucket instead of avatar buckets. 
+    if (avatar_url) {     
+      await moveAvatarToPictures(avatar_url);
     }
-
   
     //save the photo
     const saveAvatar = async () => {
@@ -446,7 +247,7 @@ const editUser = async (
           cacheControl: '3600000000',
           upsert: false,
         });
-
+        
       if (error) {
         console.error(error);
         return null;
@@ -462,12 +263,13 @@ const editUser = async (
       avatarUrl = uploadedFileName as string; 
       updates.avatar_url = avatarUrl;
       console.log('uploadedImagePath:', avatarUrl);
+
+      await getAvatar(avatarUrl);
     }    
   }
 
   //only update the database if there are changes
-  if (Object.keys(updates).length > 0) {
-    // Update the user profile in the database
+  if (Object.keys(updates).length > 0) {   
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -477,49 +279,13 @@ const editUser = async (
       console.error('Profile update error:', error);
       return;
     }
-
-    await getUser(id);
+    //update the user in the global state
+    updateUser(updates);
     console.log('User updated');
   } else {
     console.log('No changes detected, skipping update.');
   }
 };
-
-// Function to move avatar to the "pictures" bucket
-const moveAvatarToPictures = async (oldAvatarUrl: string) => {
-  
-
-  if (!oldAvatarUrl) {
-    console.error('Old avatar path is undefined or empty.');
-    return; // Handle the error case appropriately
-  }  
-
-  // Move the old avatar to the "pictures" bucket
-  const { data: moveData, error: moveError } = await supabase.storage
-  .from('avatars') // Source bucket
-  .move(oldAvatarUrl, `${oldAvatarUrl}`, {
-    destinationBucket: 'pictures' // Specify the destination bucket
-  });
-
-  if (moveError) {
-    console.error('Failed to copy avatar:', moveError);
-    return;
-  }  
-};
-
-useEffect(() => {
-  if (user?.date_of_birth) {
-  const today = new Date();
-  const birthDate = new Date(user?.date_of_birth);
-  const age = today.getFullYear() - birthDate.getFullYear();
-  setUserAge(age);
-  }
-}, [user?.date_of_birth]);
-
-const userMediaFiles = ({ file }: {file: string}) => {  
-    setSelectedMediaFile(file);
-    return file;  
-}
 
 const saveDiaryEntry = async (diaryEntry: any) => {
   const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);
@@ -530,69 +296,5 @@ const saveDiaryEntry = async (diaryEntry: any) => {
   console.log('Diary entry saved:', data);
 }
 
-
-const fetchMedicins = async (userId: string) => {
-  try {
-    //fetch the medicines associated with the user
-    const { data: medicins, error: medicinsError } = await supabase
-      .from('medicins')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (medicinsError) throw medicinsError;
-
-    //fetch the users own added medicines
-    const { data: ownMedicins, error: ownMedicinsError } = await supabase
-      .from('Own_added_medicins')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (ownMedicinsError) throw ownMedicinsError;
-    
-    return {
-      medicins: medicins || [],
-      own_medicins: ownMedicins || []
-    };
-  } catch (error) {
-    console.error('Error fetching medicines:', error);
-    return {
-      medicins: [],
-      own_medicins: []
-    };
-  }
-};
-
-const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
-  if (!medicins || medicins.length === 0) return medicins;
-
-  try {
-    const staffIds = [...new Set(medicins.map((med) => med.utskrivare))];
-    const departmentIds = [...new Set(medicins.map((med) => med.utskrivande_avdelning))];
-
-    const [staffData, departmentData] = await Promise.all([
-      supabase.from('Staff').select('id, staff_name').in('id', staffIds),
-      supabase.from('Departments').select('id, name').in('id', departmentIds)
-    ]);
-
-    if (staffData.error) throw staffData.error;
-    if (departmentData.error) throw departmentData.error;
-
-    const staffLookup = Object.fromEntries(staffData.data.map(staff => [staff.id, staff.staff_name]));
-    const departmentLookup = Object.fromEntries(departmentData.data.map(dept => [dept.id, dept.name]));
-
-    return medicins.map((med) => ({
-      ...med,
-      utskrivare_name: staffLookup[med.utskrivare] || 'Okänd utskrivare',
-      ordinationName: departmentLookup[med.utskrivande_avdelning] || 'Okänd avdelning',
-    }));
-  } catch (error) {
-    console.error('Error fetching staff and department details:', error);
-    return medicins;
-  }
-};
-
-
-//the context provider gives us acces to the user object through out the app
-return <AuthContext.Provider value={{ user, setUser, fetchUserEntries, answers, getAnswers, setAnswers, response, setResponse, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, selectedOption, userAvatar, setSelectedOption, editUser, userAge, userMediaFiles, selectedMediaFile, setSelectedMediaFile, setGetPhotoForAvatar, getPhotoForAvatar, fetchMedicins }}>{children}</AuthContext.Provider>
-
+  return <AuthContext.Provider value={{ user, setUser, signIn, signOut, signUp, editUser }}>{children}</AuthContext.Provider>
 }

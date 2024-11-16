@@ -1,42 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View, TextInput, Modal, Image } from 'react-native';
 import { Button, Typography, DisplayEntryMedia, MediaPicker, DrawingPicker } from '@/components';
 import { useAuth } from '@/providers/AuthProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { DiaryEntry, DiaryMediaUpload, FilelikeObject } from '@/utils/types';
 import { supabase } from '@/utils/supabase';
+import { useDiaryStore } from '@/stores';
 
 export default function DiaryScreen() {
-  const { user, setUser } = useAuth(); 
-  
-  const [diary, setDiary] = useState<DiaryEntry[] | null>(null); 
+
+  //global states
+  const { 
+    user,     
+  } = useAuth();   
+
+  const { 
+    diary_entries,
+    setDiaryEntries,
+  } = useDiaryStore();
+
+  //local states  
   const [loadedAll, setLoadedAll] = useState<boolean>(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [postTitel, setPostTitel] = useState('');
-  const [postText, setPostText] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [postTitel, setPostTitel] = useState<string>('');
+  const [postText, setPostText] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [drawing, setDrawing] = useState<FilelikeObject | null>(null); 
   const [drawingPreview, setDrawingPreview] = useState<string | null>(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(false); 
+  const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false); 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  //state to remount the component
-  const [remountKey, setRemountKey] = useState(0);
-
-  //set the modals to false when the component mounts, if the user happens to navigate away from the page. Else they wont open again
-  useEffect(() => {
-    setIsDrawingMode(false);
-    setIsModalVisible(false);
-     
-    setDiary(user?.diary_entries || null);
-    console.log('hej');
-  }, [remountKey]);
-
   
   
-  // Function to handle form submission (saving post)
+  // Function to handle form submission
   const handleSavePost = async () => {
     if (!postText && !selectedImage && !selectedVideo && !drawing) {
       alert("Du kan inte spara en tom post");
@@ -73,8 +70,13 @@ export default function DiaryScreen() {
       if (drawingError) {
         console.error("Error uploading drawing:", drawingError);
       } else {
-        //insert the url to the mediaUploads array
-        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
+        //get the url & uri to the mediaUploads array       
+       const { data: publicUrlData } = supabase
+      .storage
+      .from('diary_media')
+      .getPublicUrl(drawingBucketData?.path);
+
+      mediaUploads.push({ type: 'drawing', url: publicUrlData.publicUrl, uri: drawingBucketData?.path });
       }
     }
 
@@ -98,7 +100,13 @@ export default function DiaryScreen() {
     if (imageError) {
       console.error("Error uploading image:", imageError);
     } else {
-      mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+      //get the url & uri to the mediaUploads array 
+      const { data: publicUrlData } = supabase
+      .storage
+      .from('diary_media')
+      .getPublicUrl(imageBucketData?.path);
+
+      mediaUploads.push({ type: 'image', url: publicUrlData.publicUrl, uri: imageBucketData?.path });
     }
   }
 
@@ -122,25 +130,31 @@ export default function DiaryScreen() {
     if (videoError) {
       console.error("Error uploading video:", videoError);
     } else {
-      mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+      //get the url & uri to the mediaUploads array 
+      const { data: publicUrlData } = supabase
+      .storage
+      .from('diary_media')
+      .getPublicUrl(videoBucketData?.path);
+
+      mediaUploads.push({ type: 'video', url: publicUrlData.publicUrl, uri: videoBucketData?.path });
     }
   }
 
-  //if there were any media uploads, get the uri's
+  //if there were any media uploads, get the URL's
   const uploadedMedia = {
     drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
     image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
     video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
   };
 
-  // Save the post to the diary, including text, image, video, drawing, and date
+  // Save the post to the table using the media URI's 
   const uploadEntry = {
     user_id: user?.id,
     post_title: postTitel,
     post_text: postText,
-    image_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
-    video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
-    drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+    image_url: mediaUploads.find((m) => m.type === 'image')?.uri || null,
+    video_url: mediaUploads.find((m) => m.type === 'video')?.uri || null,
+    drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.uri || null,
     post_date: selectedDate,  
   };
 
@@ -166,9 +180,8 @@ export default function DiaryScreen() {
       }
     )
     .select();
-  if(EventError) console.error('Error saving event', EventError);
 
-  console.log('event added:', Eventdata);
+  if(EventError) console.error('Error saving event', EventError);  
 
   const newEntry: DiaryEntry = {
     titel: postTitel,
@@ -177,26 +190,10 @@ export default function DiaryScreen() {
     video: uploadedMedia.video_url,
     drawing: uploadedMedia.drawing_url,
     date: selectedDate,
-  };
+  };  
   
-  // Save the entry to local diary state
-  /* setDiary(prevDiary => [...(prevDiary || []), newEntry]); */
-  //save the entry to the local state but append it first not last
-  setDiary(prevDiary => [newEntry, ...(prevDiary || [])]);
-
-  // Update global state  
-  if (user) {
-    
-    if (!user.diary_entries) {
-      user.diary_entries = [];
-    }
-  
-    // Push the new entry to the user.diary_entries array
-    user.diary_entries = [newEntry, ...(user.diary_entries || [])];
-  
-    // Update the user state
-    setUser({ ...user });
-  }
+  //update the diary entries in the global state
+  setDiaryEntries([newEntry, ...(diary_entries || [])]);  
 
   // Reset modal fields
   setPostTitel('');
@@ -207,8 +204,8 @@ export default function DiaryScreen() {
   setDrawingPreview(null);
   setSelectedDate(new Date());
   
-  setRemountKey((prevKey) => prevKey + 1);
-  // Close modal
+
+  // close the modal
   setIsModalVisible(false);
 };
 
@@ -220,7 +217,7 @@ const fetchFewerEntries = async () => {
 }
 
 // Display only the first three entries, or all entries if loadedAll is true
-const displayedEntries = loadedAll ? diary : diary?.slice(0, 3);
+const displayedEntries = loadedAll ? diary_entries : diary_entries?.slice(0, 3);
 
   return (
     <ScrollView>

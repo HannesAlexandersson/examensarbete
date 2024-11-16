@@ -18,7 +18,7 @@ export default function VideoThumbnail({videoUri}: {videoUri: string}) {
   }, []);
 
   const MemoizedImage = React.memo(({ uri }: { uri: string } ) => (
-    <Image source={{ uri }} style={{ width: 128, height: 128, resizeMode: 'cover' }} />
+    <Image source={{ uri }} style={{ width: 100, height: 100, resizeMode: 'cover' }} />
   ));
   return(    
       <>
