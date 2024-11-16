@@ -70,11 +70,11 @@ const getUser = async (id: string) => {
     getAge(data.date_of_birth);    
   }
 
-  // Call fetchMedicins to get medicines
+ /*  // Call fetchMedicins to get medicines
   const medicins = await fetchMedicins(id);
 
   // Enrich medicines with staff and department details
-  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins);
+  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins); */
 
   //call the fetch diaryposts function to get the users diary entries and set the global state
   const diaryEntries = await fetchUserEntries(false, id);
@@ -95,8 +95,8 @@ const getUser = async (id: string) => {
 
   const updatedUser: User = {
     ...data,
-    own_medicins: medicins?.own_medicins || [],
-    medicins: enrichedMedicins,
+    /* own_medicins: medicins?.own_medicins || [],
+    medicins: enrichedMedicins, */
     diary_entries: diaryEntries || [], 
     departments: departments || [],
     staff: staff || [],
@@ -503,7 +503,7 @@ const saveDiaryEntry = async (diaryEntry: any) => {
 }
 
 
-const fetchMedicins = async (userId: string) => {
+/* const fetchMedicins = async (userId: string) => {
   try {
     //fetch the medicines associated with the user
     const { data: medicins, error: medicinsError } = await supabase
@@ -532,9 +532,9 @@ const fetchMedicins = async (userId: string) => {
       own_medicins: []
     };
   }
-};
+}; */
 
-const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
+/* const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
   if (!medicins || medicins.length === 0) return medicins;
 
   try {
@@ -561,10 +561,10 @@ const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<Medici
     console.error('Error fetching staff and department details:', error);
     return medicins;
   }
-};
+}; */
 
 
 
-return <AuthContext.Provider value={{ user, setUser, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser, fetchMedicins }}>{children}</AuthContext.Provider>
+return <AuthContext.Provider value={{ user, setUser, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser }}>{children}</AuthContext.Provider>
 
 }

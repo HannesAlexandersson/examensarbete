@@ -1,5 +1,5 @@
 import { supabase } from '../utils/supabase';
-import { Answers, DiaryEntry, QuestionProps } from '@/utils/types';
+import { Answers, DiaryEntry, QuestionProps, MedicinProps } from '@/utils/types';
 
 export const fetchUserDataFromProfilesTable = async (userId: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -359,3 +359,64 @@ export const fetchUserVideos = async (id: string, controller: any) => {
     }
   }
 }; 
+
+//fetch the users medicines from supabase table medicins to set the global state in the medicinstore
+export const fetchMedicins = async (userId: string) => {
+  try {
+    //fetch the medicines associated with the user
+    const { data: medicins, error: medicinsError } = await supabase
+      .from('medicins')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (medicinsError) throw medicinsError;
+
+    //fetch the users own added medicines
+    const { data: ownMedicins, error: ownMedicinsError } = await supabase
+      .from('Own_added_medicins')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (ownMedicinsError) throw ownMedicinsError;
+    
+    return {
+      medicins: medicins || [],
+      own_medicins: ownMedicins || []
+    };
+  } catch (error) {
+    console.error('Error fetching medicines:', error);
+    return {
+      medicins: [],
+      own_medicins: []
+    };
+  }
+};
+
+export const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
+  if (!medicins || medicins.length === 0) return medicins;
+
+  try {
+    const staffIds = [...new Set(medicins.map((med) => med.utskrivare))];
+    const departmentIds = [...new Set(medicins.map((med) => med.utskrivande_avdelning))];
+
+    const [staffData, departmentData] = await Promise.all([
+      supabase.from('Staff').select('id, staff_name').in('id', staffIds),
+      supabase.from('Departments').select('id, name').in('id', departmentIds)
+    ]);
+
+    if (staffData.error) throw staffData.error;
+    if (departmentData.error) throw departmentData.error;
+
+    const staffLookup = Object.fromEntries(staffData.data.map(staff => [staff.id, staff.staff_name]));
+    const departmentLookup = Object.fromEntries(departmentData.data.map(dept => [dept.id, dept.name]));
+
+    return medicins.map((med) => ({
+      ...med,
+      utskrivare_name: staffLookup[med.utskrivare] || 'Okänd utskrivare',
+      ordinationName: departmentLookup[med.utskrivande_avdelning] || 'Okänd avdelning',
+    }));
+  } catch (error) {
+    console.error('Error fetching staff and department details:', error);
+    return medicins;
+  }
+};

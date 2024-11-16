@@ -6,11 +6,23 @@ import { TextInput } from 'react-native-gesture-handler';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { OwnAddedMedicinProps, MedicinProps } from '@/utils/types';
+import { useUserStore, useMedicineStore } from '@/stores';
 
 export default function Medicin() {
-  const { user, fetchMedicins } = useAuth();
-  const [medicins, setMedicins] = React.useState<MedicinProps[]>([]);
-  const [ownMedicins, setOwnMedicins] = React.useState<OwnAddedMedicinProps[]>([]);
+  //global states
+  const { user } = useAuth();
+  const { id } = useUserStore();
+  const { 
+    user_own_medicins,
+    user_medicins,
+    fetchMedicins,
+    enrichMedicins,
+    setUserOwnMedicins,
+    setUserMedicins
+   } = useMedicineStore();
+  //local states
+  /* const [medicins, setMedicins] = React.useState<MedicinProps[]>([]);
+  const [ownMedicins, setOwnMedicins] = React.useState<OwnAddedMedicinProps[]>([]); */
   const [newMedicin, setNewMedicin] = React.useState<OwnAddedMedicinProps>({
     namn: '',
     medicin_namn: '',
@@ -21,15 +33,19 @@ export default function Medicin() {
   });
   const [addMedicinModalvisible, setAddMedicinModalVisible] = React.useState(false);
   const [selectedMedicin, setSelectedMedicin] = React.useState<OwnAddedMedicinProps | MedicinProps | null>(null);
-  /* const [selectedMedicinX, setSelectedMedicinX] = React.useState<MedicinProps | null>(null); */
-  
-
-  //set the states with the users medicins on mount
+   
+  //setters
   useEffect(() => {
-    setMedicins(user?.medicins || []);
-    setOwnMedicins(user?.own_medicins || []); 
-  }, [user]);
+    const userId = id;
+    if (!userId) return;
+    const loadMedicins = async () => {
+      await fetchMedicins(userId); 
+      await enrichMedicins(); 
+    };
+    loadMedicins();
+  }, []);
 
+  //handlers
   const addMedicin = async (newMedicin: OwnAddedMedicinProps) => {
     try {
       const {data, error} = await supabase
@@ -49,13 +65,9 @@ export default function Medicin() {
       if (error) {
         throw error;
       } else if(data && data.length > 0){        
-        //update the local state with the new medicin
-        setOwnMedicins([...ownMedicins, data[0]]);
-        //update the global user object with the new medicin
-        if (user) {
-          const newlyAddedMedicin = data[0];
-          user.own_medicins = [...ownMedicins, newlyAddedMedicin];
-        }
+        //update the zustand store/global state with the new medicin
+        setUserOwnMedicins([...user_own_medicins, data[0]]);
+       
         alert('Medicin tillagd!');
 
         const {data:Eventdata, error:EventError} = await supabase
@@ -98,15 +110,17 @@ export default function Medicin() {
   }
 
   if ('name' in medicin) {
-    setMedicins(medicins.filter((m) => m.id !== medicinId));
-    if (user) {
-      user.medicins = user.medicins?.filter((m) => m.id !== medicinId);
-    }
+    //get current state and filter
+    const currentMedicins = useMedicineStore.getState().user_medicins;
+    const updatedMedicins = currentMedicins.filter((m) => m.id !== medicinId);
+    //update store
+    setUserMedicins(updatedMedicins);
   } else {
-    setOwnMedicins(ownMedicins.filter((m) => m.id !== medicinId));
-    if (user) {
-      user.own_medicins = user.own_medicins?.filter((m) => m.id !== medicinId);
-    }
+    //get current state and filter
+    const currentOwnMedicins = useMedicineStore.getState().user_own_medicins;
+    const updatedOwnMedicins = currentOwnMedicins.filter((m) => m.id !== medicinId);
+    //update store
+    setUserOwnMedicins(updatedOwnMedicins);
   }; 
 
   alert('Medicin borttagen!');
@@ -121,33 +135,35 @@ export default function Medicin() {
   });
 }
   
-  const handleOpenFass = (medicin: MedicinProps | OwnAddedMedicinProps | null) => {
-    if (!medicin) {
-      Alert.alert("Ingen medicin vald!", "Välj en medicin att söka i Fass.");
-      return;
-    }
+const handleOpenFass = (medicin: MedicinProps | OwnAddedMedicinProps | null) => {
+  if (!medicin) {
+    Alert.alert("Ingen medicin vald!", "Välj en medicin att söka i Fass.");
+    return;
+  }
 
-    const drugName = 
-    (medicin as OwnAddedMedicinProps).medicin_namn ?? 
-    (medicin as MedicinProps).name;
+  const drugName = 
+  (medicin as OwnAddedMedicinProps).medicin_namn ?? 
+  (medicin as MedicinProps).name;
 
-    if (!drugName) {
-      Alert.alert("Ingen medicin vald!", "Välj en medicin för att öppna Fass.");
-      return;
-    }
+  if (!drugName) {
+    Alert.alert("Ingen medicin vald!", "Välj en medicin för att öppna Fass.");
+    return;
+  }
 
-    const searchQuery = encodeURIComponent(drugName);
-    const fassUrl = `https://www.fass.se/LIF/startpage?userType=2&query=${searchQuery}`;
+  const searchQuery = encodeURIComponent(drugName);
+  const fassUrl = `https://www.fass.se/LIF/startpage?userType=2&query=${searchQuery}`;
 
-    Linking.openURL(fassUrl).catch((err) =>
-      Alert.alert("Error", "Kunde inte öppna Fass...")
-    );
-  };
+  Linking.openURL(fassUrl).catch((err) =>
+    Alert.alert("Error", "Kunde inte öppna Fass...")
+  );
+};
 
+  //'disguingish' between the medicintypes of the selected medicin
   const handleSelectMedicinUnified = (medicin: OwnAddedMedicinProps | MedicinProps) => {  
     setSelectedMedicin(medicin);   
   };
 
+  //typeguards
   const isOwnAddedMedicin = (medicin: OwnAddedMedicinProps | MedicinProps | null): medicin is OwnAddedMedicinProps => {
     if(!medicin) return false;
     return (medicin as OwnAddedMedicinProps).medicin_namn !== undefined;
@@ -189,8 +205,8 @@ export default function Medicin() {
           <View>
             <Typography variant='black' size='lg' weight='700' className='text-white my-2'>Mediciner du lagt till själv:</Typography>
           </View>
-          {ownMedicins && (
-            ownMedicins.map((medicin, index) => (
+          {user_own_medicins && (
+            user_own_medicins.map((medicin, index) => (
               <TouchableOpacity key={index} onPress={() => handleSelectMedicinUnified(medicin)}>
                 <View className={isOwnAddedMedicin(selectedMedicin) && 
                   selectedMedicin?.medicin_namn === medicin.medicin_namn ? 
@@ -215,8 +231,8 @@ export default function Medicin() {
           </View>
          
           <View className='flex-col w-full'>
-            {medicins && (
-              medicins.map((medicin, index) => (
+            {user_medicins && (
+              user_medicins.map((medicin, index) => (
                 <TouchableOpacity key={index} onPress={() => handleSelectMedicinUnified(medicin)}>
                 <View className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `flex-col items-center justify-between w-full px-4 py-2 my-2 rounded bg-black border  border-purple-700` :`flex-col items-center justify-between w-full px-4 py-2 my-1 rounded bg-white`}>
                   <Typography variant='black' size='lg' weight='700' className={ismedicin(selectedMedicin) && selectedMedicin?.name === medicin.name ? `text-white`:`text-black`}>{medicin.name}</Typography>
