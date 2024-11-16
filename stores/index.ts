@@ -4,6 +4,7 @@ import { useAnswerStore } from '@/stores/answerStore';
 import { useMediaStore } from './mediaStore';
 import { useQuestionStore } from './responseStore';
 import { useMedicineStore } from './medicinStore';
+import { useDepartmentsStore } from './departmentsStore';
 
 export {
   useUserStore,
@@ -11,5 +12,6 @@ export {
   useAnswerStore,
   useMediaStore,
   useQuestionStore,
-  useMedicineStore
+  useMedicineStore,
+  useDepartmentsStore
 }

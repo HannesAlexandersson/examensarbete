@@ -1,4 +1,4 @@
-import { supabase } from '../utils/supabase';
+import { supabase, supabaseUrl } from '@/utils/supabase';
 import { Answers, DiaryEntry, QuestionProps, MedicinProps } from '@/utils/types';
 
 export const fetchUserDataFromProfilesTable = async (userId: string) => {
@@ -419,4 +419,87 @@ export const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise
     console.error('Error fetching staff and department details:', error);
     return medicins;
   }
+};
+
+// Fetch contactIds for a user
+export const fetchContactIds = async (userId: string) => {
+  const { data, error } = await supabase.from('ProfilesDepartments').select('*').eq('profile_id', userId);
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+  return data.map((contact) => ({
+    department_id: contact.department_id,
+    staff_id: contact.staff_id
+  }));
+};
+
+export const fetchDepartmentsAndStaff = async () => {
+  try {
+    const { data: departmentData, error: departmentError } = await supabase
+    .from('Departments')
+    .select('*');
+    const { data: staffData, error: staffError } = await supabase
+    .from('Staff')
+    .select('*');
+
+    if (departmentError) {
+      console.error('Error fetching departments:', departmentError);
+      return { departments: [], staff: [] };
+    }
+
+    if (staffError) {
+      console.error('Error fetching staff:', staffError);
+      return { departments: departmentData || [], staff: [] };
+    }
+
+    return {
+      departments: departmentData || [],
+      staff: staffData || [],
+    };
+  } catch (error) {
+    console.error('Error fetching departments and staff:', error);
+    return { departments: [], staff: [] };
+  }
+};
+
+//check if the current user have added any media to the departments they connected to
+export const getUserMediaForDepartments = async (userId: string) => {  
+
+  const { data: mediaEntries, error: mediaError } = await supabase
+    .from('User_Departments_mediaJunction')
+    .select('media_id, department_id')
+    .eq('user_id', userId);   
+
+  if (mediaError) {
+    console.error('Error fetching user media:', mediaError);
+    return [];
+  } 
+
+  const mediaIds = mediaEntries.map(entry => entry.media_id);
+  //get the actual media urls from the media table
+  const { data: mediaData, error: mediaDetailsError } = await supabase
+    .from('Media')
+    .select('id, image_uri, video_uri, drawing_uri, media_description')
+    .in('id', mediaIds);
+
+  if (mediaDetailsError) {
+    console.error('Error fetching media details:', mediaDetailsError);
+    return [];
+  } 
+  const mediaWithUrls = mediaEntries.map(entry => {
+    const media = mediaData.find(m => m.id === entry.media_id);
+    const bucketUrl = `${supabaseUrl}/storage/v1/object/public`;
+    return {
+      department_id: entry.department_id,
+      media: {
+        image_url: media?.image_uri ? `${bucketUrl}/pictures/${media.image_uri}` : null,
+        video_url: media?.video_uri ? `${bucketUrl}/videos/${media.video_uri}` : null,
+        drawing_url: media?.drawing_uri ? `${bucketUrl}/drawings/${media.drawing_uri}` : null,
+        description: media?.media_description || null
+      },
+    };
+  });
+
+  return mediaWithUrls;
 };

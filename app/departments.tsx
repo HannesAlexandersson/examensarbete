@@ -2,13 +2,26 @@ import React, { useState, useEffect, useMemo} from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/providers/AuthProvider';
 import { Typography, Button, MediaPicker, DrawingPicker, VideoThumbnail } from '@/components';
-import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert, Text } from 'react-native';
-import { supabase, supabaseUrl } from '@/utils/supabase';
+import { View, Image, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { supabase } from '@/utils/supabase';
 import { DepartmentProps, StaffProps, ContactsProps, FilelikeObject, MediaUpload, DepartmentMedia } from '@/utils/types';
-
+import { useDepartmentsStore, useUserStore } from '@/stores';
+import { getUserMediaForDepartments } from '@/lib/apiHelper';
 
 export default function Departments() {
-  const { user, setUser, contactIds, setContactIds, getContactIds } = useAuth();  
+  //global states
+  const { user } = useAuth();
+  const { id } = useUserStore();
+  const {
+    departments,
+    staff,
+    contactIds,
+    fetchContactIds,
+    getDepartmentsandStaff,
+    setContactIds,
+  } = useDepartmentsStore((state) => state);
+ 
+  //local states
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [newContact, setNewContact] = useState<ContactsProps>({
     name: '',
@@ -17,27 +30,15 @@ export default function Departments() {
     address: '',
     _C_department_id: '',
     _C_staff_id: '',
-  });
+  }); 
   const [contacts, setContacts] = useState<ContactsProps[] | null>([]);
   const [selectedContact, setSelectedContact] = useState<ContactsProps | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentProps | null>(null);
-  const [departments, setDepartments] = useState<DepartmentProps[] | null>([{
-    id: '',
-    name: '',
-    address: '',
-    phonenumber: '',    
-  }]);
-  const [staff, setStaff] = useState<StaffProps[]>([{
-    id: '',
-    staff_name: '',
-    staff_occupation: '',
-    department_id: '',    
-  }]);
   const [filteredDepartments, setFilteredDepartments] = useState<DepartmentProps[] | undefined>([]);
   const [filteredStaff, setFilteredStaff] = useState<StaffProps[] | null>([]);
   const [departmentSearchTerm, setDepartmentSearchTerm] = useState<string | null>('');
   const [staffSearchTerm, setStaffSearchTerm] = useState<string | null>('');  
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState<boolean>(false);
   const [isFullviewModalVisible, setIsFullviewModalVisible] = useState<boolean>(false);
   const [mediaModalVisible, setMediaModalVisible] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
@@ -47,18 +48,10 @@ export default function Departments() {
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
   
   const [mediaDescription, setMediaDescription] = useState<{ description: string }>({ description: '' });
-  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMedia[]>([]);
-  
+  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMedia[]>([]);  
   
   useEffect(() => {
-    if (user?.departments && user?.staff) {
-      setDepartments(user.departments);
-      setStaff(user.staff);
-    }
-    
-  }, []);
 
-  useEffect(() => {
   const fetchMedia = async () => {
     if (user?.id) {
       const media = await getUserMediaForDepartments(user?.id);
@@ -68,54 +61,10 @@ export default function Departments() {
   fetchMedia();
 }, [user?.id]);
 
-//check if the current user have added any media to the departments they connected to
-const getUserMediaForDepartments = async (userId: string) => {  
-
-  const { data: mediaEntries, error: mediaError } = await supabase
-    .from('User_Departments_mediaJunction')
-    .select('media_id, department_id')
-    .eq('user_id', userId);   
-
-  if (mediaError) {
-    console.error('Error fetching user media:', mediaError);
-    return [];
-  } 
-
-  const mediaIds = mediaEntries.map(entry => entry.media_id);
-  //get the actual media urls from the media table
-  const { data: mediaData, error: mediaDetailsError } = await supabase
-    .from('Media')
-    .select('id, image_uri, video_uri, drawing_uri, media_description')
-    .in('id', mediaIds);
-
-  if (mediaDetailsError) {
-    console.error('Error fetching media details:', mediaDetailsError);
-    return [];
-  } 
-  const mediaWithUrls = mediaEntries.map(entry => {
-    const media = mediaData.find(m => m.id === entry.media_id);
-    const bucketUrl = `${supabaseUrl}/storage/v1/object/public`;
-    return {
-      department_id: entry.department_id,
-      media: {
-        image_url: media?.image_uri ? `${bucketUrl}/pictures/${media.image_uri}` : null,
-        video_url: media?.video_uri ? `${bucketUrl}/videos/${media.video_uri}` : null,
-        drawing_url: media?.drawing_uri ? `${bucketUrl}/drawings/${media.drawing_uri}` : null,
-        description: media?.media_description || null
-      },
-    };
-  });
-
-  return mediaWithUrls;
-};
-
-
 
   //we want to filter out the departments that the user has contact with
   const userDepartments = useMemo(() => {
-    if(!departments || !staff || !contactIds) return [];
-
-    
+    if(!departments || !staff || !contactIds) return [];    
 
     if (departments?.length > 0 && staff.length > 0 && contactIds?.length > 0) {
       return departments?.map(department => {
@@ -141,7 +90,8 @@ const getUserMediaForDepartments = async (userId: string) => {
     }
     return [];
   }, [departments, staff, contactIds, departmentMedia]);
-  
+
+  //set the local state with the filtered departments whenever the userDepartments change
   useEffect(() => {
     setContacts(userDepartments as ContactsProps[]);
   }, [userDepartments]);
@@ -156,28 +106,37 @@ const getUserMediaForDepartments = async (userId: string) => {
   };
   
   const handleStaffSearch = (text: string) => {
-    setStaffSearchTerm(text); 
-    if (selectedDepartment) { 
-      const filtered = staff.filter(person =>
-        person.staff_name?.toLowerCase().includes(text.toLowerCase()) &&
-        person.department_id === selectedDepartment.id //check the department_id of the staff to only get staff from the selected department
-      );
-      setFilteredStaff(filtered);
+    setStaffSearchTerm(text);
+    if (staff) {
+      let filtered: StaffProps[] = [];
+      if (selectedDepartment) { 
+        filtered = staff.filter(person =>
+          person.staff_name?.toLowerCase().includes(text.toLowerCase()) &&
+          //check the department_id of the staff to only get staff from the selected department
+          person.department_id === selectedDepartment.id 
+        );             
+      } else {
+        //if no department is selected, filter staff without department
+        filtered = staff?.filter(person =>
+          person.staff_name?.toLowerCase().includes(text.toLowerCase())
+        );        
+      }
+      if (filtered) {
+        //update state with filtered staff
+        setFilteredStaff(filtered);  
+      }
     } else {
-      //if no department is selected, filter staff without department
-      const filtered = staff.filter(person =>
-        person.staff_name?.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredStaff(filtered);
-    }
+      //if staff is null, reset filtered staff to an empty array
+      setFilteredStaff([]);
+    }    
   };  
   
-  //we want to set the cursor to the start due to the long names of the departments
+  //force the cursor to the start of the input field 
   const handleFocus = () => {
-    setIsActive(true); //so when a input field is active we set the state to true
+    setIsActive(true); 
   };
   const handleBlur = () => {
-    setIsActive(false); //and when the user is done with the input field we set the state to false wich makes the cursor go to the start based on the selection prop
+    setIsActive(false); 
   };
 
   //open the fullview modal on press for the selected contact
@@ -205,7 +164,7 @@ const getUserMediaForDepartments = async (userId: string) => {
         .insert({
           profile_id: user?.id,
           department_id: selectedDepartment.id,
-          staff_id: staff.find(person => person.staff_name === newContact.contactperson)?.id
+          staff_id: staff?.find(person => person.staff_name === newContact.contactperson)?.id
         });
   
       if (error) {
@@ -223,7 +182,8 @@ const getUserMediaForDepartments = async (userId: string) => {
       });
       setModalVisible(false);
       //refresh the page so the new contact is displayed
-      refreshContacts();
+      if (id)  fetchContactIds(id);
+
     } catch (error) {
       console.error('Error adding contact:', error);
     }
@@ -243,7 +203,7 @@ const getUserMediaForDepartments = async (userId: string) => {
         text: 'OK',
         onPress: async () => {
           try {
-            // Step 1: Delete contact from the database
+            //delete contact from the database
             const { error } = await supabase
               .from('ProfilesDepartments')
               .delete()
@@ -259,8 +219,7 @@ const getUserMediaForDepartments = async (userId: string) => {
             const updatedContactIds = contactIds?.filter(
               (c) => c.department_id !== contact._C_department_id
             );
-
-            
+            //update the global state with the new contactlist
             setContactIds(updatedContactIds);
 
             //update the local state with the new contactlist
@@ -281,25 +240,18 @@ const getUserMediaForDepartments = async (userId: string) => {
     ]
   );
 };
-
-  const refreshContacts = async () => {
-    if(user?.id) {
-      await getContactIds(user?.id); // Re-fetch contacts
-    }
-
-  };
   
-  const handleSendMessage = (contact: ContactsProps) => {
-    router.push({
-      pathname: '/question',
-      params: {
-        department: contact.name,
-        department_id: contact._C_department_id,
-        contactperson: contact.contactperson,
-        staff_id: contact._C_staff_id,
-      },
-    });
-  }; 
+const handleSendMessage = (contact: ContactsProps) => {
+  router.push({
+    pathname: '/question',
+    params: {
+      department: contact.name,
+      department_id: contact._C_department_id,
+      contactperson: contact.contactperson,
+      staff_id: contact._C_staff_id,
+    },
+  });
+}; 
 
   
   const handleAddMedia = () => {
@@ -427,14 +379,10 @@ const getUserMediaForDepartments = async (userId: string) => {
         }
       } else {
         console.error('Error saving media to bucket:', error);
-      }
-      
-    
-  }
-        
+      }    
+  }        
 
-  console.log('Media saved successfully');
-     
+  console.log('Media saved successfully');     
 
   //clear the states and close the modal
   setDrawing(null);

@@ -19,7 +19,8 @@ import {
   useAnswerStore, 
   useUserStore, 
   useDiaryStore,
-  useMedicineStore
+  useMedicineStore,
+  useDepartmentsStore
  } from '@/stores';
 
 
@@ -43,7 +44,7 @@ const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
 /* const [selectedOption, setSelectedOption] = React.useState<number>(3);
 const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
 const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false); */
-const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
+/* const [contactIds, setContactIds] = React.useState<ContactIds[]>([]); */
 /* const [answers, setAnswers] = React.useState<Answers[]>([]); */
 /* const [ response, setResponse ] = React.useState<string | null>(null); */
 
@@ -67,6 +68,7 @@ const { fetchAnswers } = useAnswerStore();
 const { selectedMediaFile } = useMediaStore();
 const { setDiaryEntries } = useDiaryStore();
 const { fetchMedicins, enrichMedicins } = useMedicineStore();
+const { fetchContactIds, getDepartmentsandStaff } = useDepartmentsStore((state) => state);
 
 //context functions
 const getUser = async (id: string) => {
@@ -79,22 +81,17 @@ const getUser = async (id: string) => {
     getAge(data.date_of_birth);    
   }
 
-  // get the users medicines and enrich them with staff and department details
+  // set the global state with the users medicin and enrich them with staff and department details
   await fetchMedicins(id); 
-  await enrichMedicins(); 
-
- /* 
-  const medicins = await fetchMedicins(id);
-
-  // Enrich medicines with staff and department details
-  const enrichedMedicins = await fetchDetailsForMedicins(medicins.medicins); */
+  await enrichMedicins();  
 
   //call the fetch diaryposts function to get the users diary entries and set the global state
   const diaryEntries = await fetchUserEntries(false, id);
   setDiaryEntries(diaryEntries || []);
 
-  //get the departments and associated staff
-  const { departments, staff } = await fetchDepartmentsAndStaff();  
+  //set the global departments and staff states in the zustand store with the fetched data
+  await getDepartmentsandStaff();
+  
 
   //get the users diagoisis
   const diagnosis = await fetchDiagnosis(id);
@@ -110,15 +107,15 @@ const getUser = async (id: string) => {
     ...data,
     /* own_medicins: medicins?.own_medicins || [],
     medicins: enrichedMedicins, */
-    diary_entries: diaryEntries || [], 
-    departments: departments || [],
-    staff: staff || [],
+    /* diary_entries: diaryEntries || [], */ 
+    /* departments: departments || [],
+    staff: staff || [], */
     diagnoses: diagnosis || [],
     procedures: procedures || [],
   };
 
-  //the contact ids are used to fetch the relevant staff and departments for the user
-  await getContactIds(id); 
+  //get the ids of the users contacts to be able to filter the departments and staff arrays
+  await fetchContactIds(id);  
 
   //set the user to the updated user
   setUser(updatedUser);
@@ -215,143 +212,6 @@ const fetchDiagnosis = async (id: string) => {
     return [];
   }
 };
-
-const fetchDepartmentsAndStaff = async () => {
-  try {
-    const { data: departmentData, error: departmentError } = await supabase
-    .from('Departments')
-    .select('*');
-    const { data: staffData, error: staffError } = await supabase
-    .from('Staff')
-    .select('*');
-
-    if (departmentError) {
-      console.error('Error fetching departments:', departmentError);
-      return { departments: [], staff: [] };
-    }
-
-    if (staffError) {
-      console.error('Error fetching staff:', staffError);
-      return { departments: departmentData || [], staff: [] };
-    }
-
-    return {
-      departments: departmentData || [],
-      staff: staffData || [],
-    };
-  } catch (error) {
-    console.error('Error fetching departments and staff:', error);
-    return { departments: [], staff: [] };
-  }
-};
-
-/* const fetchUserEntries = async (limitEntries: boolean = true, id: string | null) => {
-  //first check if user is logged in
-  if (!id) {
-    console.error('User ID is missing');
-    return;
-  }
-  
-  try{      
-    
-    let query = supabase
-    .from('diary_posts')
-    .select('*')
-    .eq('user_id', id)
-    .order('created_at', { ascending: false });
-      
-      
-    if (limitEntries) {
-      query = query.limit(3); // Limit the initial number of entries to 3
-    }
-
-    const { data: diaryEntries, error: diaryError } = await query;
-
-    if (diaryError) {
-      console.error('Error fetching diary posts:', diaryError);
-      return;
-    }
-
-    if (!diaryEntries || diaryEntries.length === 0) {
-      console.log('No diary posts found for this user.');
-      return;
-    }
-
-    //map the database fields to the entry structure
-    const formattedEntries: DiaryEntry[] = await Promise.all(
-      diaryEntries.map(async (entry: any) => {
-        
-        const mediaUrls = await getMediaFiles(entry, 'diary_media');
-
-        return {
-          titel: entry.post_title,   
-          text: entry.post_text,   
-          image: mediaUrls.image || null,  
-          video: mediaUrls.video || null, 
-          drawing: mediaUrls.drawing || null, 
-          date: new Date(entry.post_date)  
-        };
-      })
-    );
-  
-    
-    return formattedEntries;
-  } catch (error) {
-    console.error('Error fetching user diary entries:', error);
-    return [];
-  }
-}; */
-
-/* const getMediaFiles = async (entry: any, bucket: string) => {
-  const mediaUrls: any = {
-    image: null,
-    video: null,
-    drawing: null,
-  };
-
-  // Fetch image URL if exists
-  if (entry.image_url) {
-    const { data: imageUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.image_url); 
-    if (imageUrl?.publicUrl) mediaUrls.image = imageUrl.publicUrl;
-  }
-
-  // Fetch video URL if exists
-  if (entry.video_url) {
-    const { data: videoUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.video_url);  
-    if (videoUrl?.publicUrl) mediaUrls.video = videoUrl.publicUrl;
-  }
-
-  // Fetch drawing URL if exists
-  if (entry.drawing_url) {
-    const { data: drawingUrl } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(entry.drawing_url);
-    if (drawingUrl?.publicUrl) mediaUrls.drawing = drawingUrl.publicUrl;
-  }
-
-  return mediaUrls;
-} */
-
-//get the users contacts from departments
-const getContactIds = async (userId: string) => {
-  const { data, error } = await supabase.from('ProfilesDepartments').select('*').eq('profile_id', userId);
-  if (error) {
-    console.error('Error fetching contacts:', error);
-    return [];
-  }
-  
-  setContactIds(
-    data.map((contact) => ({
-      department_id: contact.department_id,
-      staff_id: contact.staff_id
-    }))
-  );
-};
-
 
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -505,7 +365,6 @@ const editUser = async (
   }
 };
 
-
 const saveDiaryEntry = async (diaryEntry: any) => {
   const { data, error } = await supabase.from('diary_posts').insert([diaryEntry]);
   if (error) {
@@ -515,69 +374,5 @@ const saveDiaryEntry = async (diaryEntry: any) => {
   console.log('Diary entry saved:', data);
 }
 
-
-/* const fetchMedicins = async (userId: string) => {
-  try {
-    //fetch the medicines associated with the user
-    const { data: medicins, error: medicinsError } = await supabase
-      .from('medicins')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (medicinsError) throw medicinsError;
-
-    //fetch the users own added medicines
-    const { data: ownMedicins, error: ownMedicinsError } = await supabase
-      .from('Own_added_medicins')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (ownMedicinsError) throw ownMedicinsError;
-    
-    return {
-      medicins: medicins || [],
-      own_medicins: ownMedicins || []
-    };
-  } catch (error) {
-    console.error('Error fetching medicines:', error);
-    return {
-      medicins: [],
-      own_medicins: []
-    };
-  }
-}; */
-
-/* const fetchDetailsForMedicins = async (medicins: MedicinProps[]): Promise<MedicinProps[]> => {
-  if (!medicins || medicins.length === 0) return medicins;
-
-  try {
-    const staffIds = [...new Set(medicins.map((med) => med.utskrivare))];
-    const departmentIds = [...new Set(medicins.map((med) => med.utskrivande_avdelning))];
-
-    const [staffData, departmentData] = await Promise.all([
-      supabase.from('Staff').select('id, staff_name').in('id', staffIds),
-      supabase.from('Departments').select('id, name').in('id', departmentIds)
-    ]);
-
-    if (staffData.error) throw staffData.error;
-    if (departmentData.error) throw departmentData.error;
-
-    const staffLookup = Object.fromEntries(staffData.data.map(staff => [staff.id, staff.staff_name]));
-    const departmentLookup = Object.fromEntries(departmentData.data.map(dept => [dept.id, dept.name]));
-
-    return medicins.map((med) => ({
-      ...med,
-      utskrivare_name: staffLookup[med.utskrivare] || 'Okänd utskrivare',
-      ordinationName: departmentLookup[med.utskrivande_avdelning] || 'Okänd avdelning',
-    }));
-  } catch (error) {
-    console.error('Error fetching staff and department details:', error);
-    return medicins;
-  }
-}; */
-
-
-
-return <AuthContext.Provider value={{ user, setUser, contactIds, setContactIds, getContactIds, signIn, signOut, signUp, editUser }}>{children}</AuthContext.Provider>
-
+  return <AuthContext.Provider value={{ user, setUser, signIn, signOut, signUp, editUser }}>{children}</AuthContext.Provider>
 }

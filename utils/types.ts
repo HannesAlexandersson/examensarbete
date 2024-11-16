@@ -15,12 +15,12 @@ export type User = {
   selected_version: number | null;
   /* own_medicins?: OwnAddedMedicinProps[] | null;
   medicins?: MedicinProps[] | null; */
-  diary_entries?: DiaryEntry[] | null;
+  /* diary_entries?: DiaryEntry[] | null; */
   events?: EventSource[] | null;
   diagnoses?: DiagnosisProps[] | null;
   /* answers?: string[] | null; */
-  departments?: DepartmentProps[] | null;
-  staff?: StaffProps[] | null;
+  /* departments?: DepartmentProps[] | null;
+  staff?: StaffProps[] | null; */
   procedures?: ProcedureProps[] | null;
 };
 
@@ -117,9 +117,9 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   /* selectedOption: number; */
   /* userAge: number | null; */
-  contactIds?: ContactIds[] | null;
+  /* contactIds?: ContactIds[] | null;
   setContactIds: (contactIds: ContactIds[]) => void;  
-  getContactIds: (userId: string) => Promise<never[] | undefined>;
+  getContactIds: (userId: string) => Promise<never[] | undefined>; */
   /* answers: Answers[];
   getAnswers: (userId: string) => Promise<Answers[] | undefined>;
   setAnswers: (answers: Answers[]) => void; */
