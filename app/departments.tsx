@@ -16,8 +16,7 @@ export default function Departments() {
     departments,
     staff,
     contactIds,
-    fetchContactIds,
-    getDepartmentsandStaff,
+    fetchContactIds,    
     setContactIds,
   } = useDepartmentsStore((state) => state);
  

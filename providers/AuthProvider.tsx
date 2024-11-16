@@ -20,7 +20,8 @@ import {
   useUserStore, 
   useDiaryStore,
   useMedicineStore,
-  useDepartmentsStore
+  useDepartmentsStore,
+  useDiagnosisStore
  } from '@/stores';
 
 
@@ -69,6 +70,21 @@ const { selectedMediaFile } = useMediaStore();
 const { setDiaryEntries } = useDiaryStore();
 const { fetchMedicins, enrichMedicins } = useMedicineStore();
 const { fetchContactIds, getDepartmentsandStaff } = useDepartmentsStore((state) => state);
+const { fetchDiagnosis } = useDiagnosisStore();
+
+//keep user logged in with supabase on/off state feature
+React.useEffect(() => {
+  const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
+    //if there is no active user session return to sign in page
+    if (!session) return router.push('/(auth)'); 
+    //else call the getUser function with the session id
+    getUser(session?.user.id);    
+  });
+  //clean up function  that terminates the subscription I.E the user session
+  return () => {
+    authData?.subscription.unsubscribe();
+  };
+}, []);
 
 //context functions
 const getUser = async (id: string) => {
@@ -76,7 +92,7 @@ const getUser = async (id: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
-  
+  //get the users age from the date of birth
   if (data?.date_of_birth) {
     getAge(data.date_of_birth);    
   }
@@ -89,12 +105,11 @@ const getUser = async (id: string) => {
   const diaryEntries = await fetchUserEntries(false, id);
   setDiaryEntries(diaryEntries || []);
 
-  //set the global departments and staff states in the zustand store with the fetched data
-  await getDepartmentsandStaff();
-  
+  //set the global states with the departments and staff
+  await getDepartmentsandStaff();  
 
-  //get the users diagoisis
-  const diagnosis = await fetchDiagnosis(id);
+  //set the global state with the users diagnosis
+  await fetchDiagnosis(id);
 
   //get user procedures
   const procedures = await getProcedures(id);
@@ -110,7 +125,7 @@ const getUser = async (id: string) => {
     /* diary_entries: diaryEntries || [], */ 
     /* departments: departments || [],
     staff: staff || [], */
-    diagnoses: diagnosis || [],
+    /* diagnoses: diagnosis || [], */
     procedures: procedures || [],
   };
 
@@ -172,47 +187,6 @@ const getProcedures = async (id: string) => {
   }
 };
 
-const fetchDiagnosis = async (id: string) => {  
-  const query = supabase
-    .from('Diagnosis')
-    .select('*')
-    .eq('user_id', id);
-
-  try{
-    const { data: diagnosisData, error: diagnosisError } = await query
-    
-
-    if (diagnosisError) {
-      console.error(diagnosisError);
-      return [];
-    }
-
-    //map the database fields to the entry structure
-    const formattedDiagnoses: DiagnosisProps[] = await Promise.all(
-      diagnosisData?.map(async (diagnosis: any) => {
-        const mediaUrls = await getMediaFiles(diagnosis, 'diagnosisMedia');
-
-        return {
-          id: diagnosis.id,
-          name: diagnosis.name,
-          description: diagnosis.description,
-          department: diagnosis.treating_department_name,
-          department_id: diagnosis.treating_department_id,
-          image: mediaUrls.image || null,
-          video: mediaUrls.video || null,
-          drawing: mediaUrls.drawing || null,
-        };
-      })
-    ); 
-
-    return formattedDiagnoses;
-
-  } catch (error) {
-    console.error('Error in fetchDiagnosis:', error);
-    return [];
-  }
-};
-
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: email,
@@ -267,19 +241,7 @@ const signOut = async () => {
   router.push('/(auth)')
 };
 
-//keep user logged in with supabase on/off state feature
-React.useEffect(() => {
-  const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
-    //if there is no active user session return to sign in page
-    if (!session) return router.push('/(auth)'); 
-    //else call the getUser function who already has the user id and redirects to homepage
-    getUser(session?.user.id);    
-  });
-  //clean up function  that terminates the subscription I.E the user session
-  return () => {
-    authData?.subscription.unsubscribe();
-  };
-}, []);
+
 
 const editUser = async (
   id: string, 

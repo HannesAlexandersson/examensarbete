@@ -7,10 +7,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { getOnboardingText, getVersionDescriptions } from '@/utils/querys';
 import { OnboardingText, CheckmarkOptions, VersionDescriptions } from '@/utils/types';
 import { Button, Typography, RoundCheckmark } from '@/components';
+import { useUserStore } from '@/stores';
 
 
 export default function OnboardingScreen() {
   const { user, selectedOption, setSelectedOption } = useAuth();
+  const { selected_option, setOption } = useUserStore();
   const router = useRouter();  
   
   const [currentStep, setCurrentStep] = useState(1);

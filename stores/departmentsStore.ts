@@ -1,17 +1,6 @@
 import { create } from 'zustand';
 import { fetchContactIds, fetchDepartmentsAndStaff } from '@/lib/apiHelper';
-import { DepartmentProps, StaffProps, ContactIds } from '@/utils/types';
-
-export interface DepartmentStore {
-  departments: DepartmentProps[] | null;
-  staff: StaffProps[] | null;
-  contactIds: ContactIds[];
-  setDepartments: (departments: DepartmentProps[]) => void;
-  setStaff: (staff: StaffProps[]) => void;
-  setContactIds: (contactIds: ContactIds[]) => void;
-  fetchContactIds: (userId: string) => Promise<void>;
-  getDepartmentsandStaff: () => Promise<void>; 
-}
+import { DepartmentStore } from '@/utils/types';
 
 export const useDepartmentsStore = create<DepartmentStore>((set) => ({
   departments: null,

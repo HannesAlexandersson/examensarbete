@@ -54,6 +54,17 @@ export interface AnswerStore {
   fetchAnswers: (id: string) => Promise<void>;
 }
 
+export interface DepartmentStore {
+  departments: DepartmentProps[] | null;
+  staff: StaffProps[] | null;
+  contactIds: ContactIds[];
+  setDepartments: (departments: DepartmentProps[]) => void;
+  setStaff: (staff: StaffProps[]) => void;
+  setContactIds: (contactIds: ContactIds[]) => void;
+  fetchContactIds: (userId: string) => Promise<void>;
+  getDepartmentsandStaff: () => Promise<void>; 
+}
+
 export interface MediaStore {
   getPhotoForAvatar?: boolean;
   selectedMedia: string | null;

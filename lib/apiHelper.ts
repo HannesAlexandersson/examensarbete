@@ -1,5 +1,46 @@
 import { supabase, supabaseUrl } from '@/utils/supabase';
-import { Answers, DiaryEntry, QuestionProps, MedicinProps } from '@/utils/types';
+import { Answers, DiaryEntry, QuestionProps, MedicinProps, DiagnosisProps } from '@/utils/types';
+
+export const fetchDiagnosis = async (id: string) => {  
+  const query = supabase
+    .from('Diagnosis')
+    .select('*')
+    .eq('user_id', id);
+
+  try{
+    const { data: diagnosisData, error: diagnosisError } = await query
+    
+
+    if (diagnosisError) {
+      console.error(diagnosisError);
+      return [];
+    }
+
+    //map the database fields to the entry structure
+    const formattedDiagnoses: DiagnosisProps[] = await Promise.all(
+      diagnosisData?.map(async (diagnosis: any) => {
+        const mediaUrls = await getMediaFiles(diagnosis, 'diagnosisMedia');
+
+        return {
+          id: diagnosis.id,
+          name: diagnosis.name,
+          description: diagnosis.description,
+          department: diagnosis.treating_department_name,
+          department_id: diagnosis.treating_department_id,
+          image: mediaUrls.image || null,
+          video: mediaUrls.video || null,
+          drawing: mediaUrls.drawing || null,
+        };
+      })
+    ); 
+
+    return formattedDiagnoses;
+
+  } catch (error) {
+    console.error('Error in fetchDiagnosis:', error);
+    return [];
+  }
+};
 
 export const fetchUserDataFromProfilesTable = async (userId: string) => {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
