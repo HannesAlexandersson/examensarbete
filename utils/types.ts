@@ -13,12 +13,12 @@ export type User = {
   description?: string;
   date_of_birth?: Date | null;
   selected_version: number | null;
-  own_medicins?: OwnAddedMedicinProps[] | null;
-  medicins?: MedicinProps[] | null;
+  /* own_medicins?: OwnAddedMedicinProps[] | null;
+  medicins?: MedicinProps[] | null; */
   diary_entries?: DiaryEntry[] | null;
   events?: EventSource[] | null;
   diagnoses?: DiagnosisProps[] | null;
-  answers?: string[] | null;
+  /* answers?: string[] | null; */
   departments?: DepartmentProps[] | null;
   staff?: StaffProps[] | null;
   procedures?: ProcedureProps[] | null;

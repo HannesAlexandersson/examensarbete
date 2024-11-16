@@ -14,7 +14,13 @@ import {
   MediaEntry 
 } from '@/utils/types';
 import { fetchUserEntries, getMediaFiles } from '@/lib/apiHelper';
-import { useMediaStore, useAnswerStore, useUserStore, useDiaryStore } from '@/stores';
+import { 
+  useMediaStore, 
+  useAnswerStore, 
+  useUserStore, 
+  useDiaryStore,
+  useMedicineStore
+ } from '@/stores';
 
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
@@ -28,7 +34,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
-//the user object is created here and used all over the app with the context
+
+//states used as global states in the app
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
 /* const [userAge, setUserAge] = React.useState<number | null>(null); */
@@ -40,6 +47,7 @@ const [contactIds, setContactIds] = React.useState<ContactIds[]>([]);
 /* const [answers, setAnswers] = React.useState<Answers[]>([]); */
 /* const [ response, setResponse ] = React.useState<string | null>(null); */
 
+//global states from the zustand stores
 const { 
   first_name,
   last_name,
@@ -58,10 +66,11 @@ const {
 const { fetchAnswers } = useAnswerStore();
 const { selectedMediaFile } = useMediaStore();
 const { setDiaryEntries } = useDiaryStore();
+const { fetchMedicins, enrichMedicins } = useMedicineStore();
 
-
+//context functions
 const getUser = async (id: string) => {
-  // get from supabase table "User" and select everything and the 'id' must equal the id we defined here and return it as single wich is a object and set that to the data object and i there is no errors set the user to data
+  //get all the user data from the profiles table
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
 
@@ -70,7 +79,11 @@ const getUser = async (id: string) => {
     getAge(data.date_of_birth);    
   }
 
- /*  // Call fetchMedicins to get medicines
+  // get the users medicines and enrich them with staff and department details
+  await fetchMedicins(id); 
+  await enrichMedicins(); 
+
+ /* 
   const medicins = await fetchMedicins(id);
 
   // Enrich medicines with staff and department details

@@ -35,7 +35,7 @@ export default function Medicin() {
   const [selectedMedicin, setSelectedMedicin] = React.useState<OwnAddedMedicinProps | MedicinProps | null>(null);
    
   //setters
-  useEffect(() => {
+  /* useEffect(() => {
     const userId = id;
     if (!userId) return;
     const loadMedicins = async () => {
@@ -44,7 +44,7 @@ export default function Medicin() {
     };
     loadMedicins();
   }, []);
-
+ */
   //handlers
   const addMedicin = async (newMedicin: OwnAddedMedicinProps) => {
     try {
