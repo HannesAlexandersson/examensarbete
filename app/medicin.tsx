@@ -1,17 +1,15 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button, Typography } from '@/components';
-import { router } from 'expo-router';
 import { View, ScrollView, Modal, TouchableOpacity, Linking, Alert } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/utils/supabase';
 import { OwnAddedMedicinProps, MedicinProps } from '@/utils/types';
-import { useUserStore, useMedicineStore } from '@/stores';
+import { useMedicineStore, useUserStore } from '@/stores';
 
 export default function Medicin() {
   //global states
-  const { user } = useAuth();
-  const { id } = useUserStore();
+  const { user } = useAuth();  
   const { 
     user_own_medicins,
     user_medicins,
@@ -20,9 +18,9 @@ export default function Medicin() {
     setUserOwnMedicins,
     setUserMedicins
    } = useMedicineStore();
-  //local states
-  /* const [medicins, setMedicins] = React.useState<MedicinProps[]>([]);
-  const [ownMedicins, setOwnMedicins] = React.useState<OwnAddedMedicinProps[]>([]); */
+  const { id } = useUserStore();
+   
+  //local states  
   const [newMedicin, setNewMedicin] = React.useState<OwnAddedMedicinProps>({
     namn: '',
     medicin_namn: '',
@@ -34,17 +32,7 @@ export default function Medicin() {
   const [addMedicinModalvisible, setAddMedicinModalVisible] = React.useState(false);
   const [selectedMedicin, setSelectedMedicin] = React.useState<OwnAddedMedicinProps | MedicinProps | null>(null);
    
-  //setters
-  /* useEffect(() => {
-    const userId = id;
-    if (!userId) return;
-    const loadMedicins = async () => {
-      await fetchMedicins(userId); 
-      await enrichMedicins(); 
-    };
-    loadMedicins();
-  }, []);
- */
+  
   //handlers
   const addMedicin = async (newMedicin: OwnAddedMedicinProps) => {
     try {
@@ -67,8 +55,7 @@ export default function Medicin() {
       } else if(data && data.length > 0){        
         //update the zustand store/global state with the new medicin
         setUserOwnMedicins([...user_own_medicins, data[0]]);
-       
-        alert('Medicin tillagd!');
+        alert('Medicin tillagd. OBS!! Kom ihåg att om du lägger till mediciner själv att alltid kontrollera med din läkare så att doseringen blir korrekt!');        
 
         const {data:Eventdata, error:EventError} = await supabase
           .from('Events')
@@ -87,6 +74,22 @@ export default function Medicin() {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      //reset the state
+      setNewMedicin({
+        namn: '',
+        medicin_namn: '',
+        ordination: '',
+        utskrivare: '',
+        avdelning: '',
+        fritext: '',
+      });
+      //refrech the medicins
+      const userId = id;
+      if (userId) {
+        await fetchMedicins(userId);
+        await enrichMedicins();
+      }
     }
   }  
   
@@ -183,10 +186,7 @@ const handleOpenFass = (medicin: MedicinProps | OwnAddedMedicinProps | null) => 
 
         <View className='flex-col gap-2'>
           <View className='flex-row gap-1'>
-            <Button variant='white' size='lg' className='' onPress={() => {
-              setAddMedicinModalVisible(true)
-              alert('OBS! Kom ihåg att om du lägger till mediciner själv att alltid kontrollera med din läkare så att doseringen blir korrekt!')
-              }}>
+            <Button variant='white' size='lg' className='' onPress={() => { setAddMedicinModalVisible(true); }}>
               <Typography variant='blue' size='md' weight='700' className='text-center' >Lägg till medicin</Typography>
             </Button>
             <Button variant='white' size='lg' className='' onPress={() => handleDelete(selectedMedicin)}>
