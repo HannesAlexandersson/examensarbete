@@ -21,7 +21,8 @@ import {
   useDiaryStore,
   useMedicineStore,
   useDepartmentsStore,
-  useDiagnosisStore
+  useDiagnosisStore,
+  useProcedureStore
  } from '@/stores';
 
 
@@ -71,6 +72,7 @@ const { setDiaryEntries } = useDiaryStore();
 const { fetchMedicins, enrichMedicins } = useMedicineStore();
 const { fetchContactIds, getDepartmentsandStaff } = useDepartmentsStore((state) => state);
 const { fetchDiagnosis } = useDiagnosisStore();
+const { getUserProcedures } = useProcedureStore();
 
 //keep user logged in with supabase on/off state feature
 React.useEffect(() => {
@@ -108,15 +110,17 @@ const getUser = async (id: string) => {
   //set the global states with the departments and staff
   await getDepartmentsandStaff();  
 
+  //get the ids of the users contacts to be able to filter the departments and staff arrays
+  await fetchContactIds(id);  
+
   //set the global state with the users diagnosis
   await fetchDiagnosis(id);
 
-  //get user procedures
-  const procedures = await getProcedures(id);
+  //get user procedures and set the global state
+  await getUserProcedures(id);  
 
   //call the get answers function to set the users answers
-  await fetchAnswers(id);
-  
+  await fetchAnswers(id);  
 
   const updatedUser: User = {
     ...data,
@@ -126,11 +130,8 @@ const getUser = async (id: string) => {
     /* departments: departments || [],
     staff: staff || [], */
     /* diagnoses: diagnosis || [], */
-    procedures: procedures || [],
-  };
-
-  //get the ids of the users contacts to be able to filter the departments and staff arrays
-  await fetchContactIds(id);  
+    /* procedures: procedures || [], */
+  }; 
 
   //set the user to the updated user
   setUser(updatedUser);
@@ -145,45 +146,6 @@ const getUser = async (id: string) => {
 
     setUser(updatedUser);    
     router.push('/(tabs)');
-  }
-};
-
-const getProcedures = async (id: string) => {  
-  const query = supabase
-  .from('Procedures')
-  .select('*')
-  .eq('user_id', id);
-  
-  try{    
-    const { data: procedureEntrys, error: procedureErrors } = await query;
-
-    if(procedureErrors) {
-      console.error(procedureErrors);
-      return [];
-    }
-
-    //map the database fields to the entry structure
-    const formattedProcedures: ProcedureProps[] = await Promise.all(
-      procedureEntrys?.map(async(procedure: any) => {
-        const mediaUrls = await getMediaFiles(procedure, 'procedureMedia');
-        
-        return {
-          id: procedure.id,
-          procedure_title: procedure.procedure_title,
-          procedure_text: procedure.procedure_text,
-          user_id: procedure.user_id,
-          procedure_img: mediaUrls.img || null,
-          procedure_video: mediaUrls.video || null,
-          procedure_drawing: mediaUrls.drawing || null,
-        };
-      })
-    );
-
-    
-    return formattedProcedures;
-  } catch (error) {
-    console.error('Error fetching procedures:', error);
-    return [];
   }
 };
 
@@ -240,8 +202,6 @@ const signOut = async () => {
   setUserAvatar(null);
   router.push('/(auth)')
 };
-
-
 
 const editUser = async (
   id: string, 

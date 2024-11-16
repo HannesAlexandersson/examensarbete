@@ -5,29 +5,27 @@ import { useAuth } from "@/providers/AuthProvider";
 import { ScrollView, TouchableOpacity, View, TouchableWithoutFeedback, Modal, TextInput, Text, Image } from "react-native";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ProcedureProps, FilelikeObject, MediaUpload } from "@/utils/types";
+import { useProcedureStore } from "@/stores";
 
 export default function ProceduresScreen() {
+  //global states
   const { user } = useAuth();
+  const { procedures, setProcedures } = useProcedureStore();
+
+  //local states  
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
-  const [ addNewModal, setAddNewModal ] = React.useState<boolean>(false);
+  const [addNewModal, setAddNewModal ] = React.useState<boolean>(false);
   const [toolTipVisible, setToolTipVisible] = React.useState<boolean>(false);
   const [procedureTitle, setProcedureTitle ] = React.useState<string>('');
   const [procedureTxt, setProcedureTxt ] = React.useState<string>('');
-  const [procedures, setProcedures] = React.useState<ProcedureProps[]>([]);
   const [selectedProcedure, setSelectedProcedure] = React.useState<ProcedureProps | null>(null);
   const [isDrawingMode, setIsDrawingMode] = React.useState(false); 
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = React.useState<string | null>(null);
   const [drawing, setDrawing] = React.useState<FilelikeObject | null>(null);
   const [drawingPreview, setDrawingPreview] = React.useState<string | null>(null);
-
-  //set the sates on mount
-  React.useEffect(() => {
-    if (user?.procedures) {
-      setProcedures(user.procedures);
-    }
-  }, []);
-
+  
+  //handlers
   const handleCloseTooltip = () => {
     setToolTipVisible(false);
   };
@@ -73,8 +71,12 @@ export default function ProceduresScreen() {
       if (drawingError) {
         console.error("Error uploading drawing:", drawingError);
       } else {
+        const { data: publicUrlData } = supabase
+        .storage
+        .from('procedureMedia')
+        .getPublicUrl(drawingBucketData?.path);
         //insert the url to the mediaUploads array
-        mediaUploads.push({ type: 'drawing', url: drawingBucketData?.path });
+        mediaUploads.push({ type: 'drawing', url: publicUrlData.publicUrl, uri: drawingBucketData?.path });
       }
     }
 
@@ -98,7 +100,12 @@ export default function ProceduresScreen() {
       if (imageError) {
         console.error("Error uploading image:", imageError);
       } else {
-        mediaUploads.push({ type: 'image', url: imageBucketData?.path });
+        const { data: publicUrlData } = supabase
+        .storage
+        .from('procedureMedia')
+        .getPublicUrl(imageBucketData?.path);
+        //insert the url to the mediaUploads array        
+        mediaUploads.push({ type: 'image', url: publicUrlData.publicUrl, uri: imageBucketData?.path });
       }
     }
   
@@ -122,24 +129,32 @@ export default function ProceduresScreen() {
       if (videoError) {
         console.error("Error uploading video:", videoError);
       } else {
-        mediaUploads.push({ type: 'video', url: videoBucketData?.path });
+        const { data: publicUrlData } = supabase
+        .storage
+        .from('procedureMedia')
+        .getPublicUrl(videoBucketData?.path);
+        //insert the url to the mediaUploads array         
+        mediaUploads.push({ type: 'video', url: publicUrlData.publicUrl, uri: videoBucketData?.path });
       }
     }
 
     //if there were any media uploads, get the uri's
     const uploadedMedia = {
       drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      drawing_uri: mediaUploads.find((m) => m.type === 'drawing')?.uri || null,
       img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
+      img_uri: mediaUploads.find((m) => m.type === 'image')?.uri || null,
       video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
+      video_uri: mediaUploads.find((m) => m.type === 'video')?.uri || null,
     };
 
     const procedureEntry = {
       user_id: user?.id,
       procedure_title: procedureTitle,
       procedure_text: procedureTxt,
-      img_url: mediaUploads.find((m) => m.type === 'image')?.url || null,
-      video_url: mediaUploads.find((m) => m.type === 'video')?.url || null,
-      drawing_url: mediaUploads.find((m) => m.type === 'drawing')?.url || null,
+      image_url: uploadedMedia.img_uri, 
+      video_url: uploadedMedia.video_uri, 
+      drawing_url: uploadedMedia.drawing_uri,
     }
 
     const { data, error } = await supabase
@@ -153,7 +168,7 @@ export default function ProceduresScreen() {
       if (data && data.length > 0) {
         
         const newProcedure = data[0];
-        //update the local state with the new procedure
+        //update the state with the new procedure
         setProcedures([...procedures, { 
           id: newProcedure.id, 
           procedure_title: procedureTitle, 
@@ -162,20 +177,7 @@ export default function ProceduresScreen() {
           procedure_img: uploadedMedia.img_url,
           procedure_video: uploadedMedia.video_url,
           procedure_drawing: uploadedMedia.drawing_url 
-        }]);
-
-        //update the global userobject with the new procedure
-        if (user) {
-        user.procedures = [...procedures, { 
-          id: newProcedure.id, 
-          procedure_title: procedureTitle, 
-          procedure_text: procedureTxt, 
-          user_id: user?.id,
-          procedure_img: uploadedMedia.img_url,
-          procedure_video: uploadedMedia.video_url,
-          procedure_drawing: uploadedMedia.drawing_url 
-        }];
-      }
+        }]);        
 
         setProcedureTxt('');
         setProcedureTitle('');
@@ -202,19 +204,16 @@ const handleDeleteProcedure = async (procedur: ProcedureProps) => {
     console.error('Error deleting procedure:', error);
     alert('Något gick fel, försök igen senare!');
   } else {
-    //update the local state
+    //update the state with the procedure removed
     setProcedures(procedures.filter(procedure => procedure.id !== procedur.id));
-    //update the global user object
-    if (user) {
-      user.procedures = procedures.filter(procedure => procedure.id !== procedur.id);
-    }
+    
     alert('Procedur borttagen!');
     setModalVisible(false);
   }
 }
 
   return(
-    <ScrollView className="bg-vgrBlue">
+  <ScrollView className="bg-vgrBlue">
     <View className='flex-1 items-center justify-center pt-12 px-4'>
         <View className='flex-col items-center justify-center py-4'>
           <Typography variant='white' size='h1' weight='700' >

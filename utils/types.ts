@@ -17,11 +17,11 @@ export type User = {
   medicins?: MedicinProps[] | null; */
   /* diary_entries?: DiaryEntry[] | null; */
   events?: EventSource[] | null;
-  diagnoses?: DiagnosisProps[] | null;
+  /* diagnoses?: DiagnosisProps[] | null; */
   /* answers?: string[] | null; */
   /* departments?: DepartmentProps[] | null;
   staff?: StaffProps[] | null; */
-  procedures?: ProcedureProps[] | null;
+  /* procedures?: ProcedureProps[] | null; */
 };
 
 export type EventSource = {
@@ -64,6 +64,18 @@ export interface DepartmentStore {
   fetchContactIds: (userId: string) => Promise<void>;
   getDepartmentsandStaff: () => Promise<void>; 
 }
+
+export interface ProcedureStore {
+  procedures: ProcedureProps[];
+  setProcedures: (procedures: ProcedureProps[]) => void;
+  getUserProcedures: (id: string) => Promise<void>;
+};
+
+export interface DiagnosisStore {
+  diagnosis: DiagnosisProps[];
+  fetchDiagnosis: (id: string) => Promise<void>;
+  setDiagnosis: (diagnosis: DiagnosisProps[]) => void;
+};
 
 export interface MediaStore {
   getPhotoForAvatar?: boolean;
@@ -388,6 +400,7 @@ export interface DrawingPickerProps {
 export type MediaUpload = {
   type: string;
   url: string;
+  uri?: string;
 }
 
 export type DiagnosisProps = {

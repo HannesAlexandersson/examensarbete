@@ -1,5 +1,52 @@
 import { supabase, supabaseUrl } from '@/utils/supabase';
-import { Answers, DiaryEntry, QuestionProps, MedicinProps, DiagnosisProps } from '@/utils/types';
+import { 
+  Answers, 
+  DiaryEntry, 
+  QuestionProps, 
+  MedicinProps, 
+  DiagnosisProps,
+  ProcedureProps,
+  MediaUpload
+} from '@/utils/types';
+
+export const getProcedures = async (id: string) => {  
+  const query = supabase
+  .from('Procedures')
+  .select('*')
+  .eq('user_id', id);
+  
+  try{    
+    const { data: procedureEntrys, error: procedureErrors } = await query;
+
+    if(procedureErrors) {
+      console.error(procedureErrors);
+      return [];
+    }
+
+    //map the database fields to the entry structure
+    const formattedProcedures: ProcedureProps[] = await Promise.all(
+      procedureEntrys?.map(async(procedure: any) => {
+        const mediaUrls = await getMediaFiles(procedure, 'procedureMedia');
+        
+        return {
+          id: procedure.id,
+          procedure_title: procedure.procedure_title,
+          procedure_text: procedure.procedure_text,
+          user_id: procedure.user_id,
+          procedure_img: mediaUrls.img || null,
+          procedure_video: mediaUrls.video || null,
+          procedure_drawing: mediaUrls.drawing || null,
+        };
+      })
+    );
+
+    
+    return formattedProcedures;
+  } catch (error) {
+    console.error('Error fetching procedures:', error);
+    return [];
+  }
+};
 
 export const fetchDiagnosis = async (id: string) => {  
   const query = supabase

@@ -6,6 +6,7 @@ import { useQuestionStore } from './responseStore';
 import { useMedicineStore } from './medicinStore';
 import { useDepartmentsStore } from './departmentsStore';
 import { useDiagnosisStore } from './diagnosisStore';
+import { useProcedureStore } from './procedureStore';
 
 export {
   useUserStore,
@@ -16,4 +17,5 @@ export {
   useMedicineStore,
   useDepartmentsStore,
   useDiagnosisStore,
+  useProcedureStore
 }
