@@ -10,7 +10,7 @@ import { IPath, ICircle, IStamp, Tools, DrawProps } from "@/utils/types";
 const Draw: React.FC<DrawProps> = ({ style, onSave, onClose, strokeColor, strokeWidth }) => {
   const { width, height } = Dimensions.get("window");
   const paletteColors = ["red", "green", "blue", "yellow", "black"];
-  
+  //the SVGs for the different stamps
   const svgStamps = {
     star: '<svg viewBox="0 0 200 200"><polygon fill="{{fillColor}}" points="100,0,129.38926261462365,59.54915028125263,195.10565162951536,69.09830056250526,147.55282581475768,115.45084971874736,158.77852522924732,180.90169943749473,100,150,41.2214747707527,180.90169943749476,52.447174185242325,115.45084971874738,4.894348370484636,69.09830056250527,70.61073738537632,59.549150281252636"></polygon></svg>',
     heart: '<svg viewBox="0 0 200 200"><path fill="{{fillColor}}" d="M100,180c-1.5,0-3-0.5-4.2-1.5L35.5,125c-23.4-20.7-23.4-54.3,0-75C47.3,39.5,62.9,35,79.5,35s32.2,4.5,44,14l6.5,5.7l6.5-5.7c11.8-9.5,27.5-14,44-14s32.2,4.5,44,14c23.4,20.7,23.4,54.3,0,75l-60.3,53.5C103,179.5,101.5,180,100,180z"/></svg>',

@@ -4,7 +4,7 @@ import Button from '@/components/ButtonVariants';
 import Typography from '@/components/Typography';
 import { MediaPickerProps } from '@/utils/types';
 
-
+//Component to pick an image or video from the device to use in the app
 export default function MediaPicker({ setSelectedImage, setSelectedVideo }: MediaPickerProps) {
 
   //open Image Picker to select image or video

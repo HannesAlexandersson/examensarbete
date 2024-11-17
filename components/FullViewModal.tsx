@@ -7,7 +7,7 @@ import Typography from './Typography';
 
 
 
-
+//Modal to show the full view of an event in the users feed
 const FullViewModal = ({ isVisible, onClose, event }: FullViewModalProps) => {
   const {user} = useAuth();
   const [question, setQuestion] = useState<QuestionProps | null>(null);
@@ -49,7 +49,7 @@ const FullViewModal = ({ isVisible, onClose, event }: FullViewModalProps) => {
 
           <Typography variant='black' weight='400' size='sm' className='mt-2'>Från: {question?.contact_name}</Typography>
          
-        {/*Ready to integrate with different kind of events */}
+        {/*Ready to integrate with different kind of events on production after presentation school */}
 
         {/*   {event.event_type === 'Own_added_medicins' && (
             <Text>

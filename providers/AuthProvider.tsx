@@ -41,14 +41,7 @@ export const AuthProvider = ({ children } : { children: React.ReactNode }) => {
 //states used as global states in the app
 const [user, setUser] = React.useState<User | null>(null);
 const router = useRouter();
-/* const [userAge, setUserAge] = React.useState<number | null>(null); */
 const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
-/* const [selectedOption, setSelectedOption] = React.useState<number>(3);
-const [selectedMediaFile, setSelectedMediaFile] = React.useState<string | null>(null);
-const [getPhotoForAvatar , setGetPhotoForAvatar] = React.useState<boolean>(false); */
-/* const [contactIds, setContactIds] = React.useState<ContactIds[]>([]); */
-/* const [answers, setAnswers] = React.useState<Answers[]>([]); */
-/* const [ response, setResponse ] = React.useState<string | null>(null); */
 
 //global states from the zustand stores
 const { 
@@ -123,14 +116,7 @@ const getUser = async (id: string) => {
   await fetchAnswers(id);  
 
   const updatedUser: User = {
-    ...data,
-    /* own_medicins: medicins?.own_medicins || [],
-    medicins: enrichedMedicins, */
-    /* diary_entries: diaryEntries || [], */ 
-    /* departments: departments || [],
-    staff: staff || [], */
-    /* diagnoses: diagnosis || [], */
-    /* procedures: procedures || [], */
+    ...data,    
   }; 
 
   //set the user to the updated user

@@ -202,7 +202,9 @@ export default function HomeScreen() {
         ))}        
         </>
       ): (
-        <Typography variant='black' weight='400' size='sm' className='italic'>Inga händelser</Typography>
+        <View className='flex-row justify-between w-full px-4  py-1 my-1'>
+          <Typography variant='black' weight='400' size='sm' className='italic'>Inga nya händelser</Typography>
+        </View>
       )}
       </View>
       

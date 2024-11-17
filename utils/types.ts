@@ -12,16 +12,8 @@ export type User = {
   avatar_url?: string | null;  
   description?: string;
   date_of_birth?: Date | null;
-  selected_version: number | null;
-  /* own_medicins?: OwnAddedMedicinProps[] | null;
-  medicins?: MedicinProps[] | null; */
-  /* diary_entries?: DiaryEntry[] | null; */
-  events?: EventSource[] | null;
-  /* diagnoses?: DiagnosisProps[] | null; */
-  /* answers?: string[] | null; */
-  /* departments?: DepartmentProps[] | null;
-  staff?: StaffProps[] | null; */
-  /* procedures?: ProcedureProps[] | null; */
+  selected_version: number | null;  
+  events?: EventSource[] | null;  
 };
 
 export type EventSource = {
@@ -137,27 +129,8 @@ export type AuthContextType = {
   setUser: (user: User | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  /* selectedOption: number; */
-  /* userAge: number | null; */
-  /* contactIds?: ContactIds[] | null;
-  setContactIds: (contactIds: ContactIds[]) => void;  
-  getContactIds: (userId: string) => Promise<never[] | undefined>; */
-  /* answers: Answers[];
-  getAnswers: (userId: string) => Promise<Answers[] | undefined>;
-  setAnswers: (answers: Answers[]) => void; */
-  /* response: string | null;
-  setResponse: (response: string | null) => void; */
-  /* userAvatar: string | null; */
-  /* setSelectedOption: (option: number) => void; */
-  /* userMediaFiles: ({ file }: { file: string; }) => string | null
-  selectedMediaFile: string | null;
-  setSelectedMediaFile: (file: string | null) => void;
-  getPhotoForAvatar?: boolean; */
-  /* setGetPhotoForAvatar: (value: boolean) => void; */
-  /* fetchMedicins: (id: string) => Promise<{ medicins: MedicinProps[]; own_medicins: OwnAddedMedicinProps[]; }>; */
-  editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>;
-  /* fetchUserEntries: (limitEntries: boolean, id: string | null) => Promise<DiaryEntry[] | undefined>; */  
+  signOut: () => Promise<void>;  
+  editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>; 
 };
 
 export type OnboardingText = {
