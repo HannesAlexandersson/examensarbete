@@ -12,7 +12,7 @@ export const errorMessages = {
 
 // TypeScript type guard to handle error message translation
 export const getErrorMessage = (error: { message: string }) => {
-  // Attempt to match the error message with predefined messages
+  // match the error message with predefined messages
   return errorMessages[error.message as keyof typeof errorMessages] || errorMessages.default;
 };
 

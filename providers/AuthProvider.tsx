@@ -136,8 +136,7 @@ const signIn = async (email: string, password: string) => {
 
   //if there is an error return the error message to the caller
   if (error) {
-    const translatedErrorMessage = getErrorMessage(error);
-    alert(translatedErrorMessage); 
+    const translatedErrorMessage = getErrorMessage(error);    
     return translatedErrorMessage;
   }
 

@@ -14,7 +14,7 @@ export default  function () {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-const { signUp } = useAuth();
+  const { signUp } = useAuth();
 
 
   return (
