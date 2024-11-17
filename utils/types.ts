@@ -116,6 +116,7 @@ export interface UserStore {
   getAge: (dateOfBirth: Date) => void;
   updateUser: (updates: Partial<UserStore>) => void;
   moveAvatarToPictures: (oldAvatarUrl: string) => Promise<void>; 
+  resetUser: () => void;
 };
 
 export interface FullViewModalProps {
@@ -127,7 +128,7 @@ export interface FullViewModalProps {
 export type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (firstname: string, lastname: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;  
   editUser: (id: string, firstname: string, lastname: string, email: string, dateOfBirth: Date, avatarUrl: string, userDescription: string, selectedOption: number) => Promise<void>; 

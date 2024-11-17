@@ -1,6 +1,21 @@
 import Toast from 'react-native-toast-message';
 import { EventProps } from './types';
 
+// error messages mapped to swedish
+export const errorMessages = {
+  "Invalid login credentials": "Ogiltiga inloggningsuppgifter",
+  "Email not confirmed": "E-postadressen är inte bekräftad",
+  "Invalid email or password": "Felaktig e-postadress eller lösenord",
+  "User not found": "Användaren hittades inte",  
+  default: "Ett fel har inträffat. Försök igen.",
+};
+
+// TypeScript type guard to handle error message translation
+export const getErrorMessage = (error: { message: string }) => {
+  // Attempt to match the error message with predefined messages
+  return errorMessages[error.message as keyof typeof errorMessages] || errorMessages.default;
+};
+
 //format date strings
 export const formatDate = (date: Date): string => {
   const year = date.getFullYear();

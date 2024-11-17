@@ -6,14 +6,25 @@ import { Typography, Button } from '@/components';
 
 
 
+
 export default function () {  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    await signIn(email, password);      
+    //the signIn function returns an error message if the login fails
+    const errorMsg = await signIn(email, password);
+    if (errorMsg) {     
+      setError(errorMsg); 
+    } else {
+      setError(null); 
+    }
   };
+  /* const handleLogin = async () => {
+    await signIn(email, password);      
+  }; */
 
   return (
     <View className="flex-1 items-center justify-between bg-vgrBlue" >
@@ -27,6 +38,11 @@ export default function () {
         <Typography weight='700' variant='white'  className="text-2xl mb-4" >
           Välkommen till Hälsokollen
         </Typography>
+        {error && (
+          <Typography className="text-red-500 text-sm mb-4">
+            {error}
+          </Typography>
+        )}
         <TextInput
             placeholder="Email"
             className='bg-white rounded-lg p-4 mb-4 border-gray-300 w-full text-vgrBlue'

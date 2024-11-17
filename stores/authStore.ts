@@ -64,7 +64,23 @@ export const useUserStore = create<UserStore>((set) => ({
 
   moveAvatarToPictures: async (oldAvatarUrl: string) => {
     await moveAvatarToPictures(oldAvatarUrl);
-  }
+  },
+
+  resetUser: () =>
+    set({
+      id: null,
+      userAvatar: null,
+      first_name: '',
+      last_name: '',
+      user_email: '',
+      first_time: false,
+      selected_option: 3,
+      avatar_url: '',
+      description: '',
+      date_of_birth: null,
+      selected_version: null,
+      userAge: null,
+    }),
 
 
 }));

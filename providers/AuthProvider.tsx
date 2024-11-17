@@ -1,6 +1,7 @@
 import React from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
+import { getErrorMessage } from '@/utils/utils';
 import { 
   User, 
   AuthContextType  
@@ -132,10 +133,17 @@ const signIn = async (email: string, password: string) => {
     email: email,
     password: password,
   });
-  
-  if (error) return console.error(error)
+
+  //if there is an error return the error message to the caller
+  if (error) {
+    const translatedErrorMessage = getErrorMessage(error);
+    alert(translatedErrorMessage); 
+    return translatedErrorMessage;
+  }
+
   getUser(data.user.id);
   getUserData(data.user.id); 
+  return null;
 };
 
 
@@ -218,7 +226,8 @@ const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) return console.error(error);
   //clear the stores
-  useUserStore.setState({
+  useUserStore.getState().resetUser();
+  /* useUserStore.setState({
     id: null,
     userAvatar: null,
     first_name: '',
@@ -231,7 +240,7 @@ const signOut = async () => {
     date_of_birth: null,
     selected_version: null,
     userAge: null,
-  });
+  }); */
 
   //clear the local states
   setUser(null);
