@@ -101,9 +101,17 @@ export default function AccountScreen() {
     <View className="flex-1 items-center justify-start gap-4 bg-white">
       <View className='flex flex-row justify-between items-center w-full px-5 pt-8 pb-3 bg-slate-100'>
         <View className='w-1/2 flex flex-col items-start justify-center pl-4'>
-          <Typography variant='black' weight='400' size='xl' className='mb-4'>{first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
-          <Typography variant='black' weight='400' size='md' className=''>{description}</Typography>
-        
+          {description ? (
+            <>
+            <Typography variant='black' weight='400' size='xl' className='mb-4'>{first_name} {userAge && (<>, {userAge}år</>)}</Typography>          
+            <Typography variant='black' weight='400' size='md' className=''>{description}</Typography>
+            </>
+          ) : (
+            <>
+              <Typography variant='black' weight='400' size='xl' className='mb-4'>Hej {first_name}!</Typography>
+              <Typography variant='black' weight='400' size='md' className='text-left'>Skriv och berätta lite om dig själv här.</Typography>
+            </>
+          )}        
         </View>
         <View className='w-1/2 flex flex-col gap-2 items-center justify-center'>
           {userAvatar && (
