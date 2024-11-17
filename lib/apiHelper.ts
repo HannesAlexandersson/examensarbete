@@ -9,6 +9,27 @@ import {
   MediaUpload
 } from '@/utils/types';
 
+export const insertProfileWithRetry = async (profile: any, retries = 3, delay = 500): Promise<any> => {
+  while (retries > 0) {
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .insert(profile)
+      .select();
+
+    if (!error && profileData && profileData.length > 0) {
+      return profileData[0]; // Successfully inserted and fetched
+    }
+
+    retries--;
+    if (retries > 0) {
+      console.log(`Retrying profile insertion... Attempts left: ${retries}`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw new Error('Failed to insert profile after retries');
+};
+
 export const getProcedures = async (id: string) => {  
   const query = supabase
   .from('Procedures')

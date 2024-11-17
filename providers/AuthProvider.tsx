@@ -1,19 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'expo-router';
 import { 
   User, 
-  AuthContextType, 
-  MedicinProps, 
-  ProcedureProps, 
-  ContactIds, 
-  DiaryEntry, 
-  Answers, 
-  UserMediaForDepartment, 
-  DiagnosisProps, 
-  MediaEntry 
+  AuthContextType  
 } from '@/utils/types';
-import { fetchUserEntries, getMediaFiles } from '@/lib/apiHelper';
+import { fetchUserEntries, insertProfileWithRetry } from '@/lib/apiHelper';
 import { 
   useMediaStore, 
   useAnswerStore, 
@@ -86,7 +78,7 @@ const getUser = async (id: string) => {
   //get all the user data from the profiles table
   const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
   if(error) return console.error(error);
-
+  console.log('Fetching profile for ID:', id);
   //get the users age from the date of birth
   if (data?.date_of_birth) {
     getAge(data.date_of_birth);    
@@ -146,44 +138,102 @@ const signIn = async (email: string, password: string) => {
   getUserData(data.user.id); 
 };
 
+
 const signUp = async (firstname: string, lastname: string, email: string, password: string) => {
   //trimming the input fields to remove any white spaces to avoid issues with supabases not accepting the emails
   const trimmedEmail = email.trim();
   const trimmedFirstname = firstname.trim();
   const trimmedLastname = lastname.trim();  
-  
-  const { data, error } = await supabase.auth.signUp({      
-    email: trimmedEmail,
-    password: password,
-  });
-  if (error) return console.error(error);
-  
-  const { data: profileData, error: profileError } = await supabase
-  .from('profiles')
-  .insert(
-    {
+ 
+  try {
+    const { data, error } = await supabase.auth.signUp({      
+      email: trimmedEmail,
+      password: password,
+    });
+    if (error) {
+      console.error(error);
+      throw error; 
+    }
+
+    const userProfile = await insertProfileWithRetry({
       id: data.user?.id,
       user_id: data.user?.id,
       first_name: trimmedFirstname,
       last_name: trimmedLastname,
       email: trimmedEmail,
-    },
-  );
-  if (profileError) return console.error(profileError);
-
-  //set the user object in the context and redirect to the homepage
-  setUser(profileData);  
-  router.back()
-  router.push('/(tabs)');
-  //finally set the global user state
-  if (data?.user){
-    getUser(data?.user?.id);
+    });
+    console.log('in sign up profileData:', userProfile);
+    setUser(userProfile);    
+    if (data?.user){
+      //finally set the global user state
+      updateUser(userProfile);
+      //call the getuser function to get the user data
+      getUser(data?.user?.id);
+    }
+  } catch (error) {
+    console.error('Profile insertion failed:', error);
+    return;
   }
+  /* try{  
+    const { data, error } = await supabase.auth.signUp({      
+      email: trimmedEmail,
+      password: password,
+    });
+    if (error) return console.error(error); 
+    
+    const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .insert(
+      {
+        id: data.user?.id,
+        user_id: data.user?.id,
+        first_name: trimmedFirstname,
+        last_name: trimmedLastname,
+        email: trimmedEmail,
+      },
+    )
+    .select();
+    if (profileError) return console.error(profileError);
+    if(!profileData) return console.error('Profile data is missing');
+    const userProfile = profileData[0];
+    if(profileData){
+      //set the user object in the context and redirect to the homepage
+      setUser(userProfile);  
+    }
+    
+    console.log('in sign up profileData:', profileData);
+    router.back()
+    router.push('/(tabs)');
+    //finally set the global user state
+    if (data?.user){
+      getUser(data?.user?.id);
+    }
+  } catch (error) {
+    console.error('Profile insertion failed:', error);
+    return;
+  } */
 };
 
 const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) return console.error(error);
+  //clear the stores
+  useUserStore.setState({
+    id: null,
+    userAvatar: null,
+    first_name: '',
+    last_name: '',
+    user_email: '',
+    first_time: false,
+    selected_option: 3, 
+    avatar_url: '',
+    description: '',
+    date_of_birth: null,
+    selected_version: null,
+    userAge: null,
+  });
+
+  //clear the local states
   setUser(null);
   setUserAvatar(null);
   router.push('/(auth)')
