@@ -14,4 +14,7 @@ The app im building is an dead project from SU. It was originally an project who
  
 
 ## Interface för vårdgivare
-The protoype in its current form doesnt support proper integration for the caregivers of the users. In its current form openAI is integrated to supply answers for the users questions. This is only for the sake of presentation and isnt ment for the actual application. Instead the idea is there would be an interface for the caregivers where they could fetch the users questions and also provide answers. An crude, elementary interface is provided on https://interface-halsokollen.vercel.app/ 
+The protoype in its current form doesnt support proper integration for the caregivers of the users. In its current form openAI is integrated to supply answers for the users questions. This is only for the sake of presentation and isnt ment for the actual application. Instead the idea is there would be an interface for the caregivers where they could fetch the users questions and also provide answers. An crude, elementary interface is provided on [interface](https://interface-halsokollen.vercel.app/). 
+
+## Sanity studio
+The CMS of choice was Sanity. the Sanity studio is hosted by Sanity.io and the repo for the backend are available at [studio](https://github.com/HannesAlexandersson/examensarbete_backend).
